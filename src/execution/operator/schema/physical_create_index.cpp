@@ -21,11 +21,9 @@ public:
 
 class CreateIndexLocalSinkState : public LocalSinkState {
 public:
-	explicit CreateIndexLocalSinkState(ClientContext &context) : arena_allocator(Allocator::Get(context)) {};
+	explicit CreateIndexLocalSinkState(ClientContext &context) {};
 
 	unique_ptr<Index> local_index;
-	ArenaAllocator arena_allocator;
-	vector<Key> keys;
 	DataChunk key_chunk;
 	vector<column_t> key_column_ids;
 };
@@ -61,9 +59,8 @@ unique_ptr<LocalSinkState> PhysicalCreateIndex::GetLocalSinkState(ExecutionConte
 	default:
 		throw InternalException("Unimplemented index type");
 	}
-	state->keys = vector<Key>(STANDARD_VECTOR_SIZE);
-	state->key_chunk.Initialize(Allocator::Get(context.client), state->local_index->logical_types);
 
+	state->key_chunk.Initialize(Allocator::Get(context.client), state->local_index->logical_types);
 	for (idx_t i = 0; i < state->key_chunk.ColumnCount(); i++) {
 		state->key_column_ids.push_back(i);
 	}
@@ -79,19 +76,12 @@ SinkResultType PhysicalCreateIndex::Sink(ExecutionContext &context, GlobalSinkSt
 
 	// generate the keys for the given input
 	lstate.key_chunk.ReferenceColumns(input, lstate.key_column_ids);
-	lstate.arena_allocator.Reset();
-	ART::GenerateKeys(lstate.arena_allocator, lstate.key_chunk, lstate.keys);
 
-	auto art = make_unique<ART>(lstate.local_index->column_ids, lstate.local_index->table_io_manager,
-	                            lstate.local_index->unbound_expressions, lstate.local_index->constraint_type,
-	                            *context.client.db);
-	art->ConstructFromSorted(lstate.key_chunk.size(), lstate.keys, row_identifiers);
-
-	// merge into the local ART
+	// insert into the local ART
 	{
 		IndexLock local_lock;
 		lstate.local_index->InitializeLock(local_lock);
-		if (!lstate.local_index->MergeIndexes(local_lock, art.get())) {
+		if (!lstate.local_index->Insert(local_lock, lstate.key_chunk, row_identifiers)) {
 			throw ConstraintException("Data contains duplicates on indexed column(s)");
 		}
 	}
