@@ -4,7 +4,6 @@
 
 require parquet
 
-# TODO: enable once fixed
 require vector_size 2048
 
 statement ok
