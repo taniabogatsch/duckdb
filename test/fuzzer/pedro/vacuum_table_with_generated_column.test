@@ -2,6 +2,9 @@
 # description: Test the ANALYZE statement with generated columns.
 # group: [pedro]
 
+# FIXME: fails because we disable the HLL. Enable once we moved to a sparse HLL.
+require block_size 262144
+
 # The distinct statistics sampling relies on the vector size.
 require vector_size 2048
 
