@@ -60,7 +60,7 @@ public:
 	//! Performs a lookup on the index, fetching up to max_count result IDs. Returns true if all row IDs were fetched,
 	//! and false otherwise
 	bool Scan(const Transaction &transaction, const DataTable &table, IndexScanState &state, idx_t max_count,
-	          vector<row_t> &result_ids);
+	          Vector &row_ids, idx_t &row_ids_count);
 
 public:
 	//! Create a index instance of this type
@@ -87,7 +87,7 @@ public:
 	bool ConstructFromSorted(idx_t count, vector<ARTKey> &keys, Vector &row_identifiers);
 
 	//! Search equal values and fetches the row IDs
-	bool SearchEqual(ARTKey &key, idx_t max_count, vector<row_t> &result_ids);
+	bool SearchEqual(const ARTKey &key, idx_t const max_count, Vector &row_ids, idx_t &row_ids_count);
 
 	//! Returns all ART storage information for serialization
 	IndexStorageInfo GetStorageInfo(const bool get_buffers) override;
@@ -128,13 +128,15 @@ private:
 	void Erase(Node &node, const ARTKey &key, idx_t depth, const row_t &row_id);
 
 	//! Returns all row IDs belonging to a key greater (or equal) than the search key
-	bool SearchGreater(ARTIndexScanState &state, ARTKey &key, bool equal, idx_t max_count, vector<row_t> &result_ids);
+	bool SearchGreater(ARTIndexScanState &state, const ARTKey &key, const bool equal, const idx_t max_count,
+	                   Vector &row_ids, idx_t &row_ids_count);
 	//! Returns all row IDs belonging to a key less (or equal) than the upper_bound
-	bool SearchLess(ARTIndexScanState &state, ARTKey &upper_bound, bool equal, idx_t max_count,
-	                vector<row_t> &result_ids);
+	bool SearchLess(ARTIndexScanState &state, const ARTKey &upper_bound, const bool equal, const idx_t max_count,
+	                Vector &row_ids, idx_t &row_ids_count);
 	//! Returns all row IDs belonging to a key within the range of lower_bound and upper_bound
-	bool SearchCloseRange(ARTIndexScanState &state, ARTKey &lower_bound, ARTKey &upper_bound, bool left_equal,
-	                      bool right_equal, idx_t max_count, vector<row_t> &result_ids);
+	bool SearchCloseRange(ARTIndexScanState &state, const ARTKey &lower_bound, const ARTKey &upper_bound,
+	                      const bool left_equal, const bool right_equal, const idx_t max_count, Vector &row_ids,
+	                      idx_t &row_ids_count);
 
 	//! Initializes a merge operation by returning a set containing the buffer count of each fixed-size allocator
 	void InitializeMerge(ARTFlags &flags);

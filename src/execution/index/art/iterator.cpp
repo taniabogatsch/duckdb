@@ -41,12 +41,12 @@ bool IteratorKey::operator==(const ARTKey &key) const {
 	return true;
 }
 
-bool Iterator::Scan(const ARTKey &upper_bound, const idx_t max_count, vector<row_t> &result_ids, const bool equal) {
-
+bool Iterator::Scan(const ARTKey &upper_bound, const bool equal, const idx_t max_count, Vector &row_ids,
+                    idx_t &row_ids_count) {
 	bool has_next;
 	do {
 		if (!upper_bound.Empty()) {
-			// no more row IDs within the key bounds
+			// No more row IDs within the key bounds.
 			if (equal) {
 				if (current_key > upper_bound) {
 					return true;
@@ -58,14 +58,13 @@ bool Iterator::Scan(const ARTKey &upper_bound, const idx_t max_count, vector<row
 			}
 		}
 
-		// copy all row IDs of this leaf into the result IDs (if they don't exceed max_count)
-		if (!Leaf::GetRowIds(*art, last_leaf, result_ids, max_count)) {
+		// Copy all row IDs of this leaf into the result IDs, if they don't exceed max_count.
+		if (!Leaf::GetRowIds(*art, last_leaf, max_count, row_ids, row_ids_count)) {
 			return false;
 		}
 
-		// get the next leaf
+		// Get the next leaf.
 		has_next = Next();
-
 	} while (has_next);
 
 	return true;

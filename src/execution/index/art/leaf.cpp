@@ -231,18 +231,31 @@ idx_t Leaf::TotalCount(ART &art, const Node &node) {
 	return count;
 }
 
-bool Leaf::GetRowIds(ART &art, const Node &node, vector<row_t> &result_ids, idx_t max_count) {
+bool Leaf::GetRowIds(ART &art, const Node &node, const idx_t max_count, Vector &row_ids, idx_t &row_ids_count) {
 
 	// Test if adding more elements would exceed the maximum count.
 	D_ASSERT(node.HasMetadata());
 	auto total_count = TotalCount(art, node);
-	if (result_ids.size() + total_count > max_count) {
+	if (row_ids_count + total_count > max_count) {
 		return false;
 	}
 
+	if (row_ids_count == 0) {
+		row_ids.Initialize(false, total_count);
+	}
+
+	row_ids.Resize(row_ids_count, row_ids_count + total_count);
+	auto offset = row_ids_count;
+	row_ids_count += total_count;
+
+	UnifiedVectorFormat row_ids_data;
+	row_ids.ToUnifiedFormat(row_ids_count, row_ids_data);
+	auto data = UnifiedVectorFormat::GetDataNoConst<row_t>(row_ids_data);
+
 	if (node.GetType() == NType::LEAF_INLINED) {
 		// Push back the inlined row ID of this leaf.
-		result_ids.push_back(node.GetRowId());
+		auto idx = row_ids_data.sel->get_index(offset);
+		data[idx] = node.GetRowId();
 		return true;
 	}
 
@@ -251,7 +264,9 @@ bool Leaf::GetRowIds(ART &art, const Node &node, vector<row_t> &result_ids, idx_
 	while (last_leaf_ref.get().HasMetadata()) {
 		auto &leaf = Node::Ref<const Leaf>(art, last_leaf_ref, NType::LEAF);
 		for (idx_t i = 0; i < leaf.count; i++) {
-			result_ids.push_back(leaf.row_ids[i]);
+			auto idx = row_ids_data.sel->get_index(offset);
+			data[idx] = leaf.row_ids[i];
+			offset++;
 		}
 		last_leaf_ref = leaf.ptr;
 	}

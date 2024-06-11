@@ -264,6 +264,7 @@ bool RowGroupCollection::Scan(DuckTransaction &transaction, const std::function<
 void RowGroupCollection::Fetch(TransactionData transaction, DataChunk &result, const vector<column_t> &column_ids,
                                const Vector &row_identifiers, idx_t fetch_count, ColumnFetchState &state) {
 	// figure out which row_group to fetch from
+	//	D_ASSERT(fetch_count <= result.size());
 	auto row_ids = FlatVector::GetData<row_t>(row_identifiers);
 	idx_t count = 0;
 	for (idx_t i = 0; i < fetch_count; i++) {
