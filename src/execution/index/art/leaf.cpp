@@ -233,26 +233,27 @@ idx_t Leaf::TotalCount(ART &art, const Node &node) {
 
 bool Leaf::GetRowIds(ART &art, const Node &node, vector<row_t> &result_ids, idx_t max_count) {
 
-	// adding more elements would exceed the maximum count
+	// Test if adding more elements would exceed the maximum count.
 	D_ASSERT(node.HasMetadata());
-	if (result_ids.size() + TotalCount(art, node) > max_count) {
+	auto total_count = TotalCount(art, node);
+	if (result_ids.size() + total_count > max_count) {
 		return false;
 	}
 
 	if (node.GetType() == NType::LEAF_INLINED) {
-		// push back the inlined row ID of this leaf
+		// Push back the inlined row ID of this leaf.
 		result_ids.push_back(node.GetRowId());
+		return true;
+	}
 
-	} else {
-		// push back all the row IDs of this leaf
-		reference<const Node> last_leaf_ref(node);
-		while (last_leaf_ref.get().HasMetadata()) {
-			auto &leaf = Node::Ref<const Leaf>(art, last_leaf_ref, NType::LEAF);
-			for (idx_t i = 0; i < leaf.count; i++) {
-				result_ids.push_back(leaf.row_ids[i]);
-			}
-			last_leaf_ref = leaf.ptr;
+	// Push back all row IDs of this leaf.
+	reference<const Node> last_leaf_ref(node);
+	while (last_leaf_ref.get().HasMetadata()) {
+		auto &leaf = Node::Ref<const Leaf>(art, last_leaf_ref, NType::LEAF);
+		for (idx_t i = 0; i < leaf.count; i++) {
+			result_ids.push_back(leaf.row_ids[i]);
 		}
+		last_leaf_ref = leaf.ptr;
 	}
 
 	return true;

@@ -332,13 +332,24 @@ void TableScanPushdownComplexFilter(ClientContext &context, LogicalGet &get, Fun
 		for (auto &filter : filters) {
 			auto index_state = art_index.TryInitializeScan(transaction, *index_expression, *filter);
 			if (index_state != nullptr) {
-				if (art_index.Scan(transaction, storage, *index_state, STANDARD_VECTOR_SIZE, bind_data.result_ids)) {
-					// use an index scan!
+
+				auto &db_config = DBConfig::GetConfig(context);
+				DBConfig &GetConfig(ClientContext &context);
+				auto index_scan_percentage = db_config.options.index_scan_percentage;
+				auto index_scan_max_count = db_config.options.index_scan_max_count;
+
+				auto total_rows = storage.GetTotalRows();
+				auto total_rows_from_percentage = NumericCast<idx_t>(double(total_rows) * index_scan_percentage);
+				auto max_count = MaxValue(index_scan_max_count, total_rows_from_percentage);
+
+				// Check if we can use an index scan, and already retrieve the matching row ids.
+				if (art_index.Scan(transaction, storage, *index_state, max_count, bind_data.result_ids)) {
 					bind_data.is_index_scan = true;
 					get.function = TableScanFunction::GetIndexScanFunction();
-				} else {
-					bind_data.result_ids.clear();
+					return true;
 				}
+
+				bind_data.result_ids.clear();
 				return true;
 			}
 		}
