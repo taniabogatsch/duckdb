@@ -37,7 +37,9 @@ void ReorderTableEntries(catalog_entry_vector_t &tables);
 
 SingleFileCheckpointWriter::SingleFileCheckpointWriter(AttachedDatabase &db, BlockManager &block_manager,
                                                        CheckpointType checkpoint_type)
-    : CheckpointWriter(db), partial_block_manager(block_manager, PartialBlockType::FULL_CHECKPOINT),
+    : CheckpointWriter(db),
+      partial_block_manager(block_manager, PartialBlockType::FULL_CHECKPOINT,
+                            PartialBlockManager::MaxPartialBlockSize(block_manager.GetBlockSize())),
       checkpoint_type(checkpoint_type) {
 }
 

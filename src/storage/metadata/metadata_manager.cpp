@@ -62,15 +62,17 @@ MetadataHandle MetadataManager::Pin(MetadataPointer pointer) {
 }
 
 void MetadataManager::ConvertToTransient(MetadataBlock &block) {
+	auto block_size = block_manager.GetBlockSize();
+
 	// pin the old block
 	auto old_buffer = buffer_manager.Pin(block.block);
 
 	// allocate a new transient block to replace it
 	shared_ptr<BlockHandle> new_block;
-	auto new_buffer = buffer_manager.Allocate(MemoryTag::METADATA, Storage::BLOCK_SIZE, false, &new_block);
+	auto new_buffer = buffer_manager.Allocate(MemoryTag::METADATA, block_size, false, &new_block);
 
 	// copy the data to the transient block
-	memcpy(new_buffer.Ptr(), old_buffer.Ptr(), Storage::BLOCK_SIZE);
+	memcpy(new_buffer.Ptr(), old_buffer.Ptr(), block_size);
 	block.block = std::move(new_block);
 
 	// unregister the old block
@@ -78,16 +80,17 @@ void MetadataManager::ConvertToTransient(MetadataBlock &block) {
 }
 
 block_id_t MetadataManager::AllocateNewBlock() {
+	auto block_size = block_manager.GetBlockSize();
 	auto new_block_id = GetNextBlockId();
 
 	MetadataBlock new_block;
-	auto handle = buffer_manager.Allocate(MemoryTag::METADATA, Storage::BLOCK_SIZE, false, &new_block.block);
+	auto handle = buffer_manager.Allocate(MemoryTag::METADATA, block_size, false, &new_block.block);
 	new_block.block_id = new_block_id;
 	for (idx_t i = 0; i < METADATA_BLOCK_COUNT; i++) {
 		new_block.free_blocks.push_back(NumericCast<uint8_t>(METADATA_BLOCK_COUNT - i - 1));
 	}
 	// zero-initialize the handle
-	memset(handle.Ptr(), 0, Storage::BLOCK_SIZE);
+	memset(handle.Ptr(), 0, block_size);
 	AddBlock(std::move(new_block));
 	return new_block_id;
 }
@@ -146,22 +149,27 @@ MetadataPointer MetadataManager::RegisterDiskPointer(MetaBlockPointer pointer) {
 	return FromDiskPointer(pointer);
 }
 
-BlockPointer MetadataManager::ToBlockPointer(MetaBlockPointer meta_pointer) {
+idx_t MetadataManager::GetMetadataBlockSize(const idx_t block_size) {
+	idx_t metadata_block_size = AlignValueFloor(block_size / METADATA_BLOCK_COUNT);
+	return metadata_block_size;
+}
+
+BlockPointer MetadataManager::ToBlockPointer(MetaBlockPointer meta_pointer, const idx_t metadata_block_size) {
 	BlockPointer result;
 	result.block_id = meta_pointer.GetBlockId();
-	result.offset = meta_pointer.GetBlockIndex() * MetadataManager::METADATA_BLOCK_SIZE + meta_pointer.offset;
-	D_ASSERT(result.offset < MetadataManager::METADATA_BLOCK_SIZE * MetadataManager::METADATA_BLOCK_COUNT);
+	result.offset = meta_pointer.GetBlockIndex() * NumericCast<uint32_t>(metadata_block_size) + meta_pointer.offset;
+	D_ASSERT(result.offset < metadata_block_size * MetadataManager::METADATA_BLOCK_COUNT);
 	return result;
 }
 
-MetaBlockPointer MetadataManager::FromBlockPointer(BlockPointer block_pointer) {
+MetaBlockPointer MetadataManager::FromBlockPointer(BlockPointer block_pointer, const idx_t metadata_block_size) {
 	if (!block_pointer.IsValid()) {
 		return MetaBlockPointer();
 	}
-	idx_t index = block_pointer.offset / MetadataManager::METADATA_BLOCK_SIZE;
-	auto offset = block_pointer.offset % MetadataManager::METADATA_BLOCK_SIZE;
+	idx_t index = block_pointer.offset / metadata_block_size;
+	auto offset = block_pointer.offset % metadata_block_size;
 	D_ASSERT(index < MetadataManager::METADATA_BLOCK_COUNT);
-	D_ASSERT(offset < MetadataManager::METADATA_BLOCK_SIZE);
+	D_ASSERT(offset < metadata_block_size);
 	MetaBlockPointer result;
 	result.block_pointer = idx_t(block_pointer.block_id) | index << 56ULL;
 	result.offset = UnsafeNumericCast<uint32_t>(offset);
@@ -173,14 +181,16 @@ idx_t MetadataManager::BlockCount() {
 }
 
 void MetadataManager::Flush() {
-	const idx_t total_metadata_size = MetadataManager::METADATA_BLOCK_SIZE * MetadataManager::METADATA_BLOCK_COUNT;
+	auto block_size = block_manager.GetBlockSize();
+	auto metadata_block_size = MetadataManager::GetMetadataBlockSize(block_size);
+	const idx_t total_metadata_size = metadata_block_size * MetadataManager::METADATA_BLOCK_COUNT;
 
 	// write the blocks of the metadata manager to disk
 	for (auto &kv : blocks) {
 		auto &block = kv.second;
 		auto handle = buffer_manager.Pin(block.block);
 		// there are a few bytes left-over at the end of the block, zero-initialize them
-		memset(handle.Ptr() + total_metadata_size, 0, Storage::BLOCK_SIZE - total_metadata_size);
+		memset(handle.Ptr() + total_metadata_size, 0, block_size - total_metadata_size);
 		D_ASSERT(kv.first == block.block_id);
 		if (block.block->BlockId() >= MAXIMUM_BLOCK) {
 			// temporary block - convert to persistent

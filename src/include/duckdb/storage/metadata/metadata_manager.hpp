@@ -42,10 +42,8 @@ struct MetadataHandle {
 
 class MetadataManager {
 public:
-	//! The amount of metadata blocks per storage block
+	//! The amount of metadata blocks per storage block.
 	static constexpr const idx_t METADATA_BLOCK_COUNT = 64;
-	//! The size of metadata blocks
-	static constexpr const idx_t METADATA_BLOCK_SIZE = AlignValueFloor(Storage::BLOCK_SIZE / METADATA_BLOCK_COUNT);
 
 public:
 	MetadataManager(BlockManager &block_manager, BufferManager &buffer_manager);
@@ -58,8 +56,9 @@ public:
 	MetadataPointer FromDiskPointer(MetaBlockPointer pointer);
 	MetadataPointer RegisterDiskPointer(MetaBlockPointer pointer);
 
-	static BlockPointer ToBlockPointer(MetaBlockPointer meta_pointer);
-	static MetaBlockPointer FromBlockPointer(BlockPointer block_pointer);
+	static idx_t GetMetadataBlockSize(const idx_t block_size);
+	static BlockPointer ToBlockPointer(MetaBlockPointer meta_pointer, const idx_t metadata_block_size);
+	static MetaBlockPointer FromBlockPointer(BlockPointer block_pointer, const idx_t metadata_block_size);
 
 	//! Flush all blocks to disk
 	void Flush();
@@ -74,8 +73,10 @@ public:
 	void Write(WriteStream &sink);
 	void Read(ReadStream &source);
 
-protected:
+	// TODO: no longer protected
 	BlockManager &block_manager;
+
+protected:
 	BufferManager &buffer_manager;
 	unordered_map<block_id_t, MetadataBlock> blocks;
 	unordered_map<block_id_t, idx_t> modified_blocks;
@@ -89,9 +90,5 @@ protected:
 	void AddAndRegisterBlock(MetadataBlock block);
 	void ConvertToTransient(MetadataBlock &block);
 };
-
-//! Detect mismatching constant values
-static_assert(MetadataManager::METADATA_BLOCK_SIZE * MetadataManager::METADATA_BLOCK_COUNT <= Storage::BLOCK_SIZE,
-              "metadata block count exceeds total block alloc size");
 
 } // namespace duckdb

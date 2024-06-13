@@ -165,19 +165,20 @@ void LocalSortState::Initialize(GlobalSortState &global_sort_state, BufferManage
 	buffer_manager = &buffer_manager_p;
 	// Radix sorting data
 	radix_sorting_data = make_uniq<RowDataCollection>(
-	    *buffer_manager, RowDataCollection::EntriesPerBlock(sort_layout->entry_size), sort_layout->entry_size);
+	    *buffer_manager, RowDataCollection::EntriesPerBlock(sort_layout->entry_size, DEFAULT_BLOCK_SIZE),
+	    sort_layout->entry_size);
 	// Blob sorting data
 	if (!sort_layout->all_constant) {
 		auto blob_row_width = sort_layout->blob_layout.GetRowWidth();
 		blob_sorting_data = make_uniq<RowDataCollection>(
-		    *buffer_manager, RowDataCollection::EntriesPerBlock(blob_row_width), blob_row_width);
-		blob_sorting_heap = make_uniq<RowDataCollection>(*buffer_manager, (idx_t)Storage::BLOCK_SIZE, 1U, true);
+		    *buffer_manager, RowDataCollection::EntriesPerBlock(blob_row_width, DEFAULT_BLOCK_SIZE), blob_row_width);
+		blob_sorting_heap = make_uniq<RowDataCollection>(*buffer_manager, DEFAULT_BLOCK_SIZE, 1U, true);
 	}
 	// Payload data
 	auto payload_row_width = payload_layout->GetRowWidth();
-	payload_data = make_uniq<RowDataCollection>(*buffer_manager, RowDataCollection::EntriesPerBlock(payload_row_width),
-	                                            payload_row_width);
-	payload_heap = make_uniq<RowDataCollection>(*buffer_manager, (idx_t)Storage::BLOCK_SIZE, 1U, true);
+	payload_data = make_uniq<RowDataCollection>(
+	    *buffer_manager, RowDataCollection::EntriesPerBlock(payload_row_width, DEFAULT_BLOCK_SIZE), payload_row_width);
+	payload_heap = make_uniq<RowDataCollection>(*buffer_manager, DEFAULT_BLOCK_SIZE, 1U, true);
 	// Init done
 	initialized = true;
 }
@@ -268,8 +269,9 @@ unique_ptr<RowDataBlock> LocalSortState::ConcatenateBlocks(RowDataCollection &ro
 	// Create block with the correct capacity
 	auto buffer_manager = &row_data.buffer_manager;
 	const idx_t &entry_size = row_data.entry_size;
-	idx_t capacity = MaxValue(((idx_t)Storage::BLOCK_SIZE + entry_size - 1) / entry_size, row_data.count);
-	auto new_block = make_uniq<RowDataBlock>(MemoryTag::ORDER_BY, *buffer_manager, capacity, entry_size);
+	idx_t capacity = MaxValue((DEFAULT_BLOCK_SIZE + entry_size - 1) / entry_size, row_data.count);
+	auto new_block =
+	    make_uniq<RowDataBlock>(MemoryTag::ORDER_BY, *buffer_manager, capacity, entry_size, DEFAULT_BLOCK_SIZE);
 	new_block->count = row_data.count;
 	auto new_block_handle = buffer_manager->Pin(new_block->block);
 	data_ptr_t new_block_ptr = new_block_handle.Ptr();
@@ -294,8 +296,9 @@ void LocalSortState::ReOrder(SortedData &sd, data_ptr_t sorting_ptr, RowDataColl
 	auto unordered_data_handle = buffer_manager->Pin(unordered_data_block->block);
 	const data_ptr_t unordered_data_ptr = unordered_data_handle.Ptr();
 	// Create new block that will hold re-ordered row data
-	auto ordered_data_block = make_uniq<RowDataBlock>(MemoryTag::ORDER_BY, *buffer_manager,
-	                                                  unordered_data_block->capacity, unordered_data_block->entry_size);
+	auto ordered_data_block =
+	    make_uniq<RowDataBlock>(MemoryTag::ORDER_BY, *buffer_manager, unordered_data_block->capacity,
+	                            unordered_data_block->entry_size, DEFAULT_BLOCK_SIZE);
 	ordered_data_block->count = count;
 	auto ordered_data_handle = buffer_manager->Pin(ordered_data_block->block);
 	data_ptr_t ordered_data_ptr = ordered_data_handle.Ptr();
@@ -322,8 +325,9 @@ void LocalSortState::ReOrder(SortedData &sd, data_ptr_t sorting_ptr, RowDataColl
 		idx_t total_byte_offset =
 		    std::accumulate(heap.blocks.begin(), heap.blocks.end(), (idx_t)0,
 		                    [](idx_t a, const unique_ptr<RowDataBlock> &b) { return a + b->byte_offset; });
-		idx_t heap_block_size = MaxValue(total_byte_offset, (idx_t)Storage::BLOCK_SIZE);
-		auto ordered_heap_block = make_uniq<RowDataBlock>(MemoryTag::ORDER_BY, *buffer_manager, heap_block_size, 1U);
+		idx_t heap_block_size = MaxValue(total_byte_offset, DEFAULT_BLOCK_SIZE);
+		auto ordered_heap_block =
+		    make_uniq<RowDataBlock>(MemoryTag::ORDER_BY, *buffer_manager, heap_block_size, 1U, DEFAULT_BLOCK_SIZE);
 		ordered_heap_block->count = count;
 		ordered_heap_block->byte_offset = total_byte_offset;
 		auto ordered_heap_handle = buffer_manager->Pin(ordered_heap_block->block);

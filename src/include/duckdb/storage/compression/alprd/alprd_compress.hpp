@@ -36,7 +36,7 @@ public:
 
 	AlpRDCompressionState(ColumnDataCheckpointer &checkpointer, AlpRDAnalyzeState<T> *analyze_state)
 	    : CompressionState(analyze_state->info), checkpointer(checkpointer),
-	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_ALPRD)) {
+	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_ALPRD, info)) {
 		//! State variables from the analyze step that are needed for compression
 		state.left_parts_dict_map = std::move(analyze_state->state.left_parts_dict_map);
 		state.left_bit_width = analyze_state->state.left_bit_width;
@@ -103,7 +103,8 @@ public:
 		auto &db = checkpointer.GetDatabase();
 		auto &type = checkpointer.GetType();
 
-		auto compressed_segment = ColumnSegment::CreateTransientSegment(db, type, row_start);
+		auto compressed_segment =
+		    ColumnSegment::CreateTransientSegment(db, type, row_start, info.GetBlockSize(), info.GetBlockSize());
 		compressed_segment->function = function;
 		current_segment = std::move(compressed_segment);
 

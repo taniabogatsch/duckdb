@@ -317,19 +317,6 @@ RequireResult SQLLogicTestRunner::CheckRequire(SQLLogicParser &parser, const vec
 		return RequireResult::PRESENT;
 	}
 
-	if (param == "block_size") {
-		if (params.size() != 2) {
-			parser.Fail("require block_size requires a parameter");
-		}
-		// require a specific block size
-		auto required_block_size = NumericCast<idx_t>(std::stoi(params[1]));
-		if (Storage::BLOCK_ALLOC_SIZE != required_block_size) {
-			// block size does not match the required block size: skip it
-			return RequireResult::MISSING;
-		}
-		return RequireResult::PRESENT;
-	}
-
 	if (param == "skip_reload") {
 		skip_reload = true;
 		return RequireResult::PRESENT;

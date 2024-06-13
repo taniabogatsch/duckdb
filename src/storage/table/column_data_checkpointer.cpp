@@ -15,7 +15,8 @@ ColumnDataCheckpointer::ColumnDataCheckpointer(ColumnData &col_data_p, RowGroup 
       checkpoint_info(checkpoint_info_p) {
 
 	auto &config = DBConfig::GetConfig(GetDatabase());
-	CompressionInfo info(Storage::BLOCK_SIZE, GetType().InternalType());
+	auto block_size = col_data_p.GetBlockManager().GetBlockSize();
+	CompressionInfo info(block_size, GetType().InternalType());
 	auto functions = config.GetCompressionFunctions(info);
 	for (auto &func : functions) {
 		compression_functions.push_back(&func.get());
@@ -265,11 +266,10 @@ void ColumnDataCheckpointer::Checkpoint(vector<SegmentNode<ColumnSegment>> nodes
 	}
 }
 
-CompressionFunction &ColumnDataCheckpointer::GetCompressionFunction(CompressionType compression_type) {
+CompressionFunction &ColumnDataCheckpointer::GetCompressionFunction(const CompressionType compression_type,
+                                                                    const CompressionInfo &info) {
 	auto &db = GetDatabase();
-	auto &column_type = GetType();
 	auto &config = DBConfig::GetConfig(db);
-	CompressionInfo info(Storage::BLOCK_SIZE, column_type.InternalType());
 	return *config.GetCompressionFunction(compression_type, info);
 }
 

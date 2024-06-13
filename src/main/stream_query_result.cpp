@@ -105,7 +105,7 @@ unique_ptr<MaterializedQueryResult> StreamQueryResult::Materialize() {
 		if (!chunk || chunk->size() == 0) {
 			break;
 		}
-		collection->Append(append_state, *chunk);
+		collection->Append(append_state, *chunk, DEFAULT_BLOCK_SIZE);
 	}
 	auto result =
 	    make_uniq<MaterializedQueryResult>(statement_type, properties, names, std::move(collection), client_properties);

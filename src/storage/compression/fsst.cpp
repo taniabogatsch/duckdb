@@ -92,7 +92,8 @@ struct FSSTAnalyzeState : public AnalyzeState {
 };
 
 unique_ptr<AnalyzeState> FSSTStorage::StringInitAnalyze(ColumnData &col_data, PhysicalType type) {
-	CompressionInfo info(Storage::BLOCK_SIZE, type);
+	auto block_size = col_data.GetBlockManager().GetBlockSize();
+	CompressionInfo info(block_size, type);
 	return make_uniq<FSSTAnalyzeState>(info);
 }
 
@@ -117,7 +118,7 @@ bool FSSTStorage::StringAnalyze(AnalyzeState &state_p, Vector &input, idx_t coun
 
 		// We need to check all strings for this, otherwise we run in to trouble during compression if we miss ones
 		auto string_size = data[idx].GetSize();
-		if (string_size >= StringUncompressed::STRING_BLOCK_LIMIT) {
+		if (string_size >= StringUncompressed::GetStringBlockLimit(state.info.GetBlockSize())) {
 			return false;
 		}
 
@@ -204,7 +205,7 @@ class FSSTCompressionState : public CompressionState {
 public:
 	FSSTCompressionState(ColumnDataCheckpointer &checkpointer, const CompressionInfo &info)
 	    : CompressionState(info), checkpointer(checkpointer),
-	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_FSST)) {
+	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_FSST, info)) {
 		CreateEmptySegment(checkpointer.GetRowGroup().start);
 	}
 
@@ -231,7 +232,8 @@ public:
 		auto &db = checkpointer.GetDatabase();
 		auto &type = checkpointer.GetType();
 
-		auto compressed_segment = ColumnSegment::CreateTransientSegment(db, type, row_start);
+		auto compressed_segment =
+		    ColumnSegment::CreateTransientSegment(db, type, row_start, info.GetBlockSize(), info.GetBlockSize());
 		current_segment = std::move(compressed_segment);
 		current_segment->function = function;
 		Reset();
@@ -251,7 +253,7 @@ public:
 		current_dictionary.size += compressed_string_len;
 		auto dict_pos = current_end_ptr - current_dictionary.size;
 		memcpy(dict_pos, compressed_string, compressed_string_len);
-		current_dictionary.Verify();
+		current_dictionary.Verify(info.GetBlockSize());
 
 		// We just push the string length to effectively delta encode the strings
 		index_buffer.push_back(NumericCast<uint32_t>(compressed_string_len));

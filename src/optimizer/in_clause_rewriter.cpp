@@ -82,7 +82,7 @@ unique_ptr<Expression> InClauseRewriter::VisitReplace(BoundOperatorExpression &e
 		chunk.SetValue(0, index, value);
 		if (chunk.size() == STANDARD_VECTOR_SIZE || i + 1 == expr.children.size()) {
 			// chunk full: append to chunk collection
-			collection->Append(append_state, chunk);
+			collection->Append(append_state, chunk, DEFAULT_BLOCK_SIZE);
 			chunk.Reset();
 		}
 	}

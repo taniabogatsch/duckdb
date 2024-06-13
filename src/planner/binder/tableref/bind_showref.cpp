@@ -42,11 +42,11 @@ unique_ptr<BoundTableRef> Binder::BindShowQuery(ShowRef &ref) {
 
 		output.SetCardinality(output.size() + 1);
 		if (output.size() == STANDARD_VECTOR_SIZE) {
-			collection->Append(append_state, output);
+			collection->Append(append_state, output, DEFAULT_BLOCK_SIZE);
 			output.Reset();
 		}
 	}
-	collection->Append(append_state, output);
+	collection->Append(append_state, output, DEFAULT_BLOCK_SIZE);
 
 	auto show = make_uniq<LogicalColumnDataGet>(GenerateTableIndex(), return_types, std::move(collection));
 	bind_context.AddGenericBinding(show->table_index, "__show_select", return_names, return_types);

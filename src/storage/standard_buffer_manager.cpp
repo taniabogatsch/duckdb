@@ -107,11 +107,10 @@ TempBufferPoolReservation StandardBufferManager::EvictBlocksOrThrow(MemoryTag ta
 	return std::move(r.reservation);
 }
 
-shared_ptr<BlockHandle> StandardBufferManager::RegisterTransientMemory(const idx_t size) {
-	const idx_t block_size = Storage::BLOCK_SIZE;
+shared_ptr<BlockHandle> StandardBufferManager::RegisterTransientMemory(const idx_t size, const idx_t block_size) {
 	D_ASSERT(size <= block_size);
 	if (size < block_size) {
-		return RegisterSmallMemory(size);
+		return RegisterSmallMemory(size, block_size);
 	}
 
 	shared_ptr<BlockHandle> block;
@@ -119,8 +118,7 @@ shared_ptr<BlockHandle> StandardBufferManager::RegisterTransientMemory(const idx
 	return block;
 }
 
-shared_ptr<BlockHandle> StandardBufferManager::RegisterSmallMemory(const idx_t size) {
-	D_ASSERT(size < Storage::BLOCK_SIZE);
+shared_ptr<BlockHandle> StandardBufferManager::RegisterSmallMemory(const idx_t size, const idx_t block_size) {
 	auto reservation = EvictBlocksOrThrow(MemoryTag::BASE_TABLE, size, nullptr, "could not allocate block of size %s%s",
 	                                      StringUtil::BytesToHumanReadableString(size));
 
@@ -137,7 +135,6 @@ shared_ptr<BlockHandle> StandardBufferManager::RegisterSmallMemory(const idx_t s
 }
 
 shared_ptr<BlockHandle> StandardBufferManager::RegisterMemory(MemoryTag tag, idx_t block_size, bool can_destroy) {
-	D_ASSERT(block_size >= Storage::BLOCK_SIZE);
 	auto alloc_size = GetAllocSize(block_size);
 
 	// Evict blocks until there is enough memory to store the buffer.
@@ -164,7 +161,6 @@ BufferHandle StandardBufferManager::Allocate(MemoryTag tag, idx_t block_size, bo
 }
 
 void StandardBufferManager::ReAllocate(shared_ptr<BlockHandle> &handle, idx_t block_size) {
-	D_ASSERT(block_size >= Storage::BLOCK_SIZE);
 	unique_lock<mutex> lock(handle->lock);
 	D_ASSERT(handle->state == BlockState::BLOCK_LOADED);
 	D_ASSERT(handle->memory_usage == handle->buffer->AllocSize());
@@ -199,6 +195,7 @@ void StandardBufferManager::BatchRead(vector<shared_ptr<BlockHandle>> &handles, 
                                       block_id_t first_block, block_id_t last_block) {
 	auto &block_manager = handles[0]->block_manager;
 	idx_t block_count = NumericCast<idx_t>(last_block - first_block + 1);
+
 #ifndef DUCKDB_ALTERNATIVE_VERIFY
 	if (block_count == 1) {
 		// prefetching with block_count == 1 has no performance impact since we can't batch reads
@@ -209,7 +206,7 @@ void StandardBufferManager::BatchRead(vector<shared_ptr<BlockHandle>> &handles, 
 #endif
 
 	// allocate a buffer to hold the data of all of the blocks
-	auto intermediate_buffer = Allocate(MemoryTag::BASE_TABLE, block_count * Storage::BLOCK_SIZE);
+	auto intermediate_buffer = Allocate(MemoryTag::BASE_TABLE, block_count * block_manager.GetBlockSize());
 	// perform a batch read of the blocks into the buffer
 	block_manager.ReadBlocks(intermediate_buffer.GetFileBuffer(), first_block, block_count);
 
@@ -238,7 +235,7 @@ void StandardBufferManager::BatchRead(vector<shared_ptr<BlockHandle>> &handles, 
 				continue;
 			}
 			auto block_ptr =
-			    intermediate_buffer.GetFileBuffer().InternalBuffer() + block_idx * Storage::BLOCK_ALLOC_SIZE;
+			    intermediate_buffer.GetFileBuffer().InternalBuffer() + block_idx * block_manager.GetBlockAllocSize();
 			buf = BlockHandle::LoadFromBuffer(handle, block_ptr, std::move(reusable_buffer));
 			handle->readers = 1;
 			handle->memory_charge = std::move(reservation);
@@ -446,14 +443,14 @@ void StandardBufferManager::WriteTemporaryBuffer(MemoryTag tag, block_id_t block
 	RequireTemporaryDirectory();
 
 	// Append to a few grouped files.
-	if (buffer.size == Storage::BLOCK_SIZE) {
-		evicted_data_per_tag[uint8_t(tag)] += Storage::BLOCK_SIZE;
+	if (buffer.size == DEFAULT_BLOCK_SIZE) {
+		evicted_data_per_tag[uint8_t(tag)] += DEFAULT_BLOCK_SIZE;
 		temporary_directory.handle->GetTempFile().WriteTemporaryBuffer(block_id, buffer);
 		return;
 	}
 
 	// Get the path to write to.
-	D_ASSERT(buffer.size > Storage::BLOCK_SIZE);
+	D_ASSERT(buffer.size > DEFAULT_BLOCK_SIZE);
 	auto path = GetTemporaryPath(block_id);
 	evicted_data_per_tag[uint8_t(tag)] += buffer.size;
 
@@ -469,7 +466,7 @@ unique_ptr<FileBuffer> StandardBufferManager::ReadTemporaryBuffer(MemoryTag tag,
 	D_ASSERT(!temporary_directory.path.empty());
 	D_ASSERT(temporary_directory.handle.get());
 	if (temporary_directory.handle->GetTempFile().HasTemporaryBuffer(id)) {
-		evicted_data_per_tag[uint8_t(tag)] -= Storage::BLOCK_SIZE;
+		evicted_data_per_tag[uint8_t(tag)] -= DEFAULT_BLOCK_SIZE;
 		return temporary_directory.handle->GetTempFile().ReadTemporaryBuffer(id, std::move(reusable_buffer));
 	}
 

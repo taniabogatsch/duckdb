@@ -167,12 +167,12 @@ struct SortedAggregateState {
 
 	void FlushChunks(const SortedAggregateBindData &order_bind) {
 		D_ASSERT(sort_chunk);
-		ordering->Append(*ordering_append, *sort_chunk);
+		ordering->Append(*ordering_append, *sort_chunk, DEFAULT_BLOCK_SIZE);
 		sort_chunk->Reset();
 
 		if (arguments) {
 			D_ASSERT(arg_chunk);
-			arguments->Append(*arguments_append, *arg_chunk);
+			arguments->Append(*arguments_append, *arg_chunk, DEFAULT_BLOCK_SIZE);
 			arg_chunk->Reset();
 		}
 	}
@@ -239,9 +239,9 @@ struct SortedAggregateState {
 
 		if (ordering) {
 			//	Using collections
-			ordering->Append(*ordering_append, sort_input);
+			ordering->Append(*ordering_append, sort_input, DEFAULT_BLOCK_SIZE);
 			if (arguments) {
-				arguments->Append(*arguments_append, arg_input);
+				arguments->Append(*arguments_append, arg_input, DEFAULT_BLOCK_SIZE);
 			}
 		} else if (sort_chunk) {
 			//	Still using data chunks

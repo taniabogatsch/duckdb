@@ -58,7 +58,7 @@ bool BlockIndexManager::HasFreeBlocks() {
 }
 
 void BlockIndexManager::SetMaxIndex(idx_t new_index) {
-	static constexpr idx_t TEMPFILE_BLOCK_SIZE = Storage::BLOCK_ALLOC_SIZE;
+	static constexpr idx_t TEMPFILE_BLOCK_SIZE = DEFAULT_BLOCK_ALLOC_SIZE;
 	if (!manager) {
 		max_index = new_index;
 	} else {
@@ -118,14 +118,14 @@ TemporaryFileIndex TemporaryFileHandle::TryGetBlockIndex() {
 }
 
 void TemporaryFileHandle::WriteTemporaryFile(FileBuffer &buffer, TemporaryFileIndex index) {
-	D_ASSERT(buffer.size == Storage::BLOCK_SIZE);
+	D_ASSERT(buffer.size == DEFAULT_BLOCK_SIZE);
 	buffer.Write(*handle, GetPositionInFile(index.block_index));
 }
 
 unique_ptr<FileBuffer> TemporaryFileHandle::ReadTemporaryBuffer(idx_t block_index,
                                                                 unique_ptr<FileBuffer> reusable_buffer) {
 	return StandardBufferManager::ReadTemporaryBufferInternal(BufferManager::GetBufferManager(db), *handle,
-	                                                          GetPositionInFile(block_index), Storage::BLOCK_SIZE,
+	                                                          GetPositionInFile(block_index), DEFAULT_BLOCK_SIZE,
 	                                                          std::move(reusable_buffer));
 }
 
@@ -180,7 +180,7 @@ void TemporaryFileHandle::RemoveTempBlockIndex(TemporaryFileLock &, idx_t index)
 }
 
 idx_t TemporaryFileHandle::GetPositionInFile(idx_t index) {
-	return index * Storage::BLOCK_ALLOC_SIZE;
+	return index * DEFAULT_BLOCK_ALLOC_SIZE;
 }
 
 //===--------------------------------------------------------------------===//
@@ -277,7 +277,7 @@ TemporaryFileManager::TemporaryManagerLock::TemporaryManagerLock(mutex &mutex) :
 }
 
 void TemporaryFileManager::WriteTemporaryBuffer(block_id_t block_id, FileBuffer &buffer) {
-	D_ASSERT(buffer.size == Storage::BLOCK_SIZE);
+	D_ASSERT(buffer.size == DEFAULT_BLOCK_SIZE);
 	TemporaryFileIndex index;
 	TemporaryFileHandle *handle = nullptr;
 

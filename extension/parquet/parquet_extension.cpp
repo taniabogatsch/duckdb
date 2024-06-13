@@ -1188,7 +1188,7 @@ void ParquetWriteSink(ExecutionContext &context, FunctionData &bind_data_p, Glob
 	auto &local_state = lstate.Cast<ParquetWriteLocalState>();
 
 	// append data to the local (buffered) chunk collection
-	local_state.buffer.Append(local_state.append_state, input);
+	local_state.buffer.Append(local_state.append_state, input, DEFAULT_BLOCK_SIZE);
 
 	if (local_state.buffer.Count() >= bind_data.row_group_size ||
 	    local_state.buffer.SizeInBytes() >= bind_data.row_group_size_bytes) {

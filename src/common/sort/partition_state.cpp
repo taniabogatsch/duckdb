@@ -94,7 +94,7 @@ PartitionGlobalSinkState::PartitionGlobalSinkState(ClientContext &context,
 	memory_per_thread = PhysicalOperator::GetMaxThreadMemory(context);
 	external = ClientConfig::GetConfig(context).force_external;
 
-	const auto thread_pages = PreviousPowerOfTwo(memory_per_thread / (4 * idx_t(Storage::BLOCK_ALLOC_SIZE)));
+	const auto thread_pages = PreviousPowerOfTwo(memory_per_thread / (4 * DEFAULT_BLOCK_ALLOC_SIZE));
 	while (max_bits < 10 && (thread_pages >> max_bits) > 1) {
 		++max_bits;
 	}
@@ -316,9 +316,9 @@ void PartitionLocalSinkState::Sink(DataChunk &input_chunk) {
 		//	No sorts, so build paged row chunks
 		if (!rows) {
 			const auto entry_size = payload_layout.GetRowWidth();
-			const auto capacity = MaxValue<idx_t>(STANDARD_VECTOR_SIZE, (Storage::BLOCK_SIZE / entry_size) + 1);
+			const auto capacity = MaxValue<idx_t>(STANDARD_VECTOR_SIZE, (DEFAULT_BLOCK_SIZE / entry_size) + 1);
 			rows = make_uniq<RowDataCollection>(gstate.buffer_manager, capacity, entry_size);
-			strings = make_uniq<RowDataCollection>(gstate.buffer_manager, (idx_t)Storage::BLOCK_SIZE, 1U, true);
+			strings = make_uniq<RowDataCollection>(gstate.buffer_manager, DEFAULT_BLOCK_SIZE, 1U, true);
 		}
 		const auto row_count = input_chunk.size();
 		const auto row_sel = FlatVector::IncrementalSelectionVector();

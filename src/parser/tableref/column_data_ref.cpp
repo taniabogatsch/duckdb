@@ -61,7 +61,7 @@ unique_ptr<TableRef> ColumnDataRef::Copy() {
 		ColumnDataAppendState append_state;
 		new_collection->InitializeAppend(append_state);
 		while (collection->Scan(scan_state, chunk)) {
-			new_collection->Append(append_state, chunk);
+			new_collection->Append(append_state, chunk, DEFAULT_BLOCK_SIZE);
 		}
 #ifdef DEBUG
 		string error_message;

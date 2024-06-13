@@ -83,7 +83,7 @@ unique_ptr<LocalSinkState> PhysicalLeftDelimJoin::GetLocalSinkState(ExecutionCon
 SinkResultType PhysicalLeftDelimJoin::Sink(ExecutionContext &context, DataChunk &chunk,
                                            OperatorSinkInput &input) const {
 	auto &lstate = input.local_state.Cast<LeftDelimJoinLocalState>();
-	lstate.lhs_data.Append(lstate.append_state, chunk);
+	lstate.lhs_data.Append(lstate.append_state, chunk, DEFAULT_BLOCK_SIZE);
 	OperatorSinkInput distinct_sink_input {*distinct->sink_state, *lstate.distinct_state, input.interrupt_state};
 	distinct->Sink(context, chunk, distinct_sink_input);
 	return SinkResultType::NEED_MORE_INPUT;

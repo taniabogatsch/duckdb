@@ -47,7 +47,7 @@ SinkResultType PhysicalPositionalJoin::Sink(ExecutionContext &context, DataChunk
                                             OperatorSinkInput &input) const {
 	auto &sink = input.global_state.Cast<PositionalJoinGlobalState>();
 	lock_guard<mutex> client_guard(sink.rhs_lock);
-	sink.rhs.Append(sink.append_state, chunk);
+	sink.rhs.Append(sink.append_state, chunk, DEFAULT_BLOCK_SIZE);
 	return SinkResultType::NEED_MORE_INPUT;
 }
 

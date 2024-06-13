@@ -184,7 +184,8 @@ struct ValidityAnalyzeState : public AnalyzeState {
 };
 
 unique_ptr<AnalyzeState> ValidityInitAnalyze(ColumnData &col_data, PhysicalType type) {
-	CompressionInfo info(Storage::BLOCK_SIZE, type);
+	auto block_size = col_data.GetBlockManager().GetBlockSize();
+	CompressionInfo info(block_size, type);
 	return make_uniq<ValidityAnalyzeState>(info);
 }
 

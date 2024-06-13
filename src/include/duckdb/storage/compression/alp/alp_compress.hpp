@@ -34,7 +34,7 @@ public:
 
 	AlpCompressionState(ColumnDataCheckpointer &checkpointer, AlpAnalyzeState<T> *analyze_state)
 	    : CompressionState(analyze_state->info), checkpointer(checkpointer),
-	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_ALP)) {
+	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_ALP, analyze_state->info)) {
 		CreateEmptySegment(checkpointer.GetRowGroup().start);
 
 		//! Combinations found on the analyze step are needed for compression
@@ -93,7 +93,8 @@ public:
 		auto &db = checkpointer.GetDatabase();
 		auto &type = checkpointer.GetType();
 
-		auto compressed_segment = ColumnSegment::CreateTransientSegment(db, type, row_start);
+		auto block_size = current_segment->block->block_manager.GetBlockSize();
+		auto compressed_segment = ColumnSegment::CreateTransientSegment(db, type, row_start, block_size, block_size);
 		current_segment = std::move(compressed_segment);
 		current_segment->function = function;
 

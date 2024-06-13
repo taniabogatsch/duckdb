@@ -65,7 +65,7 @@ unique_ptr<LocalSinkState> PhysicalCTE::GetLocalSinkState(ExecutionContext &cont
 
 SinkResultType PhysicalCTE::Sink(ExecutionContext &context, DataChunk &chunk, OperatorSinkInput &input) const {
 	auto &lstate = input.local_state.Cast<CTELocalState>();
-	lstate.lhs_data.Append(lstate.append_state, chunk);
+	lstate.lhs_data.Append(lstate.append_state, chunk, DEFAULT_BLOCK_SIZE);
 
 	return SinkResultType::NEED_MORE_INPUT;
 }

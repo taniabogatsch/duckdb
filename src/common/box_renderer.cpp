@@ -250,7 +250,7 @@ list<ColumnDataCollection> BoxRenderer::PivotCollections(ClientContext &context,
 		}
 		row_chunk.SetCardinality(row_chunk.size() + 1);
 		if (row_chunk.size() == STANDARD_VECTOR_SIZE || c + 1 == top.ColumnCount()) {
-			res_coll.Append(append_state, row_chunk);
+			res_coll.Append(append_state, row_chunk, DEFAULT_BLOCK_SIZE);
 			row_chunk.Reset();
 		}
 	}

@@ -325,7 +325,8 @@ template <class T>
 unique_ptr<AnalyzeState> BitpackingInitAnalyze(ColumnData &col_data, PhysicalType type) {
 	auto &config = DBConfig::GetConfig(col_data.GetDatabase());
 
-	CompressionInfo info(Storage::BLOCK_SIZE, type);
+	auto block_size = col_data.GetBlockManager().GetBlockSize();
+	CompressionInfo info(block_size, type);
 	auto state = make_uniq<BitpackingAnalyzeState<T>>(info);
 	state->state.mode = config.options.force_bitpacking_mode;
 
@@ -366,7 +367,7 @@ struct BitpackingCompressState : public CompressionState {
 public:
 	explicit BitpackingCompressState(ColumnDataCheckpointer &checkpointer, const CompressionInfo &info)
 	    : CompressionState(info), checkpointer(checkpointer),
-	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_BITPACKING)) {
+	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_BITPACKING, info)) {
 		CreateEmptySegment(checkpointer.GetRowGroup().start);
 
 		state.data_ptr = reinterpret_cast<void *>(this);
@@ -485,7 +486,8 @@ public:
 		auto &db = checkpointer.GetDatabase();
 		auto &type = checkpointer.GetType();
 
-		auto compressed_segment = ColumnSegment::CreateTransientSegment(db, type, row_start);
+		auto compressed_segment =
+		    ColumnSegment::CreateTransientSegment(db, type, row_start, info.GetBlockSize(), info.GetBlockSize());
 		compressed_segment->function = function;
 		current_segment = std::move(compressed_segment);
 
@@ -650,7 +652,7 @@ public:
 	//! value) depending on the bitpacking mode for that group
 	void LoadNextGroup() {
 		D_ASSERT(bitpacking_metadata_ptr > handle.Ptr() &&
-		         bitpacking_metadata_ptr < handle.Ptr() + Storage::BLOCK_SIZE);
+		         bitpacking_metadata_ptr < handle.Ptr() + current_segment.block->block_manager.GetBlockSize());
 		current_group_offset = 0;
 		current_group = DecodeMeta(reinterpret_cast<bitpacking_metadata_encoded_t *>(bitpacking_metadata_ptr));
 

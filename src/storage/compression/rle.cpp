@@ -88,7 +88,8 @@ struct RLEAnalyzeState : public AnalyzeState {
 
 template <class T>
 unique_ptr<AnalyzeState> RLEInitAnalyze(ColumnData &col_data, PhysicalType type) {
-	CompressionInfo info(Storage::BLOCK_SIZE, type);
+	auto block_size = col_data.GetBlockManager().GetBlockSize();
+	CompressionInfo info(block_size, type);
 	return make_uniq<RLEAnalyzeState<T>>(info);
 }
 
@@ -136,18 +137,19 @@ struct RLECompressState : public CompressionState {
 
 	RLECompressState(ColumnDataCheckpointer &checkpointer_p, const CompressionInfo &info)
 	    : CompressionState(info), checkpointer(checkpointer_p),
-	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_RLE)) {
-		CreateEmptySegment(checkpointer.GetRowGroup().start);
+	      function(checkpointer.GetCompressionFunction(CompressionType::COMPRESSION_RLE, info)) {
 
+		CreateEmptySegment(checkpointer.GetRowGroup().start);
 		state.dataptr = (void *)this;
 		max_rle_count = MaxRLECount();
 	}
 
-	void CreateEmptySegment(idx_t row_start) {
+	void CreateEmptySegment(const idx_t row_start) {
 		auto &db = checkpointer.GetDatabase();
 		auto &type = checkpointer.GetType();
 
-		auto column_segment = ColumnSegment::CreateTransientSegment(db, type, row_start);
+		auto column_segment =
+		    ColumnSegment::CreateTransientSegment(db, type, row_start, info.GetBlockSize(), info.GetBlockSize());
 		column_segment->function = function;
 		current_segment = std::move(column_segment);
 
@@ -252,7 +254,7 @@ struct RLEScanState : public SegmentScanState {
 		entry_pos = 0;
 		position_in_entry = 0;
 		rle_count_offset = UnsafeNumericCast<uint32_t>(Load<uint64_t>(handle.Ptr() + segment.GetBlockOffset()));
-		D_ASSERT(rle_count_offset <= Storage::BLOCK_SIZE);
+		D_ASSERT(rle_count_offset <= segment.block->block_manager.GetBlockSize());
 	}
 
 	void Skip(ColumnSegment &segment, idx_t skip_count) {

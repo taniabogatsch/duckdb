@@ -140,6 +140,8 @@ TEST_CASE("Modifying the buffer manager limit at runtime for an in-memory databa
 TEST_CASE("Test buffer reallocation", "[storage][.]") {
 	auto storage_database = TestCreatePath("storage_test");
 	auto config = GetTestConfig();
+	config->options.default_block_alloc_size = DEFAULT_BLOCK_ALLOC_SIZE;
+
 	// make sure the database does not exist
 	DeleteDatabase(storage_database);
 	DuckDB db(storage_database, config.get());
@@ -152,7 +154,7 @@ TEST_CASE("Test buffer reallocation", "[storage][.]") {
 	auto &buffer_manager = BufferManager::GetBufferManager(*con.context);
 	CHECK(buffer_manager.GetUsedMemory() == 0);
 
-	idx_t requested_size = Storage::BLOCK_SIZE;
+	idx_t requested_size = DEFAULT_BLOCK_SIZE;
 	duckdb::shared_ptr<BlockHandle> block;
 	auto handle = buffer_manager.Allocate(MemoryTag::EXTENSION, requested_size, false, &block);
 	CHECK(buffer_manager.GetUsedMemory() == BufferManager::GetAllocSize(requested_size));
@@ -170,7 +172,7 @@ TEST_CASE("Test buffer reallocation", "[storage][.]") {
 		CHECK(buffer_manager.GetUsedMemory() == BufferManager::GetAllocSize(requested_size));
 	}
 	requested_size /= 2;
-	for (; requested_size > Storage::BLOCK_SIZE; requested_size /= 2) {
+	for (; requested_size > DEFAULT_BLOCK_SIZE; requested_size /= 2) {
 		// decrease size
 		buffer_manager.ReAllocate(block, requested_size);
 		CHECK(buffer_manager.GetUsedMemory() == BufferManager::GetAllocSize(requested_size));
@@ -188,6 +190,8 @@ TEST_CASE("Test buffer reallocation", "[storage][.]") {
 TEST_CASE("Test buffer manager variable size allocations", "[storage][.]") {
 	auto storage_database = TestCreatePath("storage_test");
 	auto config = GetTestConfig();
+	config->options.default_block_alloc_size = DEFAULT_BLOCK_ALLOC_SIZE;
+
 	// make sure the database does not exist
 	DeleteDatabase(storage_database);
 	DuckDB db(storage_database, config.get());
@@ -199,7 +203,7 @@ TEST_CASE("Test buffer manager variable size allocations", "[storage][.]") {
 	idx_t requested_size = 424242;
 	duckdb::shared_ptr<BlockHandle> block;
 	auto pin = buffer_manager.Allocate(MemoryTag::EXTENSION, requested_size, false, &block);
-	CHECK(buffer_manager.GetUsedMemory() >= requested_size + Storage::BLOCK_HEADER_SIZE);
+	CHECK(buffer_manager.GetUsedMemory() >= requested_size + DEFAULT_BLOCK_HEADER_SIZE);
 
 	pin.Destroy();
 	block.reset();
@@ -209,6 +213,8 @@ TEST_CASE("Test buffer manager variable size allocations", "[storage][.]") {
 TEST_CASE("Test buffer manager buffer re-use", "[storage][.]") {
 	auto storage_database = TestCreatePath("storage_test");
 	auto config = GetTestConfig();
+	config->options.default_block_alloc_size = DEFAULT_BLOCK_ALLOC_SIZE;
+
 	// make sure the database does not exist
 	DeleteDatabase(storage_database);
 	DuckDB db(storage_database, config.get());
@@ -219,8 +225,7 @@ TEST_CASE("Test buffer manager buffer re-use", "[storage][.]") {
 
 	// Set memory limit to hold exactly 10 blocks
 	idx_t pin_count = 10;
-	REQUIRE_NO_FAIL(
-	    con.Query(StringUtil::Format("PRAGMA memory_limit='%lldB'", Storage::BLOCK_ALLOC_SIZE * pin_count)));
+	REQUIRE_NO_FAIL(con.Query(StringUtil::Format("PRAGMA memory_limit='%lldB'", DEFAULT_BLOCK_ALLOC_SIZE * pin_count)));
 
 	// Create 40 blocks, but don't hold the pin
 	// They will be added to the eviction queue and the buffers will be re-used
@@ -229,15 +234,15 @@ TEST_CASE("Test buffer manager buffer re-use", "[storage][.]") {
 	blocks.reserve(block_count);
 	for (idx_t i = 0; i < block_count; i++) {
 		blocks.emplace_back();
-		buffer_manager.Allocate(MemoryTag::EXTENSION, Storage::BLOCK_SIZE, false, &blocks.back());
+		buffer_manager.Allocate(MemoryTag::EXTENSION, DEFAULT_BLOCK_SIZE, false, &blocks.back());
 		// used memory should increment by exactly one block at a time, up to 10
-		CHECK(buffer_manager.GetUsedMemory() == MinValue<idx_t>(pin_count, i + 1) * Storage::BLOCK_ALLOC_SIZE);
+		CHECK(buffer_manager.GetUsedMemory() == MinValue<idx_t>(pin_count, i + 1) * DEFAULT_BLOCK_ALLOC_SIZE);
 	}
 
 	// now pin them one by one - cycling through should trigger more buffer re-use
 	for (idx_t i = 0; i < block_count; i++) {
 		auto pin = buffer_manager.Pin(blocks[i]);
-		CHECK(buffer_manager.GetUsedMemory() == pin_count * Storage::BLOCK_ALLOC_SIZE);
+		CHECK(buffer_manager.GetUsedMemory() == pin_count * DEFAULT_BLOCK_ALLOC_SIZE);
 	}
 
 	// Clear all blocks and verify we go back down to 0 used memory
@@ -297,6 +302,8 @@ TEST_CASE("Test buffer manager buffer re-use", "[storage][.]") {
 TEST_CASE("Test buffer allocator", "[storage][.]") {
 	auto storage_database = TestCreatePath("storage_test");
 	auto config = GetTestConfig();
+	config->options.default_block_alloc_size = DEFAULT_BLOCK_ALLOC_SIZE;
+
 	// make sure the database does not exist
 	DeleteDatabase(storage_database);
 	DuckDB db(storage_database, config.get());
@@ -309,7 +316,7 @@ TEST_CASE("Test buffer allocator", "[storage][.]") {
 	REQUIRE_NO_FAIL(con.Query(StringUtil::Format("PRAGMA memory_limit='%lldB'", limit)));
 
 	auto &allocator = buffer_manager.GetBufferAllocator();
-	idx_t requested_size = Storage::BLOCK_SIZE;
+	idx_t requested_size = DEFAULT_BLOCK_SIZE;
 	auto pointer = allocator.AllocateData(requested_size);
 	idx_t current_size = requested_size;
 	CHECK(buffer_manager.GetUsedMemory() == requested_size);
@@ -322,7 +329,7 @@ TEST_CASE("Test buffer allocator", "[storage][.]") {
 	}
 
 	// decrease
-	for (; requested_size >= Storage::BLOCK_SIZE; requested_size /= 2) {
+	for (; requested_size >= DEFAULT_BLOCK_SIZE; requested_size /= 2) {
 		pointer = allocator.ReallocateData(pointer, current_size, requested_size);
 		current_size = requested_size;
 		CHECK(buffer_manager.GetUsedMemory() == requested_size);

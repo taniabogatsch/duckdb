@@ -73,7 +73,8 @@ public:
 
 template <class T>
 unique_ptr<AnalyzeState> AlpInitAnalyze(ColumnData &col_data, PhysicalType type) {
-	CompressionInfo info(Storage::BLOCK_SIZE, type);
+	auto block_size = col_data.GetBlockManager().GetBlockSize();
+	CompressionInfo info(block_size, type);
 	return make_uniq<AlpAnalyzeState<T>>(info);
 }
 

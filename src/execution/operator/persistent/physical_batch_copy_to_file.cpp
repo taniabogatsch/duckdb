@@ -189,7 +189,7 @@ SinkResultType PhysicalBatchCopyToFile::Sink(ExecutionContext &context, DataChun
 		state.batch_index = batch_index;
 	}
 	state.rows_copied += chunk.size();
-	state.collection->Append(state.append_state, chunk);
+	state.collection->Append(state.append_state, chunk, DEFAULT_BLOCK_SIZE);
 	auto new_memory_usage = state.collection->AllocationSize();
 	if (new_memory_usage > state.local_memory_usage) {
 		// memory usage increased - add to global state
@@ -451,7 +451,7 @@ void PhysicalBatchCopyToFile::RepartitionBatches(ClientContext &context, GlobalS
 		// iterate the collection while appending
 		for (auto &chunk : current_collection.Chunks()) {
 			// append the chunk to the collection
-			append_batch->collection->Append(append_state, chunk);
+			append_batch->collection->Append(append_state, chunk, DEFAULT_BLOCK_SIZE);
 			if (append_batch->collection->Count() < gstate.batch_size) {
 				// the collection is still under the batch size - continue
 				continue;

@@ -92,8 +92,6 @@ enum class PartialBlockType { FULL_CHECKPOINT, APPEND_TO_TABLE };
 //! In any case, they must share a block manager.
 class PartialBlockManager {
 public:
-	//! 20% free / 80% utilization
-	static constexpr const idx_t DEFAULT_MAX_PARTIAL_BLOCK_SIZE = Storage::BLOCK_SIZE / 5 * 4;
 	//! Max number of shared references to a block. No effective limit by default.
 	static constexpr const idx_t DEFAULT_MAX_USE_COUNT = 1u << 20;
 	//! No point letting map size grow unbounded. We'll drop blocks with the
@@ -102,12 +100,16 @@ public:
 
 public:
 	PartialBlockManager(BlockManager &block_manager, PartialBlockType partial_block_type,
-	                    uint32_t max_partial_block_size = DEFAULT_MAX_PARTIAL_BLOCK_SIZE,
-	                    uint32_t max_use_count = DEFAULT_MAX_USE_COUNT);
+	                    uint32_t max_partial_block_size, uint32_t max_use_count = DEFAULT_MAX_USE_COUNT);
 	virtual ~PartialBlockManager();
 
 public:
 	PartialBlockAllocation GetBlockAllocation(uint32_t segment_size);
+
+	// TODO: comment
+	static uint32_t MaxPartialBlockSize(const idx_t block_size) {
+		return NumericCast<uint32_t>(block_size / 5 * 4);
+	};
 
 	//! Register a partially filled block that is filled with "segment_size" entries
 	void RegisterPartialBlock(PartialBlockAllocation allocation);
@@ -128,8 +130,10 @@ public:
 		return unique_lock<mutex>(partial_block_lock);
 	}
 
-protected:
+	// TODO: no longer protected
 	BlockManager &block_manager;
+
+protected:
 	PartialBlockType partial_block_type;
 	mutex partial_block_lock;
 	//! A map of (available space -> PartialBlock) for partially filled blocks

@@ -142,7 +142,7 @@ SingleFileBlockManager::SingleFileBlockManager(AttachedDatabase &db, const strin
                                                const StorageManagerOptions &options)
     : BlockManager(BufferManager::GetBufferManager(db), options.block_alloc_size), db(db), path(path_p),
       header_buffer(Allocator::Get(db), FileBufferType::MANAGED_BUFFER,
-                    Storage::FILE_HEADER_SIZE - Storage::BLOCK_HEADER_SIZE),
+                    Storage::FILE_HEADER_SIZE - DEFAULT_BLOCK_HEADER_SIZE),
       iteration_count(0), options(options) {
 }
 
@@ -294,13 +294,6 @@ void SingleFileBlockManager::Initialize(const DatabaseHeader &header, const opti
 		                            GetBlockAllocSize(), header.block_alloc_size);
 	}
 
-	// NOTE: remove this once we start supporting different block sizes.
-	if (Storage::BLOCK_ALLOC_SIZE != header.block_alloc_size) {
-		throw NotImplementedException("cannot initialize a database with a different block size than the default block "
-		                              "size: default block size: %llu, file block size: %llu",
-		                              Storage::BLOCK_ALLOC_SIZE, header.block_alloc_size);
-	}
-
 	SetBlockAllocSize(header.block_alloc_size);
 }
 
@@ -434,7 +427,7 @@ unique_ptr<Block> SingleFileBlockManager::CreateBlock(block_id_t block_id, FileB
 	if (source_buffer) {
 		result = ConvertBlock(block_id, *source_buffer);
 	} else {
-		result = make_uniq<Block>(Allocator::Get(db), block_id);
+		result = make_uniq<Block>(Allocator::Get(db), block_id, GetBlockSize());
 	}
 	result->Initialize(options.debug_initialize);
 	return result;
@@ -464,7 +457,7 @@ void SingleFileBlockManager::ReadBlocks(FileBuffer &buffer, block_id_t start_blo
 		// compute the checksum
 		auto start_ptr = ptr + i * GetBlockAllocSize();
 		auto stored_checksum = Load<uint64_t>(start_ptr);
-		uint64_t computed_checksum = Checksum(start_ptr + Storage::BLOCK_HEADER_SIZE, Storage::BLOCK_SIZE);
+		uint64_t computed_checksum = Checksum(start_ptr + DEFAULT_BLOCK_HEADER_SIZE, GetBlockSize());
 		// verify the checksum
 		if (stored_checksum != computed_checksum) {
 			throw IOException(
@@ -507,7 +500,7 @@ vector<MetadataHandle> SingleFileBlockManager::GetFreeListBlocks() {
 
 	// reserve all blocks that we are going to write the free list to
 	// since these blocks are no longer free we cannot just include them in the free list!
-	auto block_size = MetadataManager::METADATA_BLOCK_SIZE - sizeof(idx_t);
+	auto block_size = MetadataManager::GetMetadataBlockSize(GetBlockSize()) - sizeof(idx_t);
 	idx_t allocated_size = 0;
 	while (true) {
 		auto free_list_size = sizeof(uint64_t) + sizeof(block_id_t) * (free_list.size() + modified_blocks.size());
