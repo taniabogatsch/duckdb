@@ -100,16 +100,12 @@ public:
 
 public:
 	PartialBlockManager(BlockManager &block_manager, PartialBlockType partial_block_type,
-	                    uint32_t max_partial_block_size, uint32_t max_use_count = DEFAULT_MAX_USE_COUNT);
+	                    optional_idx max_partial_block_size = optional_idx(),
+	                    uint32_t max_use_count = DEFAULT_MAX_USE_COUNT);
 	virtual ~PartialBlockManager();
 
 public:
 	PartialBlockAllocation GetBlockAllocation(uint32_t segment_size);
-
-	// TODO: comment
-	static uint32_t MaxPartialBlockSize(const idx_t block_size) {
-		return NumericCast<uint32_t>(block_size / 5 * 4);
-	};
 
 	//! Register a partially filled block that is filled with "segment_size" entries
 	void RegisterPartialBlock(PartialBlockAllocation allocation);
@@ -130,10 +126,8 @@ public:
 		return unique_lock<mutex>(partial_block_lock);
 	}
 
-	// TODO: no longer protected
-	BlockManager &block_manager;
-
 protected:
+	BlockManager &block_manager;
 	PartialBlockType partial_block_type;
 	mutex partial_block_lock;
 	//! A map of (available space -> PartialBlock) for partially filled blocks

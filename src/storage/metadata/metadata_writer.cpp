@@ -18,9 +18,7 @@ MetadataWriter::~MetadataWriter() {
 }
 
 BlockPointer MetadataWriter::GetBlockPointer() {
-	auto block_size = manager.block_manager.GetBlockSize();
-	auto metadata_block_size = MetadataManager::GetMetadataBlockSize(block_size);
-	return MetadataManager::ToBlockPointer(GetMetaBlockPointer(), metadata_block_size);
+	return MetadataManager::ToBlockPointer(GetMetaBlockPointer(), GetManager().GetMetadataBlockSize());
 }
 
 MetaBlockPointer MetadataWriter::GetMetaBlockPointer() {
@@ -49,9 +47,7 @@ void MetadataWriter::NextBlock() {
 	block = std::move(new_handle);
 	current_pointer = block.pointer;
 	offset = sizeof(idx_t);
-	auto block_size = manager.block_manager.GetBlockSize();
-	auto metadata_block_size = MetadataManager::GetMetadataBlockSize(block_size);
-	capacity = metadata_block_size;
+	capacity = GetManager().GetMetadataBlockSize();
 	Store<idx_t>(static_cast<idx_t>(-1), BasePtr());
 	if (written_pointers) {
 		written_pointers->push_back(manager.GetDiskPointer(current_pointer));
@@ -86,9 +82,7 @@ void MetadataWriter::Flush() {
 }
 
 data_ptr_t MetadataWriter::BasePtr() {
-	auto block_size = manager.block_manager.GetBlockSize();
-	auto metadata_block_size = MetadataManager::GetMetadataBlockSize(block_size);
-	return block.handle.Ptr() + current_pointer.index * metadata_block_size;
+	return block.handle.Ptr() + current_pointer.index * GetManager().GetMetadataBlockSize();
 }
 
 data_ptr_t MetadataWriter::Ptr() {

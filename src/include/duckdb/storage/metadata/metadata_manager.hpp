@@ -42,7 +42,7 @@ struct MetadataHandle {
 
 class MetadataManager {
 public:
-	//! The amount of metadata blocks per storage block.
+	//! The amount of metadata blocks per storage block
 	static constexpr const idx_t METADATA_BLOCK_COUNT = 64;
 
 public:
@@ -56,7 +56,6 @@ public:
 	MetadataPointer FromDiskPointer(MetaBlockPointer pointer);
 	MetadataPointer RegisterDiskPointer(MetaBlockPointer pointer);
 
-	static idx_t GetMetadataBlockSize(const idx_t block_size);
 	static BlockPointer ToBlockPointer(MetaBlockPointer meta_pointer, const idx_t metadata_block_size);
 	static MetaBlockPointer FromBlockPointer(BlockPointer block_pointer, const idx_t metadata_block_size);
 
@@ -73,10 +72,10 @@ public:
 	void Write(WriteStream &sink);
 	void Read(ReadStream &source);
 
-	// TODO: no longer protected
-	BlockManager &block_manager;
+	idx_t GetMetadataBlockSize() const;
 
 protected:
+	BlockManager &block_manager;
 	BufferManager &buffer_manager;
 	unordered_map<block_id_t, MetadataBlock> blocks;
 	unordered_map<block_id_t, idx_t> modified_blocks;

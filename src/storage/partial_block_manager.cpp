@@ -35,9 +35,16 @@ void PartialBlock::FlushInternal(const idx_t free_space_left) {
 //===--------------------------------------------------------------------===//
 
 PartialBlockManager::PartialBlockManager(BlockManager &block_manager, PartialBlockType partial_block_type,
-                                         uint32_t max_partial_block_size, uint32_t max_use_count)
-    : block_manager(block_manager), partial_block_type(partial_block_type),
-      max_partial_block_size(max_partial_block_size), max_use_count(max_use_count) {
+                                         optional_idx max_partial_block_size_p, uint32_t max_use_count)
+    : block_manager(block_manager), partial_block_type(partial_block_type), max_use_count(max_use_count) {
+
+	if (max_partial_block_size_p.IsValid()) {
+		max_partial_block_size = NumericCast<uint32_t>(max_partial_block_size_p.GetIndex());
+		return;
+	}
+
+	// Use the default maximum partial block size with a ratio of 20% free and 80% utilization.
+	max_partial_block_size = NumericCast<uint32_t>(block_manager.GetBlockSize() / 5 * 4);
 }
 PartialBlockManager::~PartialBlockManager() {
 }

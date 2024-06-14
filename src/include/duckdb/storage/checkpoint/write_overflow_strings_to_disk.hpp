@@ -38,6 +38,7 @@ public:
 
 private:
 	void AllocateNewBlock(UncompressedStringSegmentState &state, block_id_t new_block_id);
+	idx_t GetStringSpace() const;
 };
 
 } // namespace duckdb
