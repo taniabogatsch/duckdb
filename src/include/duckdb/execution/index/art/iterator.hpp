@@ -60,8 +60,7 @@ public:
 
 	//! Scans the tree, starting at the current top node on the stack, and ending at upper_bound.
 	//! If upper_bound is the empty ARTKey, than there is no upper bound
-	bool Scan(const ARTKey &upper_bound, const bool equal, const idx_t max_count, Vector &row_ids,
-	          idx_t &row_ids_count);
+	void Scan(const ARTKey &upper_bound, const bool equal, Vector &row_ids, idx_t &row_ids_count);
 	//! Finds the minimum (leaf) of the current subtree
 	void FindMinimum(const Node &node);
 	//! Finds the lower bound of the ART and adds the nodes to the stack. Returns false, if the lower

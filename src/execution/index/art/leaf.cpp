@@ -231,15 +231,11 @@ idx_t Leaf::TotalCount(ART &art, const Node &node) {
 	return count;
 }
 
-bool Leaf::GetRowIds(ART &art, const Node &node, const idx_t max_count, Vector &row_ids, idx_t &row_ids_count) {
+void Leaf::GetRowIds(ART &art, const Node &node, Vector &row_ids, idx_t &row_ids_count) {
 
 	// Test if adding more elements would exceed the maximum count.
 	D_ASSERT(node.HasMetadata());
 	auto total_count = TotalCount(art, node);
-	if (row_ids_count + total_count > max_count) {
-		return false;
-	}
-
 	if (row_ids_count == 0) {
 		row_ids.Initialize(false, total_count);
 	}
@@ -256,7 +252,7 @@ bool Leaf::GetRowIds(ART &art, const Node &node, const idx_t max_count, Vector &
 		// Push back the inlined row ID of this leaf.
 		auto idx = row_ids_data.sel->get_index(offset);
 		data[idx] = node.GetRowId();
-		return true;
+		return;
 	}
 
 	// Push back all row IDs of this leaf.
@@ -270,8 +266,6 @@ bool Leaf::GetRowIds(ART &art, const Node &node, const idx_t max_count, Vector &
 		}
 		last_leaf_ref = leaf.ptr;
 	}
-
-	return true;
 }
 
 bool Leaf::ContainsRowId(ART &art, const Node &node, const row_t row_id) {

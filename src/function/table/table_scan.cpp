@@ -211,8 +211,7 @@ unique_ptr<NodeStatistics> TableScanCardinality(ClientContext &context, const Fu
 // Index Scan
 //===--------------------------------------------------------------------===//
 struct IndexScanGlobalState : public GlobalTableFunctionState {
-	IndexScanGlobalState() : row_ids(LogicalType::ROW_TYPE), row_ids_count(0),
-	      row_ids_offset(0), index_scanned(false) {
+	IndexScanGlobalState() : row_ids(LogicalType::ROW_TYPE), row_ids_count(0), row_ids_offset(0), index_scanned(false) {
 	}
 
 	Vector row_ids;
@@ -341,7 +340,6 @@ void TableScanPushdownComplexFilter(ClientContext &context, LogicalGet &get, Fun
 		for (auto &filter : filters) {
 			auto index_state = art_index.TryInitializeScan(transaction, *index_expression, *filter);
 			if (index_state != nullptr) {
-
 				auto &db_config = DBConfig::GetConfig(context);
 				auto index_scan_percentage = db_config.options.index_scan_percentage;
 				auto index_scan_max_count = db_config.options.index_scan_max_count;
@@ -350,12 +348,10 @@ void TableScanPushdownComplexFilter(ClientContext &context, LogicalGet &get, Fun
 				auto total_rows_from_percentage = NumericCast<idx_t>(double(total_rows) * index_scan_percentage);
 				auto max_count = MaxValue(index_scan_max_count, total_rows_from_percentage);
 
-				// Check if we can use an index scan, and already retrieve the matching row ids.
-				// TODO: change this to not actually scan the index
-				if (art_index.Scan(transaction, storage, *index_state, max_count, bind_data.row_ids)) {
+				// Check if we can use an index scan.
+				if (art_index.UseIndexScan(max_count)) {
 					bind_data.is_index_scan = true;
 					get.function = TableScanFunction::GetIndexScanFunction();
-					return true;
 				}
 				return true;
 			}
@@ -378,7 +374,7 @@ static void TableScanSerialize(Serializer &serializer, const optional_ptr<Functi
 	serializer.WriteProperty(102, "table", bind_data.table.name);
 	serializer.WriteProperty(103, "is_index_scan", bind_data.is_index_scan);
 	serializer.WriteProperty(104, "is_create_index", bind_data.is_create_index);
-// TODO: deprecate
+	// TODO: deprecate
 	//	serializer.WriteProperty(105, "result_ids", bind_data.result_ids);
 }
 

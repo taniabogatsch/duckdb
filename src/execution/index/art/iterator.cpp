@@ -41,33 +41,29 @@ bool IteratorKey::operator==(const ARTKey &key) const {
 	return true;
 }
 
-bool Iterator::Scan(const ARTKey &upper_bound, const bool equal, const idx_t max_count, Vector &row_ids,
-                    idx_t &row_ids_count) {
+void Iterator::Scan(const ARTKey &upper_bound, const bool equal, Vector &row_ids, idx_t &row_ids_count) {
 	bool has_next;
 	do {
 		if (!upper_bound.Empty()) {
 			// No more row IDs within the key bounds.
 			if (equal) {
 				if (current_key > upper_bound) {
-					return true;
+					return;
 				}
 			} else {
 				if (current_key >= upper_bound) {
-					return true;
+					return;
 				}
 			}
 		}
 
-		// Copy all row IDs of this leaf into the result IDs, if they don't exceed max_count.
-		if (!Leaf::GetRowIds(*art, last_leaf, max_count, row_ids, row_ids_count)) {
-			return false;
-		}
-
+		// Copy all row IDs of this leaf into the row IDs.
+		Leaf::GetRowIds(*art, last_leaf, row_ids, row_ids_count);
 		// Get the next leaf.
 		has_next = Next();
-	} while (has_next);
 
-	return true;
+	} while (has_next);
+	return;
 }
 
 void Iterator::FindMinimum(const Node &node) {
