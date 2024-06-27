@@ -20,14 +20,10 @@
 namespace duckdb {
 
 struct ARTIndexScanState : public IndexScanState {
-
 	//! Scan predicates (single predicate scan or range scan)
 	Value values[2];
 	//! Expressions of the scan predicates
 	ExpressionType expressions[2];
-	bool checked = false;
-	//! All scanned row IDs
-	vector<row_t> result_ids;
 	Iterator iterator;
 };
 

@@ -25,6 +25,8 @@ struct TableScanBindData : public TableFunctionData {
 
 	//! Whether or not the table scan is an index scan.
 	bool is_index_scan;
+	//! The index to scan. // TODO: catalog entry reference or something?
+	string index_name;
 	//! Whether or not the table scan is for index creation.
 	bool is_create_index;
 

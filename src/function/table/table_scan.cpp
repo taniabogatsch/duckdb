@@ -211,13 +211,12 @@ unique_ptr<NodeStatistics> TableScanCardinality(ClientContext &context, const Fu
 // Index Scan
 //===--------------------------------------------------------------------===//
 struct IndexScanGlobalState : public GlobalTableFunctionState {
-	IndexScanGlobalState() : row_ids(LogicalType::ROW_TYPE), row_ids_count(0), row_ids_offset(0), index_scanned(false) {
+	IndexScanGlobalState() : row_ids(LogicalType::ROW_TYPE), row_ids_count(0), row_ids_offset(0) {
 	}
 
 	Vector row_ids;
 	const idx_t row_ids_count;
 	idx_t row_ids_offset;
-	bool index_scanned;
 
 	ColumnFetchState fetch_state;
 	TableScanState local_storage_state;
@@ -239,6 +238,10 @@ static unique_ptr<GlobalTableFunctionState> IndexScanInitGlobal(ClientContext &c
 	result->local_storage_state.Initialize(result->column_ids, input.filters.get());
 	local_storage.InitializeScan(bind_data.table.GetStorage(), result->local_storage_state.local_state, input.filters);
 	result->finished = false;
+
+	// Scan the index to acquire the row IDs.
+	//	bind_data.table.GetStorage();
+
 	return std::move(result);
 }
 
@@ -249,7 +252,6 @@ static void IndexScanFunction(ClientContext &context, TableFunctionInput &data_p
 	auto &local_storage = LocalStorage::Get(transaction);
 
 	if (!state.finished) {
-		// TODO: if not index scanned, then scan.
 		auto remaining = state.row_ids_count - state.row_ids_offset;
 		auto scan_count = remaining < STANDARD_VECTOR_SIZE ? remaining : STANDARD_VECTOR_SIZE;
 
