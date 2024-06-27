@@ -6,8 +6,7 @@ name Point Query (ART) With Many Keys
 group art
 
 load
-CREATE TABLE integers AS SELECT 42 AS i FROM range(10000);
-INSERT INTO integers SELECT 42 + range FROM range(2000000);
+CREATE TABLE integers AS SELECT range % 1000 AS i FROM range(10000000);
 CREATE INDEX i_index ON integers USING ART(i);
 SET index_scan_percentage = 1.0;
 SET index_scan_max_count = 0;

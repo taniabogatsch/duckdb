@@ -17,9 +17,7 @@ class DuckTableEntry;
 class TableCatalogEntry;
 
 struct TableScanBindData : public TableFunctionData {
-	explicit TableScanBindData(DuckTableEntry &table)
-	    : table(table), is_index_scan(false), is_create_index(false), row_ids_count(0),
-	      row_ids(LogicalType::ROW_TYPE, idx_t(row_ids_count)) {
+	explicit TableScanBindData(DuckTableEntry &table) : table(table), is_index_scan(false), is_create_index(false) {
 	}
 
 	//! The table to scan
@@ -29,15 +27,11 @@ struct TableScanBindData : public TableFunctionData {
 	bool is_index_scan;
 	//! Whether or not the table scan is for index creation.
 	bool is_create_index;
-	//! The count of row ids to fetch in case of an index scan.
-	idx_t row_ids_count;
-	//! The row ids to fetch in case of an index scan.
-	Vector row_ids;
 
 public:
 	bool Equals(const FunctionData &other_p) const override {
 		auto &other = other_p.Cast<TableScanBindData>();
-		return &other.table == &table && row_ids_count == other.row_ids_count;
+		return &other.table == &table;
 	}
 };
 

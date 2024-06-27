@@ -30,6 +30,9 @@ EXPLAIN SELECT * FROM integers WHERE i = 42;
 ----
 logical_opt	<REGEX>:.*INDEX_SCAN.*
 
+statement  ok
+SELECT * FROM integers WHERE i = 42;
+
 statement ok
 SET index_scan_percentage = 0.000001;
 
@@ -39,6 +42,9 @@ query II
 EXPLAIN SELECT * FROM integers WHERE i = 42;
 ----
 logical_opt	<REGEX>:.*SEQ_SCAN.*
+
+statement ok
+SELECT * FROM integers WHERE i = 42;
 
 # Let's also test more than STANDARD_VECTOR_SIZE values.
 
@@ -52,3 +58,6 @@ query II
 EXPLAIN SELECT * FROM integers WHERE i = 4242;
 ----
 logical_opt	<REGEX>:.*INDEX_SCAN.*
+
+statement ok
+SELECT * FROM integers WHERE i = 4242;
