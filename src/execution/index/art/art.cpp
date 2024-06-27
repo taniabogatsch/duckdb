@@ -798,13 +798,14 @@ static ARTKey CreateKey(ArenaAllocator &allocator, PhysicalType type, Value &val
 	}
 }
 
-void ART::SearchEqual(const ARTKey &key, Vector &row_ids, idx_t &row_ids_count) {
+bool ART::SearchEqual(const ARTKey &key, optional_ptr<Vector> row_ids, idx_t &row_ids_count, const idx_t max_count) {
 
 	auto leaf = Lookup(tree, key, 0);
 	if (!leaf) {
-		return;
+		return true;
 	}
-	return Leaf::GetRowIds(*this, *leaf, row_ids, row_ids_count);
+	Leaf::GetRowIds(*this, *leaf, row_ids, row_ids_count, max_count);
+	return row_ids_count <= max_count;
 }
 
 //===--------------------------------------------------------------------===//
@@ -849,11 +850,11 @@ optional_ptr<const Node> ART::Lookup(const Node &node, const ARTKey &key, idx_t 
 // Greater Than and Less Than
 //===--------------------------------------------------------------------===//
 
-void ART::SearchGreater(ARTIndexScanState &state, const ARTKey &key, const bool equal, Vector &row_ids,
-                        idx_t &row_ids_count) {
+bool ART::SearchGreater(ARTIndexScanState &state, const ARTKey &key, const bool equal, optional_ptr<Vector> row_ids,
+                        idx_t &row_ids_count, const idx_t max_count) {
 
 	if (!tree.HasMetadata()) {
-		return;
+		return true;
 	}
 	Iterator &it = state.iterator;
 
@@ -862,21 +863,21 @@ void ART::SearchGreater(ARTIndexScanState &state, const ARTKey &key, const bool 
 		it.art = this;
 		if (!it.LowerBound(tree, key, equal, 0)) {
 			// Early-out, if the maximum value in the ART is lower than the lower bound.
-			return;
+			return true;
 		}
 	}
 
 	// We continue the scan; we don't need to check the bounds as any value following this value is
 	// greater than the lowest value. Hence, it satisfies our predicate.
 	ARTKey empty_key = ARTKey();
-	return it.Scan(empty_key, false, row_ids, row_ids_count);
+	return it.Scan(empty_key, false, row_ids, row_ids_count, max_count);
 }
 
-void ART::SearchLess(ARTIndexScanState &state, const ARTKey &upper_bound, const bool equal, Vector &row_ids,
-                     idx_t &row_ids_count) {
+bool ART::SearchLess(ARTIndexScanState &state, const ARTKey &upper_bound, const bool equal,
+                     optional_ptr<Vector> row_ids, idx_t &row_ids_count, const idx_t max_count) {
 
 	if (!tree.HasMetadata()) {
-		return;
+		return true;
 	}
 	Iterator &it = state.iterator;
 
@@ -887,20 +888,21 @@ void ART::SearchLess(ARTIndexScanState &state, const ARTKey &upper_bound, const 
 
 		// Early-out, if the minimum value is higher than the upper bound.
 		if (it.current_key > upper_bound) {
-			return;
+			return true;
 		}
 	}
 
 	// Now continue the scan until we reach the upper bound.
-	return it.Scan(upper_bound, equal, row_ids, row_ids_count);
+	return it.Scan(upper_bound, equal, row_ids, row_ids_count, max_count);
 }
 
 //===--------------------------------------------------------------------===//
 // Closed Range Query
 //===--------------------------------------------------------------------===//
 
-void ART::SearchCloseRange(ARTIndexScanState &state, const ARTKey &lower_bound, const ARTKey &upper_bound,
-                           const bool left_equal, const bool right_equal, Vector &row_ids, idx_t &row_ids_count) {
+bool ART::SearchCloseRange(ARTIndexScanState &state, const ARTKey &lower_bound, const ARTKey &upper_bound,
+                           const bool left_equal, const bool right_equal, optional_ptr<Vector> row_ids,
+                           idx_t &row_ids_count, const idx_t max_count) {
 
 	Iterator &it = state.iterator;
 
@@ -909,52 +911,52 @@ void ART::SearchCloseRange(ARTIndexScanState &state, const ARTKey &lower_bound, 
 		it.art = this;
 		if (!it.LowerBound(tree, lower_bound, left_equal, 0)) {
 			// Early-out, if the maximum value in the ART is lower than the lower bound.
-			return;
+			return true;
 		}
 	}
 
 	// Now continue the scan until we reach the upper bound.
-	return it.Scan(upper_bound, right_equal, row_ids, row_ids_count);
+	return it.Scan(upper_bound, right_equal, row_ids, row_ids_count, max_count);
 }
 
-void ART::Scan(const Transaction &transaction, const DataTable &table, IndexScanState &state, Vector &row_ids,
-               idx_t &row_ids_count) {
-
+bool ART::Scan(IndexScanState &state, optional_ptr<Vector> row_ids, idx_t &row_ids_count, const idx_t max_count) {
 	auto &scan_state = state.Cast<ARTIndexScanState>();
+
+	// One predicate, PK or UNIQUE, and COMPARE_EQUAL: scan.
+	if (!row_ids && scan_state.values[1].IsNull() && IsUnique() &&
+	    scan_state.expressions[0] == ExpressionType::COMPARE_EQUAL) {
+		return true;
+	}
+
 	D_ASSERT(scan_state.values[0].type().InternalType() == types[0]);
 	ArenaAllocator arena_allocator(Allocator::Get(db));
 	auto key = CreateKey(arena_allocator, types[0], scan_state.values[0]);
+	lock_guard<mutex> l(lock);
 
 	// One predicate.
 	if (scan_state.values[1].IsNull()) {
-		lock_guard<mutex> l(lock);
 		switch (scan_state.expressions[0]) {
 		case ExpressionType::COMPARE_EQUAL:
-			return SearchEqual(key, row_ids, row_ids_count);
+			return SearchEqual(key, row_ids, row_ids_count, max_count);
 		case ExpressionType::COMPARE_GREATERTHANOREQUALTO:
-			return SearchGreater(scan_state, key, true, row_ids, row_ids_count);
+			return SearchGreater(scan_state, key, true, row_ids, row_ids_count, max_count);
 		case ExpressionType::COMPARE_GREATERTHAN:
-			return SearchGreater(scan_state, key, false, row_ids, row_ids_count);
+			return SearchGreater(scan_state, key, false, row_ids, row_ids_count, max_count);
 		case ExpressionType::COMPARE_LESSTHANOREQUALTO:
-			return SearchLess(scan_state, key, true, row_ids, row_ids_count);
+			return SearchLess(scan_state, key, true, row_ids, row_ids_count, max_count);
 		case ExpressionType::COMPARE_LESSTHAN:
-			return SearchLess(scan_state, key, false, row_ids, row_ids_count);
+			return SearchLess(scan_state, key, false, row_ids, row_ids_count, max_count);
 		default:
 			throw InternalException("Index scan type not implemented");
 		}
 	}
 
 	// Two predicates.
-	lock_guard<mutex> l(lock);
 	D_ASSERT(scan_state.values[1].type().InternalType() == types[0]);
 	auto upper_bound = CreateKey(arena_allocator, types[0], scan_state.values[1]);
 	bool left_equal = scan_state.expressions[0] == ExpressionType ::COMPARE_GREATERTHANOREQUALTO;
 	bool right_equal = scan_state.expressions[1] == ExpressionType ::COMPARE_LESSTHANOREQUALTO;
-	return SearchCloseRange(scan_state, key, upper_bound, left_equal, right_equal, row_ids, row_ids_count);
-}
-
-bool ART::UseIndexScan(const idx_t max_count) {
-	return false;
+	return SearchCloseRange(scan_state, key, upper_bound, left_equal, right_equal, row_ids, row_ids_count, max_count);
 }
 
 //===--------------------------------------------------------------------===//

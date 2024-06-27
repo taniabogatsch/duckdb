@@ -63,7 +63,8 @@ public:
 	//! Get the total count of row IDs in the chain of leaves
 	static idx_t TotalCount(ART &art, const Node &node);
 	//! Fill the row_ids vector with the row IDs of this leaf chain.
-	static void GetRowIds(ART &art, const Node &node, Vector &row_ids, idx_t &row_ids_count);
+	static void GetRowIds(ART &art, const Node &node, optional_ptr<Vector> row_ids, idx_t &row_ids_count,
+	                      const idx_t max_count);
 	//! Returns whether the leaf contains the row ID
 	static bool ContainsRowId(ART &art, const Node &node, const row_t row_id);
 

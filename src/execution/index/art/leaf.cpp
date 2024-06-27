@@ -231,21 +231,28 @@ idx_t Leaf::TotalCount(ART &art, const Node &node) {
 	return count;
 }
 
-void Leaf::GetRowIds(ART &art, const Node &node, Vector &row_ids, idx_t &row_ids_count) {
+void Leaf::GetRowIds(ART &art, const Node &node, optional_ptr<Vector> row_ids, idx_t &row_ids_count,
+                     const idx_t max_count) {
 
-	// Test if adding more elements would exceed the maximum count.
 	D_ASSERT(node.HasMetadata());
 	auto total_count = TotalCount(art, node);
-	if (row_ids_count == 0) {
-		row_ids.Initialize(false, total_count);
+
+	// Early-out, if we only count the number of row IDs.
+	if (!row_ids) {
+		row_ids_count += total_count;
+		return;
 	}
 
-	row_ids.Resize(row_ids_count, row_ids_count + total_count);
+	if (row_ids_count == 0) {
+		row_ids->Initialize(false, total_count);
+	}
+
+	row_ids->Resize(row_ids_count, row_ids_count + total_count);
 	auto offset = row_ids_count;
 	row_ids_count += total_count;
 
 	UnifiedVectorFormat row_ids_data;
-	row_ids.ToUnifiedFormat(row_ids_count, row_ids_data);
+	row_ids->ToUnifiedFormat(row_ids_count, row_ids_data);
 	auto data = UnifiedVectorFormat::GetDataNoConst<row_t>(row_ids_data);
 
 	if (node.GetType() == NType::LEAF_INLINED) {

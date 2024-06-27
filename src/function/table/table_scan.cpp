@@ -349,7 +349,8 @@ void TableScanPushdownComplexFilter(ClientContext &context, LogicalGet &get, Fun
 				auto max_count = MaxValue(index_scan_max_count, total_rows_from_percentage);
 
 				// Check if we can use an index scan.
-				if (art_index.UseIndexScan(max_count)) {
+				idx_t row_ids_count = 0;
+				if (art_index.Scan(*index_state, nullptr, row_ids_count, max_count)) {
 					bind_data.is_index_scan = true;
 					get.function = TableScanFunction::GetIndexScanFunction();
 				}
