@@ -29,6 +29,40 @@ env:
   BASE_BRANCH: ${{ github.base_ref || (endsWith(github.ref, '_feature') && 'feature' || 'main') }}
 
 jobs:
+  linux-memory-leaks:
+    name: Linux Memory Leaks
+    runs-on: ubuntu-20.04
+    env:
+      GEN: ninja
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Ninja
+        shell: bash
+        run: sudo apt-get update -y -qq && sudo apt-get install -y -qq ninja-build
+
+      - name: Setup Ccache
+        uses: hendrikmuhs/ccache-action@main
+        with:
+          key: ${{ github.job }}
+          save: ${{ env.CCACHE_SAVE }}
+
+      - name: Build
+        shell: bash
+        run: make
+
+      - name: Test
+        shell: bash
+        run: |
+          python3 test/memoryleak/test_memory_leaks.py
+
   linux-release-32:
     name: Linux (32 Bit)
     runs-on: ubuntu-latest
