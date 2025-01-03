@@ -492,7 +492,7 @@ generate-files:
 # Run the formatter again after (re)generating the files
 	$(MAKE) format-main
 
-bundle-library: release
+bundle-library-prepare:
 	cd build/release && \
 	rm -rf bundle && \
 	mkdir -p bundle && \
@@ -501,5 +501,15 @@ bundle-library: release
 	cp extension/*/lib*_extension.a bundle/. && \
 	cd bundle && \
 	find . -name '*.a' -exec mkdir -p {}.objects \; -exec mv {} {}.objects \; && \
-	find . -name '*.a' -execdir ${AR} -x {} \; && \
+	find . -name '*.a' -execdir ${AR} -x {} \;
+
+bundle-library-o: bundle-library-prepare
+	cd build/release/bundle && \
 	${AR} cr ../libduckdb_bundle.a ./*/*.o
+
+bundle-library: release
+	make bundle-library-o
+
+bundle-library-obj: bundle-library-prepare
+	cd build/release/bundle && \
+	${AR} cr ../libduckdb_bundle.a ./*/*.obj

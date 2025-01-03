@@ -77,6 +77,15 @@ jobs:
         cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_GENERATOR_PLATFORM=x64 -DENABLE_EXTENSION_AUTOLOADING=1 -DENABLE_EXTENSION_AUTOINSTALL=1 -DDUCKDB_EXTENSION_CONFIGS="${GITHUB_WORKSPACE}/.github/config/bundled_extensions.cmake" -DDISABLE_UNITY=1 -DOVERRIDE_GIT_DESCRIBE="$OVERRIDE_GIT_DESCRIBE"
         cmake --build . --config Release --parallel
 
+    # for now just understand the build structure here
+    - name: Bundle static library
+      shell: bash
+      run: |
+        ls
+        ls src
+        ls src/Release
+        make bundle-library-obj
+
     - name: Set DUCKDB_INSTALL_LIB for ADBC tests
       shell: pwsh
       run: echo "DUCKDB_INSTALL_LIB=$((Get-ChildItem -Recurse -Filter "duckdb.dll" | Select-Object -First 1).FullName)" >> $GITHUB_ENV
@@ -99,6 +108,7 @@ jobs:
         python -m pytest tools/shell/tests --shell-binary Release/duckdb.exe
         tools/sqlite3_api_wrapper/Release/test_sqlite3_api_wrapper.exe
 
+    # TODO: deploy the bundled library
     - name: Deploy
       shell: bash
       env:

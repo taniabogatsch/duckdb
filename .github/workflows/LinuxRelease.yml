@@ -88,6 +88,10 @@ jobs:
       shell: bash
       run: make
 
+    - name: Bundle static library
+      shell: bash
+      run: make bundle-library-o
+
     - name: Print platform
       shell: bash
       run: ./build/release/duckdb -c "PRAGMA platform;"
@@ -122,7 +126,7 @@ jobs:
       run: |
         python3 scripts/amalgamation.py
         zip -j duckdb_cli-linux-amd64.zip build/release/duckdb
-        zip -j libduckdb-linux-amd64.zip build/release/src/libduckdb*.* src/amalgamation/duckdb.hpp src/include/duckdb.h
+        zip -j libduckdb-linux-amd64.zip build/release/src/libduckdb*.* src/amalgamation/duckdb.hpp src/include/duckdb.h build/release/libduckdb_bundle.a
         zip -j libduckdb-src.zip src/amalgamation/duckdb.hpp src/amalgamation/duckdb.cpp src/include/duckdb.h src/include/duckdb_extension.h
         ./scripts/upload-assets-to-staging.sh github_release libduckdb-src.zip libduckdb-linux-amd64.zip duckdb_cli-linux-amd64.zip
 
@@ -167,6 +171,10 @@ jobs:
        shell: bash
        run: CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ make
 
+     - name: Bundle static library
+       shell: bash
+       run: CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ make bundle-library-o
+
      - name: Deploy
        shell: bash
        env:
@@ -175,7 +183,7 @@ jobs:
        run: |
          python3 scripts/amalgamation.py
          zip -j duckdb_cli-linux-aarch64.zip build/release/duckdb
-         zip -j libduckdb-linux-aarch64.zip build/release/src/libduckdb*.* src/amalgamation/duckdb.hpp src/include/duckdb.h
+         zip -j libduckdb-linux-aarch64.zip build/release/src/libduckdb*.* src/amalgamation/duckdb.hpp src/include/duckdb.h build/release/libduckdb_bundle.a
          ./scripts/upload-assets-to-staging.sh github_release libduckdb-linux-aarch64.zip duckdb_cli-linux-aarch64.zip
 
      - uses: actions/upload-artifact@v4
