@@ -501,14 +501,14 @@ bundle-library-o:
 	cp extension/*/lib*_extension.a bundle/. && \
 	cd bundle && \
 	find . -name '*.a' -exec mkdir -p {}.objects \; -exec mv {} {}.objects \; && \
-	find . -name '*.a' -execdir ${AR} -x {} \;
+	find . -name '*.a' -execdir ${AR} -x {} \; && \
 	${AR} cr ../libduckdb_bundle.a ./*/*.o
 
 bundle-library: release
 	make bundle-library-o
 
 bundle-library-obj:
-	cd build/Release && \
+	cd Release && \
 	rm -rf bundle && \
 	mkdir -p bundle && \
 	cp src/libduckdb_static.a bundle/. && \
@@ -516,5 +516,5 @@ bundle-library-obj:
 	cp extension/*/lib*_extension.a bundle/. && \
 	cd bundle && \
 	find . -name '*.a' -exec mkdir -p {}.objects \; -exec mv {} {}.objects \; && \
-	find . -name '*.a' -execdir ${AR} -x {} \;
+	find . -name '*.a' -execdir ${AR} -x {} \; && \
 	${AR} cr ../libduckdb_bundle.a ./*/*.obj

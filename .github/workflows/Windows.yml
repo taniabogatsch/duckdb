@@ -81,9 +81,7 @@ jobs:
     - name: Bundle static library
       shell: bash
       run: |
-        ls
-        ls src
-        ls src/Release
+        tree
         make bundle-library-obj
 
     - name: Set DUCKDB_INSTALL_LIB for ADBC tests
