@@ -81,7 +81,9 @@ jobs:
 
       - name: Bundle static library
         shell: bash
-        run: make bundle-library-obj
+        run: |
+          ulimit -s 65536
+          make bundle-library-obj
 
       - name: Deploy
         shell: bash
