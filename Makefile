@@ -506,3 +506,15 @@ bundle-library: release
 	find . -name '*.a' -exec mkdir -p {}.objects \; -exec mv {} {}.objects \; && \
 	find . -name '*.a' -execdir ${AR} -x {} \; && \
 	${AR} cr ../libduckdb_bundle.a ./*/*.o
+
+bundle-library-obj:
+	cd build/release && \
+	rm -rf bundle && \
+	mkdir -p bundle && \
+	cp src/libduckdb_static.a bundle/. && \
+	cp third_party/*/libduckdb_*.a bundle/. && \
+	cp extension/*/lib*_extension.a bundle/. && \
+	cd bundle && \
+	find . -name '*.a' -exec mkdir -p {}.objects \; -exec mv {} {}.objects \; && \
+	find . -name '*.a' -execdir ${AR} -x {} \; && \
+	${AR} cr ../libduckdb_bundle.a ./*/*.obj
