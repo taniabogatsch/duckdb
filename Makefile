@@ -517,4 +517,4 @@ bundle-library-obj:
 	cd bundle && \
 	find . -name '*.a' -exec mkdir -p {}.objects \; -exec mv {} {}.objects \; && \
 	find . -name '*.a' -execdir ${AR} -x {} \; && \
-	${AR} cr ../libduckdb_bundle.a ./*/*.obj
+	echo ./*/*.obj | xargs ${AR} cr ../libduckdb_bundle.a
