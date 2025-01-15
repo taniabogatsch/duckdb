@@ -21,7 +21,7 @@ struct MapContainsFun {
 	static constexpr const char *Description = "Checks if a map contains a given key.";
 	static constexpr const char *Example = "map_contains(MAP {'key1': 10, 'key2': 20, 'key3': 30}, 'key2')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 } // namespace duckdb

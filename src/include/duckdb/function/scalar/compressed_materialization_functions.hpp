@@ -21,7 +21,7 @@ struct InternalCompressIntegralUtinyintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalCompressIntegralUsmallintFun {
@@ -30,7 +30,7 @@ struct InternalCompressIntegralUsmallintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalCompressIntegralUintegerFun {
@@ -39,7 +39,7 @@ struct InternalCompressIntegralUintegerFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalCompressIntegralUbigintFun {
@@ -48,7 +48,7 @@ struct InternalCompressIntegralUbigintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalCompressStringUtinyintFun {
@@ -57,7 +57,7 @@ struct InternalCompressStringUtinyintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct InternalCompressStringUsmallintFun {
@@ -66,7 +66,7 @@ struct InternalCompressStringUsmallintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct InternalCompressStringUintegerFun {
@@ -75,7 +75,7 @@ struct InternalCompressStringUintegerFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct InternalCompressStringUbigintFun {
@@ -84,7 +84,7 @@ struct InternalCompressStringUbigintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct InternalCompressStringHugeintFun {
@@ -93,7 +93,7 @@ struct InternalCompressStringHugeintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct InternalDecompressIntegralSmallintFun {
@@ -102,7 +102,7 @@ struct InternalDecompressIntegralSmallintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalDecompressIntegralIntegerFun {
@@ -111,7 +111,7 @@ struct InternalDecompressIntegralIntegerFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalDecompressIntegralBigintFun {
@@ -120,7 +120,7 @@ struct InternalDecompressIntegralBigintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalDecompressIntegralHugeintFun {
@@ -129,7 +129,7 @@ struct InternalDecompressIntegralHugeintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalDecompressIntegralUsmallintFun {
@@ -138,7 +138,7 @@ struct InternalDecompressIntegralUsmallintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalDecompressIntegralUintegerFun {
@@ -147,7 +147,7 @@ struct InternalDecompressIntegralUintegerFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalDecompressIntegralUbigintFun {
@@ -156,7 +156,7 @@ struct InternalDecompressIntegralUbigintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalDecompressIntegralUhugeintFun {
@@ -165,7 +165,7 @@ struct InternalDecompressIntegralUhugeintFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct InternalDecompressStringFun {
@@ -174,7 +174,7 @@ struct InternalDecompressStringFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 } // namespace duckdb

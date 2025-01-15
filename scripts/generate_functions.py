@@ -118,16 +118,16 @@ def create_header_file(root, include_dir, path, all_function_list, function_type
             raise Exception("Duplicate entry " + struct_name)
         function_type_set[struct_name] = entry['type']
         if entry['type'] == 'scalar_function':
-            function_text = 'static ScalarFunction GetFunction();'
+            function_text = 'DUCKDB_API static ScalarFunction GetFunction();'
             all_function_list.append([entry['name'], f"DUCKDB_SCALAR_FUNCTION({struct_name})"])
         elif entry['type'] == 'scalar_function_set':
-            function_text = 'static ScalarFunctionSet GetFunctions();'
+            function_text = 'DUCKDB_API static ScalarFunctionSet GetFunctions();'
             all_function_list.append([entry['name'], f"DUCKDB_SCALAR_FUNCTION_SET({struct_name})"])
         elif entry['type'] == 'aggregate_function':
-            function_text = 'static AggregateFunction GetFunction();'
+            function_text = 'DUCKDB_API static AggregateFunction GetFunction();'
             all_function_list.append([entry['name'], f"DUCKDB_AGGREGATE_FUNCTION({struct_name})"])
         elif entry['type'] == 'aggregate_function_set':
-            function_text = 'static AggregateFunctionSet GetFunctions();'
+            function_text = 'DUCKDB_API static AggregateFunctionSet GetFunctions();'
             all_function_list.append([entry['name'], f"DUCKDB_AGGREGATE_FUNCTION_SET({struct_name})"])
         else:
             print("Unknown entry type " + entry['type'] + ' for entry ' + struct_name)

@@ -21,7 +21,7 @@ struct ListSelectFun {
 	static constexpr const char *Description = "Returns a list based on the elements selected by the index_list.";
 	static constexpr const char *Example = "list_select([10, 20, 30, 40], [1, 4])";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ArraySelectFun {
@@ -36,7 +36,7 @@ struct ListWhereFun {
 	static constexpr const char *Description = "Returns a list with the BOOLEANs in mask_list applied as a mask to the value_list.";
 	static constexpr const char *Example = "list_where([10, 20, 30, 40], [true, false, false, true])";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ArrayWhereFun {
@@ -51,7 +51,7 @@ struct ListContainsFun {
 	static constexpr const char *Description = "Returns true if the list contains the element.";
 	static constexpr const char *Example = "list_contains([1, 2, NULL], 1)";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ArrayContainsFun {
@@ -78,7 +78,7 @@ struct ListPositionFun {
 	static constexpr const char *Description = "Returns the index of the element if the list contains the element. If the element is not found, it returns NULL.";
 	static constexpr const char *Example = "list_position([1, 2, NULL], 2)";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ListIndexofFun {
@@ -105,7 +105,7 @@ struct ListZipFun {
 	static constexpr const char *Description = "Zips k LISTs to a new LIST whose length will be that of the longest list. Its elements are structs of k elements from each list list_1, …, list_k, missing elements are replaced with NULL. If truncate is set, all lists are truncated to the smallest list length.";
 	static constexpr const char *Example = "list_zip([1, 2], [3, 4], [5, 6])";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ArrayZipFun {
@@ -120,7 +120,7 @@ struct ListExtractFun {
 	static constexpr const char *Description = "Extract the indexth (1-based) value from the list.";
 	static constexpr const char *Example = "list_extract([4, 5, 6], 3)";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct ListElementFun {
@@ -135,7 +135,7 @@ struct ListResizeFun {
 	static constexpr const char *Description = "Resizes the list to contain size elements. Initializes new elements with value or NULL if value is not set.";
 	static constexpr const char *Example = "list_resize([1, 2, 3], 5, 0)";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct ArrayResizeFun {
@@ -150,7 +150,7 @@ struct ArrayExtractFun {
 	static constexpr const char *Description = "Extract the indexth (1-based) value from the array.";
 	static constexpr const char *Example = "array_extract('DuckDB', 2)";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 } // namespace duckdb

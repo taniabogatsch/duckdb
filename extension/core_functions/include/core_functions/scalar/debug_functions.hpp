@@ -21,7 +21,7 @@ struct VectorTypeFun {
 	static constexpr const char *Description = "Returns the VectorType of a given column";
 	static constexpr const char *Example = "vector_type(col)";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 } // namespace duckdb

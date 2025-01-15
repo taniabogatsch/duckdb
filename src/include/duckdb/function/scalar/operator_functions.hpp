@@ -21,7 +21,7 @@ struct OperatorAddFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct AddFun {
@@ -36,7 +36,7 @@ struct OperatorSubtractFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct SubtractFun {
@@ -51,7 +51,7 @@ struct OperatorMultiplyFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct MultiplyFun {
@@ -66,7 +66,7 @@ struct OperatorFloatDivideFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct OperatorIntegerDivideFun {
@@ -75,7 +75,7 @@ struct OperatorIntegerDivideFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct DivideFun {
@@ -90,7 +90,7 @@ struct OperatorModuloFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct ModFun {

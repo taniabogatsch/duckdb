@@ -21,7 +21,7 @@ struct FinalizeFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct CombineFun {
@@ -30,7 +30,7 @@ struct CombineFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct WriteLogFun {
@@ -39,7 +39,7 @@ struct WriteLogFun {
 	static constexpr const char *Description = "Writes to the logger";
 	static constexpr const char *Example = "write_log('Hello')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 } // namespace duckdb

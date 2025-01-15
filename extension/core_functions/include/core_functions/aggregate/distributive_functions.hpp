@@ -21,7 +21,7 @@ struct ApproxCountDistinctFun {
 	static constexpr const char *Description = "Computes the approximate count of distinct elements using HyperLogLog.";
 	static constexpr const char *Example = "approx_count_distinct(A)";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct ArgMinFun {
@@ -30,7 +30,7 @@ struct ArgMinFun {
 	static constexpr const char *Description = "Finds the row with the minimum val. Calculates the non-NULL arg expression at that row.";
 	static constexpr const char *Example = "arg_min(A,B)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct ArgminFun {
@@ -51,7 +51,7 @@ struct ArgMinNullFun {
 	static constexpr const char *Description = "Finds the row with the minimum val. Calculates the arg expression at that row.";
 	static constexpr const char *Example = "arg_min_null(A,B)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct ArgMaxFun {
@@ -60,7 +60,7 @@ struct ArgMaxFun {
 	static constexpr const char *Description = "Finds the row with the maximum val. Calculates the non-NULL arg expression at that row.";
 	static constexpr const char *Example = "arg_max(A,B)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct ArgmaxFun {
@@ -81,7 +81,7 @@ struct ArgMaxNullFun {
 	static constexpr const char *Description = "Finds the row with the maximum val. Calculates the arg expression at that row.";
 	static constexpr const char *Example = "arg_max_null(A,B)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct BitAndFun {
@@ -90,7 +90,7 @@ struct BitAndFun {
 	static constexpr const char *Description = "Returns the bitwise AND of all bits in a given expression.";
 	static constexpr const char *Example = "bit_and(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct BitOrFun {
@@ -99,7 +99,7 @@ struct BitOrFun {
 	static constexpr const char *Description = "Returns the bitwise OR of all bits in a given expression.";
 	static constexpr const char *Example = "bit_or(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct BitXorFun {
@@ -108,7 +108,7 @@ struct BitXorFun {
 	static constexpr const char *Description = "Returns the bitwise XOR of all bits in a given expression.";
 	static constexpr const char *Example = "bit_xor(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct BitstringAggFun {
@@ -117,7 +117,7 @@ struct BitstringAggFun {
 	static constexpr const char *Description = "Returns a bitstring with bits set for each distinct value.";
 	static constexpr const char *Example = "bitstring_agg(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct BoolAndFun {
@@ -126,7 +126,7 @@ struct BoolAndFun {
 	static constexpr const char *Description = "Returns TRUE if every input value is TRUE, otherwise FALSE.";
 	static constexpr const char *Example = "bool_and(A)";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct BoolOrFun {
@@ -135,7 +135,7 @@ struct BoolOrFun {
 	static constexpr const char *Description = "Returns TRUE if any input value is TRUE, otherwise FALSE.";
 	static constexpr const char *Example = "bool_or(A)";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct CountIfFun {
@@ -144,7 +144,7 @@ struct CountIfFun {
 	static constexpr const char *Description = "Counts the total number of TRUE values for a boolean column";
 	static constexpr const char *Example = "count_if(A)";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct CountifFun {
@@ -159,7 +159,7 @@ struct EntropyFun {
 	static constexpr const char *Description = "Returns the log-2 entropy of count input-values.";
 	static constexpr const char *Example = "";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct KahanSumFun {
@@ -168,7 +168,7 @@ struct KahanSumFun {
 	static constexpr const char *Description = "Calculates the sum using a more accurate floating point summation (Kahan Sum).";
 	static constexpr const char *Example = "kahan_sum(A)";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct FsumFun {
@@ -189,7 +189,7 @@ struct KurtosisFun {
 	static constexpr const char *Description = "Returns the excess kurtosis (Fisher’s definition) of all input values, with a bias correction according to the sample size";
 	static constexpr const char *Example = "";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct KurtosisPopFun {
@@ -198,7 +198,7 @@ struct KurtosisPopFun {
 	static constexpr const char *Description = "Returns the excess kurtosis (Fisher’s definition) of all input values, without bias correction";
 	static constexpr const char *Example = "";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct ProductFun {
@@ -207,7 +207,7 @@ struct ProductFun {
 	static constexpr const char *Description = "Calculates the product of all tuples in arg.";
 	static constexpr const char *Example = "product(A)";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct SkewnessFun {
@@ -216,7 +216,7 @@ struct SkewnessFun {
 	static constexpr const char *Description = "Returns the skewness of all input values.";
 	static constexpr const char *Example = "skewness(A)";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct StringAggFun {
@@ -225,7 +225,7 @@ struct StringAggFun {
 	static constexpr const char *Description = "Concatenates the column string values with an optional separator.";
 	static constexpr const char *Example = "string_agg(A, '-')";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct GroupConcatFun {
@@ -246,7 +246,7 @@ struct SumFun {
 	static constexpr const char *Description = "Calculates the sum value for all tuples in arg.";
 	static constexpr const char *Example = "sum(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct SumNoOverflowFun {
@@ -255,7 +255,7 @@ struct SumNoOverflowFun {
 	static constexpr const char *Description = "Internal only. Calculates the sum value for all tuples in arg without overflow checks.";
 	static constexpr const char *Example = "sum_no_overflow(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 } // namespace duckdb

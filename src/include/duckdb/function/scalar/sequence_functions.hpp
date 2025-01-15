@@ -21,7 +21,7 @@ struct CurrvalFun {
 	static constexpr const char *Description = "Return the current value of the sequence. Note that nextval must be called at least once prior to calling currval.";
 	static constexpr const char *Example = "currval('my_sequence_name')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct NextvalFun {
@@ -30,7 +30,7 @@ struct NextvalFun {
 	static constexpr const char *Description = "Return the following value of the sequence.";
 	static constexpr const char *Example = "nextval('my_sequence_name')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 } // namespace duckdb

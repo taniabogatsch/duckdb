@@ -21,7 +21,7 @@ struct UpperFun {
 	static constexpr const char *Description = "Convert string to upper case.";
 	static constexpr const char *Example = "upper('Hello')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct UcaseFun {
@@ -36,7 +36,7 @@ struct LowerFun {
 	static constexpr const char *Description = "Convert string to lower case";
 	static constexpr const char *Example = "lower('Hello')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct LcaseFun {
@@ -51,7 +51,7 @@ struct ConcatWsFun {
 	static constexpr const char *Description = "Concatenate strings together separated by the specified separator.";
 	static constexpr const char *Example = "concat_ws(', ', 'Banana', 'Apple', 'Melon')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ConcatFun {
@@ -60,7 +60,7 @@ struct ConcatFun {
 	static constexpr const char *Description = "Concatenate many strings together.";
 	static constexpr const char *Example = "concat('Hello', ' ', 'World')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ListConcatFun {
@@ -69,7 +69,7 @@ struct ListConcatFun {
 	static constexpr const char *Description = "Concatenates two lists.";
 	static constexpr const char *Example = "list_concat([2, 3], [4, 5, 6])";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ListCatFun {
@@ -96,7 +96,7 @@ struct ConcatOperatorFun {
 	static constexpr const char *Description = "Concatenates two lists.";
 	static constexpr const char *Example = "list_concat([2, 3], [4, 5, 6])";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct PrefixFun {
@@ -105,7 +105,7 @@ struct PrefixFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct SuffixFun {
@@ -114,7 +114,7 @@ struct SuffixFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct EndsWithFun {
@@ -129,7 +129,7 @@ struct ContainsFun {
 	static constexpr const char *Description = "Returns true if search_string is found within string.\1Returns true if the list contains the element.\1Checks if a map contains a given key.";
 	static constexpr const char *Example = "contains('abc', 'a')\1contains([1, 2, NULL], 1)\1contains(MAP {'key1': 10, 'key2': 20, 'key3': 30}, 'key2')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct StripAccentsFun {
@@ -138,7 +138,7 @@ struct StripAccentsFun {
 	static constexpr const char *Description = "Strips accents from string.";
 	static constexpr const char *Example = "strip_accents('mühleisen')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct NFCNormalizeFun {
@@ -147,7 +147,7 @@ struct NFCNormalizeFun {
 	static constexpr const char *Description = "Convert string to Unicode NFC normalized string. Useful for comparisons and ordering if text data is mixed between NFC normalized and not.";
 	static constexpr const char *Example = "nfc_normalize('ardèch')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct LengthFun {
@@ -156,7 +156,7 @@ struct LengthFun {
 	static constexpr const char *Description = "Number of characters in string.";
 	static constexpr const char *Example = "length('Hello🦆')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct LenFun {
@@ -171,7 +171,7 @@ struct StrlenFun {
 	static constexpr const char *Description = "Number of bytes in string.";
 	static constexpr const char *Example = "strlen('🦆')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct BitLengthFun {
@@ -180,7 +180,7 @@ struct BitLengthFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct OctetLengthFun {
@@ -189,7 +189,7 @@ struct OctetLengthFun {
 	static constexpr const char *Description = "Number of bytes in blob.";
 	static constexpr const char *Example = "octet_length('\\xAA\\xBB'::BLOB)";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct LengthGraphemeFun {
@@ -198,7 +198,7 @@ struct LengthGraphemeFun {
 	static constexpr const char *Description = "Number of grapheme clusters in string.";
 	static constexpr const char *Example = "length_grapheme('🤦🏼‍♂️🤦🏽‍♀️')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct ArrayLengthFun {
@@ -207,7 +207,7 @@ struct ArrayLengthFun {
 	static constexpr const char *Description = "Returns the length of the list.";
 	static constexpr const char *Example = "array_length([1,2,3])";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct SubstringFun {
@@ -216,7 +216,7 @@ struct SubstringFun {
 	static constexpr const char *Description = "Extract substring of length characters starting from character start. Note that a start value of 1 refers to the first character of the string.";
 	static constexpr const char *Example = "substring('Hello', 2, 2)";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct SubstrFun {
@@ -231,7 +231,7 @@ struct SubstringGraphemeFun {
 	static constexpr const char *Description = "Extract substring of length grapheme clusters starting from character start. Note that a start value of 1 refers to the first character of the string.";
 	static constexpr const char *Example = "substring_grapheme('🦆🤦🏼‍♂️🤦🏽‍♀️🦆', 3, 2)";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct StringSplitFun {
@@ -240,7 +240,7 @@ struct StringSplitFun {
 	static constexpr const char *Description = "Splits the string along the separator";
 	static constexpr const char *Example = "string_split('hello-world', '-')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct StrSplitFun {
@@ -267,7 +267,7 @@ struct StringSplitRegexFun {
 	static constexpr const char *Description = "Splits the string along the regex";
 	static constexpr const char *Example = "string_split_regex('hello␣world; 42', ';?␣')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct StrSplitRegexFun {
@@ -288,7 +288,7 @@ struct RegexpFun {
 	static constexpr const char *Description = "Returns true if the entire string matches the regex. A set of optional options can be set.";
 	static constexpr const char *Example = "regexp_full_match('anabanana', '(an)*')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct RegexpMatchesFun {
@@ -297,7 +297,7 @@ struct RegexpMatchesFun {
 	static constexpr const char *Description = "Returns true if string contains the regexp pattern, false otherwise. A set of optional options can be set.";
 	static constexpr const char *Example = "regexp_matches('anabanana', '(an)*')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct RegexpReplaceFun {
@@ -306,7 +306,7 @@ struct RegexpReplaceFun {
 	static constexpr const char *Description = "If string contains the regexp pattern, replaces the matching part with replacement. A set of optional options can be set.";
 	static constexpr const char *Example = "regexp_replace('hello', '[lo]', '-')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct RegexpExtractFun {
@@ -315,7 +315,7 @@ struct RegexpExtractFun {
 	static constexpr const char *Description = "If string contains the regexp pattern, returns the capturing group specified by optional parameter group. The group must be a constant value. If no group is given, it defaults to 0. A set of optional options can be set.";
 	static constexpr const char *Example = "regexp_extract('abc', '([a-z])(b)', 1)";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct RegexpExtractAllFun {
@@ -324,7 +324,7 @@ struct RegexpExtractAllFun {
 	static constexpr const char *Description = "Split the string along the regex and extract all occurrences of group. A set of optional options can be set.";
 	static constexpr const char *Example = "regexp_extract_all('hello_world', '([a-z ]+)_?', 1)";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct RegexpEscapeFun {
@@ -333,7 +333,7 @@ struct RegexpEscapeFun {
 	static constexpr const char *Description = "Escapes all potentially meaningful regexp characters in the input string";
 	static constexpr const char *Example = "regexp_escape('https://duckdb.org')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct LikeFun {
@@ -342,7 +342,7 @@ struct LikeFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct NotLikeFun {
@@ -351,7 +351,7 @@ struct NotLikeFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct GlobPatternFun {
@@ -360,7 +360,7 @@ struct GlobPatternFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ILikeFun {
@@ -369,7 +369,7 @@ struct ILikeFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct NotILikeFun {
@@ -378,7 +378,7 @@ struct NotILikeFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct LikeEscapeFun {
@@ -387,7 +387,7 @@ struct LikeEscapeFun {
 	static constexpr const char *Description = "Returns true if the string matches the like_specifier (see Pattern Matching) using case-sensitive matching. escape_character is used to search for wildcard characters in the string.";
 	static constexpr const char *Example = "like_escape('a%c', 'a$%c', '$')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct NotLikeEscapeFun {
@@ -396,7 +396,7 @@ struct NotLikeEscapeFun {
 	static constexpr const char *Description = "Returns false if the string matches the like_specifier (see Pattern Matching) using case-sensitive matching. escape_character is used to search for wildcard characters in the string.";
 	static constexpr const char *Example = "not_like_escape('a%c', 'a$%c', '$')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct IlikeEscapeFun {
@@ -405,7 +405,7 @@ struct IlikeEscapeFun {
 	static constexpr const char *Description = "Returns true if the string matches the like_specifier (see Pattern Matching) using case-insensitive matching. escape_character is used to search for wildcard characters in the string.";
 	static constexpr const char *Example = "ilike_escape('A%c', 'a$%C', '$')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct NotIlikeEscapeFun {
@@ -414,7 +414,7 @@ struct NotIlikeEscapeFun {
 	static constexpr const char *Description = "Returns false if the string matches the like_specifier (see Pattern Matching) using case-insensitive matching. escape_character is used to search for wildcard characters in the string.";
 	static constexpr const char *Example = "not_ilike_escape('A%c', 'a$%C', '$')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct MD5Fun {
@@ -423,7 +423,7 @@ struct MD5Fun {
 	static constexpr const char *Description = "Returns the MD5 hash of the value as a string";
 	static constexpr const char *Example = "md5('123')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct MD5NumberFun {
@@ -432,7 +432,7 @@ struct MD5NumberFun {
 	static constexpr const char *Description = "Returns the MD5 hash of the value as an INT128";
 	static constexpr const char *Example = "md5_number('123')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct SHA1Fun {
@@ -441,7 +441,7 @@ struct SHA1Fun {
 	static constexpr const char *Description = "Returns the SHA1 hash of the value";
 	static constexpr const char *Example = "sha1('hello')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 struct SHA256Fun {
@@ -450,7 +450,7 @@ struct SHA256Fun {
 	static constexpr const char *Description = "Returns the SHA256 hash of the value";
 	static constexpr const char *Example = "sha256('hello')";
 
-	static ScalarFunctionSet GetFunctions();
+	DUCKDB_API static ScalarFunctionSet GetFunctions();
 };
 
 } // namespace duckdb

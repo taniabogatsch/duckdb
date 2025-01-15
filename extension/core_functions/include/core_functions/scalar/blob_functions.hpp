@@ -21,7 +21,7 @@ struct DecodeFun {
 	static constexpr const char *Description = "Convert blob to varchar. Fails if blob is not valid utf-8";
 	static constexpr const char *Example = "decode('\\xC3\\xBC'::BLOB)";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct EncodeFun {
@@ -30,7 +30,7 @@ struct EncodeFun {
 	static constexpr const char *Description = "Convert varchar to blob. Converts utf-8 characters into literal encoding";
 	static constexpr const char *Example = "encode('my_string_with_ü')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct FromBase64Fun {
@@ -39,7 +39,7 @@ struct FromBase64Fun {
 	static constexpr const char *Description = "Convert a base64 encoded string to a character string";
 	static constexpr const char *Example = "from_base64('QQ==')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ToBase64Fun {
@@ -48,7 +48,7 @@ struct ToBase64Fun {
 	static constexpr const char *Description = "Convert a blob to a base64 encoded string";
 	static constexpr const char *Example = "base64('A'::blob)";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct Base64Fun {

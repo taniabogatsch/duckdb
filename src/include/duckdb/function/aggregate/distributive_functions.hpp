@@ -21,7 +21,7 @@ struct CountStarFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static AggregateFunction GetFunction();
+	DUCKDB_API static AggregateFunction GetFunction();
 };
 
 struct CountFun {
@@ -30,7 +30,7 @@ struct CountFun {
 	static constexpr const char *Description = "Returns the number of non-null values in arg.";
 	static constexpr const char *Example = "count(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct FirstFun {
@@ -39,7 +39,7 @@ struct FirstFun {
 	static constexpr const char *Description = "Returns the first value (null or non-null) from arg. This function is affected by ordering.";
 	static constexpr const char *Example = "first(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct ArbitraryFun {
@@ -54,7 +54,7 @@ struct LastFun {
 	static constexpr const char *Description = "Returns the last value of a column. This function is affected by ordering.";
 	static constexpr const char *Example = "last(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct AnyValueFun {
@@ -63,7 +63,7 @@ struct AnyValueFun {
 	static constexpr const char *Description = "Returns the first non-null value from arg. This function is affected by ordering.";
 	static constexpr const char *Example = "";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct MinFun {
@@ -72,7 +72,7 @@ struct MinFun {
 	static constexpr const char *Description = "Returns the minimum value present in arg.";
 	static constexpr const char *Example = "min(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 struct MaxFun {
@@ -81,7 +81,7 @@ struct MaxFun {
 	static constexpr const char *Description = "Returns the maximum value present in arg.";
 	static constexpr const char *Example = "max(A)";
 
-	static AggregateFunctionSet GetFunctions();
+	DUCKDB_API static AggregateFunctionSet GetFunctions();
 };
 
 } // namespace duckdb

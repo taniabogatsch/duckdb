@@ -21,7 +21,7 @@ struct ConstantOrNullFun {
 	static constexpr const char *Description = "If arg2 is NULL, return NULL. Otherwise, return arg1.";
 	static constexpr const char *Example = "constant_or_null(42, NULL)";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct GetVariableFun {
@@ -30,7 +30,7 @@ struct GetVariableFun {
 	static constexpr const char *Description = "";
 	static constexpr const char *Example = "";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct ErrorFun {
@@ -39,7 +39,7 @@ struct ErrorFun {
 	static constexpr const char *Description = "Throws the given error message";
 	static constexpr const char *Example = "error('access_mode')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct CreateSortKeyFun {
@@ -48,7 +48,7 @@ struct CreateSortKeyFun {
 	static constexpr const char *Description = "Constructs a binary-comparable sort key based on a set of input parameters and sort qualifiers";
 	static constexpr const char *Example = "create_sort_key('A', 'DESC')";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 } // namespace duckdb

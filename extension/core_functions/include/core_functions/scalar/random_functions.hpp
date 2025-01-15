@@ -21,7 +21,7 @@ struct RandomFun {
 	static constexpr const char *Description = "Returns a random number between 0 and 1";
 	static constexpr const char *Example = "random()";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct SetseedFun {
@@ -30,7 +30,7 @@ struct SetseedFun {
 	static constexpr const char *Description = "Sets the seed to be used for the random function";
 	static constexpr const char *Example = "setseed(0.42)";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct UUIDFun {
@@ -39,7 +39,7 @@ struct UUIDFun {
 	static constexpr const char *Description = "Returns a random UUID similar to this: eeccb8c5-9943-b2bb-bb5e-222f4e14b687";
 	static constexpr const char *Example = "uuid()";
 
-	static ScalarFunction GetFunction();
+	DUCKDB_API static ScalarFunction GetFunction();
 };
 
 struct GenRandomUuidFun {
