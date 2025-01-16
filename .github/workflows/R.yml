@@ -91,8 +91,14 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DUCKDB_STAGING_KEY }}
         run: |
           zip -j static-lib-windows-mingw.zip src/include/duckdb.h build/release/libduckdb_bundle.a
-          ./scripts/upload-assets-to-staging.sh github_release static-lib-windows-mingw.zip
+          zip -r bundle-folder.zip build/release/bundle
+          ./scripts/upload-assets-to-staging.sh github_release static-lib-windows-mingw.zip bundle-folder.zip
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle-folder
+          path: |
+            bundle-folder.zip
       - uses: actions/upload-artifact@v4
         with:
           name: duckdb-static-lib-windows-mingw
