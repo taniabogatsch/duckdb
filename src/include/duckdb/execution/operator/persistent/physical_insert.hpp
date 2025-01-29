@@ -48,11 +48,7 @@ public:
 
 public:
 	//! The to-be-inserted chunk.
-	//! We initialize it lazily, as we need to know which columns will be references and which will be set to their
-	//! default values.
 	DataChunk insert_chunk;
-	bool init_insert_chunk = true;
-	vector<LogicalType> types;
 	//! The chunk containing the tuples that become an update (if DO UPDATE)
 	DataChunk update_chunk;
 	ExpressionExecutor default_executor;

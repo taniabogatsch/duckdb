@@ -87,10 +87,9 @@ InsertLocalState::InsertLocalState(ClientContext &context, const vector<LogicalT
 
 	auto &allocator = Allocator::Get(context);
 
-	types = types_p;
-	auto initialize = vector<bool>(types.size(), false);
-	update_chunk.Initialize(allocator, types, initialize);
-	append_chunk.Initialize(allocator, types, initialize);
+	insert_chunk.Initialize(allocator, types_p);
+	update_chunk.Initialize(allocator, types_p);
+	append_chunk.Initialize(allocator, types_p);
 }
 
 ConstraintState &InsertLocalState::GetConstraintState(DataTable &table, TableCatalogEntry &table_ref) {
@@ -189,8 +188,7 @@ static void CombineExistingAndInsertTuples(DataChunk &result, DataChunk &scan_ch
 	if (types_to_fetch.empty()) {
 		// We have not scanned the initial table, so we duplicate the initial chunk.
 		const auto &types = input_chunk.GetTypes();
-		auto initialize = vector<bool>(types.size(), false);
-		result.Initialize(client, types, initialize, input_chunk.size());
+		result.Initialize(client, types, input_chunk.size());
 		result.Reference(input_chunk);
 		result.SetCardinality(input_chunk);
 		return;
@@ -261,8 +259,7 @@ static void CreateUpdateChunk(ExecutionContext &context, DataChunk &chunk, Vecto
 	}
 
 	if (chunk.size() == 0) {
-		auto initialize = vector<bool>(set_types.size(), false);
-		update_chunk.Initialize(context.client, set_types, initialize, chunk.size());
+		update_chunk.Initialize(context.client, set_types, chunk.size());
 		update_chunk.SetCardinality(chunk);
 		return;
 	}
@@ -489,8 +486,7 @@ static idx_t HandleInsertConflicts(TableCatalogEntry &table, ExecutionContext &c
 
 	// Filter out everything but the conflicting rows
 	const auto &types = tuples.GetTypes();
-	auto initialize = vector<bool>(types.size(), false);
-	conflict_chunk.Initialize(context.client, types, initialize, tuples.size());
+	conflict_chunk.Initialize(context.client, types, tuples.size());
 	conflict_chunk.Reference(tuples);
 	conflict_chunk.Slice(conflicts.Selection(), conflicts.Count());
 	conflict_chunk.SetCardinality(conflicts.Count());
@@ -634,21 +630,6 @@ SinkResultType PhysicalInsert::Sink(ExecutionContext &context, DataChunk &chunk,
 
 	auto &table = gstate.table;
 	auto &storage = table.GetStorage();
-	if (lstate.init_insert_chunk) {
-		auto initialize = vector<bool>(lstate.types.size(), false);
-		if (!column_index_map.empty()) {
-			for (auto &col : table.GetColumns().Physical()) {
-				auto storage_idx = col.StorageOid();
-				auto mapped_index = column_index_map[col.Physical()];
-				if (mapped_index == DConstants::INVALID_INDEX) {
-					initialize[storage_idx] = true;
-				}
-			}
-		}
-		auto &allocator = Allocator::Get(context.client);
-		lstate.insert_chunk.Initialize(allocator, lstate.types, initialize, chunk.size());
-		lstate.init_insert_chunk = false;
-	}
 	PhysicalInsert::ResolveDefaults(table, chunk, column_index_map, lstate.default_executor, lstate.insert_chunk);
 
 	if (!parallel) {
