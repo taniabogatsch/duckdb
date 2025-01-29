@@ -190,7 +190,7 @@ static void CombineExistingAndInsertTuples(DataChunk &result, DataChunk &scan_ch
 		// We have not scanned the initial table, so we duplicate the initial chunk.
 		const auto &types = input_chunk.GetTypes();
 		auto initialize = vector<bool>(types.size(), false);
-		result.Initialize(client, types, initialize, input_chunk.size());
+		result.Initialize(client, types, initialize);
 		result.Reference(input_chunk);
 		result.SetCardinality(input_chunk);
 		return;
@@ -200,7 +200,7 @@ static void CombineExistingAndInsertTuples(DataChunk &result, DataChunk &scan_ch
 	combined_types.insert(combined_types.end(), insert_types.begin(), insert_types.end());
 	combined_types.insert(combined_types.end(), types_to_fetch.begin(), types_to_fetch.end());
 
-	result.Initialize(client, combined_types, input_chunk.size());
+	result.Initialize(client, combined_types);
 	result.Reset();
 	// Add the VALUES list
 	for (idx_t i = 0; i < insert_types.size(); i++) {
@@ -262,13 +262,13 @@ static void CreateUpdateChunk(ExecutionContext &context, DataChunk &chunk, Vecto
 
 	if (chunk.size() == 0) {
 		auto initialize = vector<bool>(set_types.size(), false);
-		update_chunk.Initialize(context.client, set_types, initialize, chunk.size());
+		update_chunk.Initialize(context.client, set_types, initialize);
 		update_chunk.SetCardinality(chunk);
 		return;
 	}
 
 	// Execute the SET expressions.
-	update_chunk.Initialize(context.client, set_types, chunk.size());
+	update_chunk.Initialize(context.client, set_types);
 	ExpressionExecutor executor(context.client, set_expressions);
 	executor.Execute(chunk, update_chunk);
 	update_chunk.SetCardinality(chunk);
@@ -490,7 +490,7 @@ static idx_t HandleInsertConflicts(TableCatalogEntry &table, ExecutionContext &c
 	// Filter out everything but the conflicting rows
 	const auto &types = tuples.GetTypes();
 	auto initialize = vector<bool>(types.size(), false);
-	conflict_chunk.Initialize(context.client, types, initialize, tuples.size());
+	conflict_chunk.Initialize(context.client, types, initialize);
 	conflict_chunk.Reference(tuples);
 	conflict_chunk.Slice(conflicts.Selection(), conflicts.Count());
 	conflict_chunk.SetCardinality(conflicts.Count());
@@ -501,7 +501,7 @@ static idx_t HandleInsertConflicts(TableCatalogEntry &table, ExecutionContext &c
 		D_ASSERT(scan_chunk.size() == 0);
 		// When these values are required for the conditions or the SET expressions,
 		// then we scan the existing table for the conflicting tuples, using the rowids
-		scan_chunk.Initialize(context.client, types_to_fetch, conflicts.Count());
+		scan_chunk.Initialize(context.client, types_to_fetch);
 		fetch_state = make_uniq<ColumnFetchState>();
 		if (GLOBAL) {
 			auto &transaction = DuckTransaction::Get(context.client, table.catalog);
@@ -646,7 +646,7 @@ SinkResultType PhysicalInsert::Sink(ExecutionContext &context, DataChunk &chunk,
 			}
 		}
 		auto &allocator = Allocator::Get(context.client);
-		lstate.insert_chunk.Initialize(allocator, lstate.types, initialize, chunk.size());
+		lstate.insert_chunk.Initialize(allocator, lstate.types, initialize);
 		lstate.init_insert_chunk = false;
 	}
 	PhysicalInsert::ResolveDefaults(table, chunk, column_index_map, lstate.default_executor, lstate.insert_chunk);
