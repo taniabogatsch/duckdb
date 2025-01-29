@@ -88,9 +88,8 @@ InsertLocalState::InsertLocalState(ClientContext &context, const vector<LogicalT
 	auto &allocator = Allocator::Get(context);
 
 	types = types_p;
-	auto initialize = vector<bool>(types.size(), false);
-	update_chunk.Initialize(allocator, types, initialize);
-	append_chunk.Initialize(allocator, types, initialize);
+	update_chunk.Initialize(allocator, types);
+	append_chunk.Initialize(allocator, types);
 }
 
 ConstraintState &InsertLocalState::GetConstraintState(DataTable &table, TableCatalogEntry &table_ref) {
@@ -189,8 +188,7 @@ static void CombineExistingAndInsertTuples(DataChunk &result, DataChunk &scan_ch
 	if (types_to_fetch.empty()) {
 		// We have not scanned the initial table, so we duplicate the initial chunk.
 		const auto &types = input_chunk.GetTypes();
-		auto initialize = vector<bool>(types.size(), false);
-		result.Initialize(client, types, initialize, input_chunk.size());
+		result.Initialize(client, types, input_chunk.size());
 		result.Reference(input_chunk);
 		result.SetCardinality(input_chunk);
 		return;
@@ -489,8 +487,7 @@ static idx_t HandleInsertConflicts(TableCatalogEntry &table, ExecutionContext &c
 
 	// Filter out everything but the conflicting rows
 	const auto &types = tuples.GetTypes();
-	auto initialize = vector<bool>(types.size(), false);
-	conflict_chunk.Initialize(context.client, types, initialize, tuples.size());
+	conflict_chunk.Initialize(context.client, types, tuples.size());
 	conflict_chunk.Reference(tuples);
 	conflict_chunk.Slice(conflicts.Selection(), conflicts.Count());
 	conflict_chunk.SetCardinality(conflicts.Count());
