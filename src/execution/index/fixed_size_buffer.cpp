@@ -54,7 +54,7 @@ FixedSizeBuffer::FixedSizeBuffer(BlockManager &block_manager, const idx_t segmen
 	D_ASSERT(block_handle->BlockId() < MAXIMUM_BLOCK);
 }
 
-FixedSizeBuffer::~FixedSizeBuffer() {
+void FixedSizeBuffer::Destroy() {
 	lock_guard<mutex> l(lock);
 	if (InMemory()) {
 		// we can have multiple readers on a pinned block, and unpinning the buffer handle

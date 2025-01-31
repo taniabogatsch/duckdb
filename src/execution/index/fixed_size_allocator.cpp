@@ -112,6 +112,9 @@ void FixedSizeAllocator::Free(const IndexPointer ptr) {
 }
 
 void FixedSizeAllocator::Reset() {
+	for (auto &buffer : buffers) {
+		buffer.second->Destroy();
+	}
 	buffers.clear();
 	buffers_with_free_space.clear();
 	total_segment_count = 0;
@@ -224,10 +227,11 @@ bool FixedSizeAllocator::InitializeVacuum() {
 }
 
 void FixedSizeAllocator::FinalizeVacuum() {
-
 	for (auto &buffer_id : vacuum_buffers) {
 		D_ASSERT(buffers.find(buffer_id) != buffers.end());
-		D_ASSERT(buffers.find(buffer_id)->second->InMemory());
+		auto &buffer = buffers.find(buffer_id)->second;
+		D_ASSERT(buffer->InMemory());
+		buffer->Destroy();
 		buffers.erase(buffer_id);
 	}
 	vacuum_buffers.clear();
@@ -346,6 +350,7 @@ void FixedSizeAllocator::RemoveEmptyBuffers() {
 		}
 
 		buffers_with_free_space.erase(buffer_it->first);
+		buffer_it->second->Destroy();
 		buffer_it = buffers.erase(buffer_it);
 	}
 }

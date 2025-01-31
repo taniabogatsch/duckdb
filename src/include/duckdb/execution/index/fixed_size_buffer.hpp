@@ -48,8 +48,6 @@ public:
 	FixedSizeBuffer(BlockManager &block_manager, const idx_t segment_count, const idx_t allocation_size,
 	                const BlockPointer &block_pointer);
 
-	~FixedSizeBuffer();
-
 private:
 	//! Returns a pointer to the buffer in memory, and calls Deserialize, if the buffer is not in memory
 	data_ptr_t Get(const bool dirty_p = true) {
@@ -85,6 +83,8 @@ private:
 	//! Sets all uninitialized regions of a buffer in the respective partial block allocation
 	void SetUninitializedRegions(PartialBlockForIndex &p_block_for_index, const idx_t segment_size, const idx_t offset,
 	                             const idx_t bitmask_offset, const idx_t available_segments);
+	//! Destroys the in-memory buffer and the on-disk block
+	void Destroy();
 
 private:
 	//! Block manager of the database instance
