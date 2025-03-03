@@ -72,7 +72,13 @@ SourceResultType PhysicalAttach::GetData(ExecutionContext &context, DataChunk &c
 
 	//! Initialize the database.
 	const auto storage_options = info->GetStorageOptions();
+
+	auto start = system_clock::now();
 	attached_db->Initialize(storage_options);
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_ERROR(context.client, "duckdb.PhysicalAttach.Initialize", "%f", elapsed);
+
 	if (!options.default_table.name.empty()) {
 		attached_db->GetCatalog().SetDefaultTable(options.default_table.schema, options.default_table.name);
 	}

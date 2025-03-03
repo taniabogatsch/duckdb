@@ -59,9 +59,13 @@ optional_ptr<AttachedDatabase> DatabaseManager::AttachDatabase(ClientContext &co
 	}
 
 	// and add it to the databases catalog set
+	auto start = system_clock::now();
 	if (!databases->CreateEntry(context, name, std::move(attached_db), dependencies)) {
 		throw BinderException("Failed to attach database: database with name \"%s\" already exists", name);
 	}
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_ERROR(context, "duckdb.AttachDatabase.CreateEntry", "%f", elapsed);
 
 	return GetDatabase(context, name);
 }

@@ -295,6 +295,8 @@ bool LocalFileSystem::IsPrivateFile(const string &path_p, FileOpener *opener) {
 
 unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenFlags flags,
                                                  optional_ptr<FileOpener> opener) {
+	auto start = system_clock::now();
+
 	auto path = FileSystem::ExpandPath(path_p, opener);
 	auto normalized_path = NormalizeLocalPath(path);
 	if (flags.Compression() != FileCompressionType::UNCOMPRESSED) {
@@ -438,6 +440,13 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 				                  path, extended_error);
 			}
 		}
+	}
+
+
+	if (opener) {
+		auto end = system_clock::now();
+		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+		DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.OpenFile", "%f", elapsed);
 	}
 	return make_uniq<UnixFileHandle>(*this, path, fd, flags);
 }
