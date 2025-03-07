@@ -201,10 +201,14 @@ void SingleFileStorageManager::LoadDatabase(StorageOptions storage_options) {
 		// Initialize the block manager while loading the database file.
 		// We'll construct the SingleFileBlockManager with the default block allocation size,
 		// and later adjust it when reading the file header.
+		auto start = system_clock::now();
 		auto sf_block_manager = make_uniq<SingleFileBlockManager>(db, path, options);
 		sf_block_manager->LoadExistingDatabase();
 		block_manager = std::move(sf_block_manager);
 		table_io_manager = make_uniq<SingleFileTableIOManager>(*block_manager, row_group_size);
+		auto end = system_clock::now();
+		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.SingleFileBlockManager.LoadExistingDatabase", "%f", elapsed);
 
 		if (storage_options.block_alloc_size.IsValid()) {
 			// user-provided block alloc size
@@ -217,11 +221,19 @@ void SingleFileStorageManager::LoadDatabase(StorageOptions storage_options) {
 		}
 
 		// load the db from storage
+		start = system_clock::now();
 		auto checkpoint_reader = SingleFileCheckpointReader(*this);
 		checkpoint_reader.LoadFromStorage();
+		end = system_clock::now();
+		elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.CheckpointReader.LoadFromStorage", "%f", elapsed);
 
+		start = system_clock::now();
 		auto wal_path = GetWALPath();
 		wal = WriteAheadLog::Replay(fs, db, wal_path);
+		end = system_clock::now();
+		elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.WriteAheadLog.Replay", "%f", elapsed);
 	}
 	if (row_group_size > 122880ULL && GetStorageVersion() < 4) {
 		throw InvalidInputException("Unsupported row group size %llu - row group sizes >= 122_880 are only supported "
