@@ -360,10 +360,17 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 	}
 
 	// Open the file
+	auto start_open = system_clock::now();
 	int fd = open(normalized_path, open_flags, filesec);
+	auto end_open = system_clock::now();
+	auto elapsed_open = duration_cast<duration<double>>(end_open - start_open).count(); // Seconds.
+	DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.open", "%f", elapsed_open);
 
 	if (fd == -1) {
 		if (flags.ReturnNullIfNotExists() && errno == ENOENT) {
+			auto end = system_clock::now();
+			auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+			DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.OpenFile", "%f", elapsed);
 			return nullptr;
 		}
 		if (flags.ReturnNullIfExists() && errno == EEXIST) {
