@@ -254,6 +254,7 @@ void SingleFileCheckpointWriter::CreateCheckpoint() {
 }
 
 void CheckpointReader::LoadCheckpoint(CatalogTransaction transaction, MetadataReader &reader) {
+	auto start = system_clock::now();
 	BinaryDeserializer deserializer(reader);
 	deserializer.Set<Catalog &>(catalog);
 	deserializer.Begin();
@@ -262,6 +263,9 @@ void CheckpointReader::LoadCheckpoint(CatalogTransaction transaction, MetadataRe
 	});
 	deserializer.End();
 	deserializer.Unset<Catalog>();
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_ERROR(*transaction.db, "duckdb.CheckpointReader.LoadCheckpoint", "%f", elapsed);
 }
 
 MetadataManager &SingleFileCheckpointReader::GetMetadataManager() {
