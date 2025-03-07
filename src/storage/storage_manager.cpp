@@ -228,8 +228,9 @@ void SingleFileStorageManager::LoadDatabase(StorageOptions storage_options) {
 		elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
 		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.CheckpointReader.LoadFromStorage", "%f", elapsed);
 
-		start = system_clock::now();
 		auto wal_path = GetWALPath();
+
+		start = system_clock::now();
 		wal = WriteAheadLog::Replay(fs, db, wal_path);
 		end = system_clock::now();
 		elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.

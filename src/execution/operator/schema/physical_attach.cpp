@@ -67,16 +67,20 @@ SourceResultType PhysicalAttach::GetData(ExecutionContext &context, DataChunk &c
 	}
 
 	// Get the database type and attach the database.
+	auto start = system_clock::now();
 	db_manager.GetDatabaseType(context.client, *info, config, options);
 	auto attached_db = db_manager.AttachDatabase(context.client, *info, options);
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_ERROR(context.client, "duckdb.DatabaseManager.AttachDatabase", "%f", elapsed);
 
 	//! Initialize the database.
 	const auto storage_options = info->GetStorageOptions();
 
-	auto start = system_clock::now();
+	start = system_clock::now();
 	attached_db->Initialize(storage_options);
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	end = system_clock::now();
+	elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
 	DUCKDB_LOG_ERROR(context.client, "duckdb.PhysicalAttach.Initialize", "%f", elapsed);
 
 	if (!options.default_table.name.empty()) {
