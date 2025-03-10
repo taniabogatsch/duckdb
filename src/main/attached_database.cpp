@@ -173,12 +173,12 @@ string AttachedDatabase::ExtractDatabaseName(const string &dbpath, FileSystem &f
 	return name;
 }
 
-void AttachedDatabase::Initialize(StorageOptions options) {
+void AttachedDatabase::Initialize(optional_ptr<ClientContext> context, StorageOptions options) {
 	if (IsSystem()) {
-		catalog->Initialize(true);
+		catalog->Initialize(context, true);
 	} else {
 		auto start = system_clock::now();
-		catalog->Initialize(false);
+		catalog->Initialize(context, false);
 		auto end = system_clock::now();
 		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
 		DUCKDB_LOG_ERROR(db, "duckdb.Catalog.Initialize", "%f", elapsed);
@@ -255,7 +255,7 @@ void AttachedDatabase::Close() {
 			}
 			CheckpointOptions options;
 			options.wal_action = CheckpointWALAction::DELETE_WAL;
-			storage->CreateCheckpoint(options);
+			storage->CreateCheckpoint(nullptr, options);
 		}
 	} catch (...) { // NOLINT
 	}
