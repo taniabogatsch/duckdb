@@ -453,7 +453,6 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 		}
 	}
 
-
 	if (opener) {
 		auto end = system_clock::now();
 		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.

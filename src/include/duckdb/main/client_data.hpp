@@ -35,11 +35,7 @@ struct ClientData {
 
 	//! Query profiler
 	shared_ptr<QueryProfiler> profiler;
-//	template <typename T>
-//	class Start {
-//		time_point<T> start;
-//	};
-//
+	//! Start time of a query.
 	time_point<system_clock, duration<double>> start;
 
 	//! HTTP logger

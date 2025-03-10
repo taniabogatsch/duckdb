@@ -172,12 +172,7 @@ unique_ptr<WriteAheadLog> WriteAheadLog::Replay(FileSystem &fs, AttachedDatabase
 	DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.FileSystem.OpenFile", "%f", elapsed);
 	if (!handle) {
 		// WAL does not exist - instantiate an empty WAL
-		start = system_clock::now();
-		auto wal = make_uniq<WriteAheadLog>(db, wal_path);
-		end = system_clock::now();
-		elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.make_uniq.WriteAheadLog", "%f", elapsed);
-		return wal;
+		return make_uniq<WriteAheadLog>(db, wal_path);
 	}
 	auto wal_handle = ReplayInternal(db, std::move(handle));
 	if (wal_handle) {
