@@ -225,7 +225,7 @@ ErrorData ClientContext::EndQueryInternal(ClientContextLock &lock, bool success,
                                           optional_ptr<ErrorData> previous_error) {
 	auto end = system_clock::now();
 	auto elapsed = duration_cast<duration<double>>(end - client_data->start).count(); // Seconds.
-	DUCKDB_LOG_ERROR(*this, "duckdb.ClientContext.EndQueryInternal", "%f", elapsed);
+	DUCKDB_LOG_ERROR(*this, "duckdb.ClientContext.InternalQueryLatency", "%f", elapsed);
 	client_data->profiler->EndQuery();
 
 	if (active_query->executor) {

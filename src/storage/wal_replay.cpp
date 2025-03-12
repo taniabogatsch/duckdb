@@ -165,11 +165,7 @@ private:
 // Replay
 //===--------------------------------------------------------------------===//
 unique_ptr<WriteAheadLog> WriteAheadLog::Replay(FileSystem &fs, AttachedDatabase &db, const string &wal_path) {
-	auto start = system_clock::now();
 	auto handle = fs.OpenFile(wal_path, FileFlags::FILE_FLAGS_READ | FileFlags::FILE_FLAGS_NULL_IF_NOT_EXISTS);
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-	DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.FileSystem.OpenFile", "%f", elapsed);
 	if (!handle) {
 		// WAL does not exist - instantiate an empty WAL
 		return make_uniq<WriteAheadLog>(db, wal_path);

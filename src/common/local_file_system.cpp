@@ -365,7 +365,7 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 	if (opener) {
 		auto end_open = system_clock::now();
 		auto elapsed_open = duration_cast<duration<double>>(end_open - start_open).count(); // Seconds.
-		DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.open", "%f", elapsed_open);
+		DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.openSystemCall", "%f", elapsed_open);
 	}
 
 	if (fd == -1) {
@@ -373,7 +373,7 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 			if (opener) {
 				auto end = system_clock::now();
 				auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-				DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.OpenFile", "%f", elapsed);
+				DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.OpenReturnNull", "%f", elapsed);
 			}
 			return nullptr;
 		}
@@ -456,7 +456,7 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 	if (opener) {
 		auto end = system_clock::now();
 		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.OpenFile", "%f", elapsed);
+		DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.OpenReturnUnixFileHandle", "%f", elapsed);
 	}
 	return make_uniq<UnixFileHandle>(*this, path, fd, flags);
 }
