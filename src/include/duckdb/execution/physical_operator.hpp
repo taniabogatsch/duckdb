@@ -31,8 +31,7 @@ class Pipeline;
 class PipelineBuildState;
 class MetaPipeline;
 
-//! PhysicalOperator is the base class of the physical operators present in the
-//! execution plan
+//! PhysicalOperator is the base class of the physical operators in the execution plan.
 class PhysicalOperator {
 public:
 	static constexpr const PhysicalOperatorType TYPE = PhysicalOperatorType::INVALID;
@@ -41,6 +40,10 @@ public:
 	PhysicalOperator(PhysicalOperatorType type, vector<LogicalType> types, idx_t estimated_cardinality)
 	    : type(type), types(std::move(types)), estimated_cardinality(estimated_cardinality) {
 	}
+
+	//	PhysicalOperator(PhysicalOperatorType type, array_ptr<reference<PhysicalOperator>> children, vector<LogicalType> types, idx_t estimated_cardinality)
+	//	    : type(type), children(std::move(children)), types(std::move(types)), estimated_cardinality(estimated_cardinality) {
+	//	}
 
 	virtual ~PhysicalOperator() {
 	}
@@ -51,8 +54,11 @@ public:
 
 	//! The physical operator type
 	PhysicalOperatorType type;
-	//! The set of children of the operator
+	// The children of this operator.
 	vector<reference<PhysicalOperator>> children;
+
+	//	// The children of this operator.
+	//	array_ptr<reference<PhysicalOperator>> children;
 	//! The types returned by this physical operator
 	vector<LogicalType> types;
 	//! The estimated cardinality of this physical operator

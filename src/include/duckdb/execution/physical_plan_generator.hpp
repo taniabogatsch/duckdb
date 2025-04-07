@@ -16,6 +16,8 @@
 #include "duckdb/catalog/dependency_list.hpp"
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/unordered_set.hpp"
+#include "duckdb/common/array_ptr.hpp"
+#include "duckdb/common/initializer_list.hpp"
 
 namespace duckdb {
 class ClientContext;
@@ -41,6 +43,19 @@ public:
 		auto ptr = new (mem) T(std::forward<ARGS>(args)...);
 		ops.push_back(*ptr);
 		return *ptr;
+	}
+
+	template <class T>
+	array_ptr<T> MakeArray(initializer_list<T> elems) {
+		auto mem = arena.AllocateAligned(elems.size() * sizeof(T));
+		auto ptr = array_ptr<T>(reinterpret_cast<T*>(mem), elems.size());
+
+		idx_t i = 0;
+		for (const auto &elem : elems) {
+			ptr[i] = elem;
+			i++;
+		}
+		return ptr;
 	}
 
 	PhysicalOperator &Root() {
@@ -93,6 +108,12 @@ public:
 	template <class T, class... ARGS>
 	PhysicalOperator &Make(ARGS &&... args) {
 		return physical_plan->Make<T>(std::forward<ARGS>(args)...);
+	}
+
+	template <class T>
+	array_ptr<T> MakeArray(initializer_list<T> elems) {
+		// Copying a std::initializer_list does not copy the backing array of the corresponding initializer list.
+		return physical_plan->MakeArray<T>(elems);
 	}
 
 public:
