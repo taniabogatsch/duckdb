@@ -26,8 +26,10 @@ PhysicalOperator &PhysicalPlanGenerator::CreatePlan(LogicalFilter &op) {
 		for (idx_t i = 0; i < op.projection_map.size(); i++) {
 			select_list.push_back(make_uniq<BoundReferenceExpression>(op.types[i], op.projection_map[i]));
 		}
+		// TODO: or set them one-by-one? children[0] = plan.
 		auto children = MakeArray({plan});
 		auto &proj = Make<PhysicalProjection>(op.types, std::move(select_list), op.estimated_cardinality);
+		// TODO: pass to constructor? Assign afterwards?
 		proj.children.push_back(plan);
 		plan = proj;
 	}
