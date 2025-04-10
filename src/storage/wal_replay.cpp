@@ -176,7 +176,11 @@ unique_ptr<WriteAheadLog> WriteAheadLog::Replay(FileSystem &fs, AttachedDatabase
 	}
 	// replay returning NULL indicates we can nuke the WAL entirely - but only if this is not a read-only connection
 	if (!db.IsReadOnly()) {
+		auto start = system_clock::now();
 		fs.RemoveFile(wal_path);
+		auto end = system_clock::now();
+		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.WriteAheadLog.Replay.RemoveFile", "%f", elapsed);
 	}
 	return make_uniq<WriteAheadLog>(db, wal_path);
 }

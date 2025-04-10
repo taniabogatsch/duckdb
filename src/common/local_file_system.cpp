@@ -63,7 +63,8 @@ namespace duckdb {
 bool LocalFileSystem::FileExists(const string &filename, optional_ptr<FileOpener> opener) {
 	if (!filename.empty()) {
 		auto normalized_file = NormalizeLocalPath(filename);
-		if (access(normalized_file, 0) == 0) {
+		auto access_result = access(normalized_file, 0);
+		if (access_result == 0) {
 			struct stat status;
 			stat(normalized_file, &status);
 			if (S_ISREG(status.st_mode)) {
@@ -373,11 +374,16 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 			if (opener) {
 				auto end = system_clock::now();
 				auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-				DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.OpenReturnNull", "%f", elapsed);
+				DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.ReturnNullIfNotExists", "%f", elapsed);
 			}
 			return nullptr;
 		}
 		if (flags.ReturnNullIfExists() && errno == EEXIST) {
+			if (opener) {
+				auto end = system_clock::now();
+				auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+				DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.ReturnNullIfExists", "%f", elapsed);
+			}
 			return nullptr;
 		}
 		throw IOException("Cannot open file \"%s\": %s", {{"errno", std::to_string(errno)}}, path, strerror(errno));
@@ -674,10 +680,16 @@ void LocalFileSystem::RemoveDirectory(const string &directory, optional_ptr<File
 }
 
 void LocalFileSystem::RemoveFile(const string &filename, optional_ptr<FileOpener> opener) {
+	auto start = system_clock::now();
 	auto normalized_file = NormalizeLocalPath(filename);
 	if (std::remove(normalized_file) != 0) {
 		throw IOException("Could not remove file \"%s\": %s", {{"errno", std::to_string(errno)}}, filename,
 		                  strerror(errno));
+	}
+	if (opener) {
+		auto end = system_clock::now();
+		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+		DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.RemoveFile", "%f", elapsed);
 	}
 }
 
