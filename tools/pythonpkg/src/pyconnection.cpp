@@ -696,11 +696,10 @@ shared_ptr<DuckDBPyConnection> DuckDBPyConnection::RegisterPythonObject(const st
 	return shared_from_this();
 }
 
-static void ParseMultiFileReaderOptions(named_parameter_map_t &options, const Optional<py::object> &filename,
-                                        const Optional<py::object> &hive_partitioning,
-                                        const Optional<py::object> &union_by_name,
-                                        const Optional<py::object> &hive_types,
-                                        const Optional<py::object> &hive_types_autocast) {
+static void ParseMultiFileOptions(named_parameter_map_t &options, const Optional<py::object> &filename,
+                                  const Optional<py::object> &hive_partitioning,
+                                  const Optional<py::object> &union_by_name, const Optional<py::object> &hive_types,
+                                  const Optional<py::object> &hive_types_autocast) {
 	if (!py::none().is(filename)) {
 		auto val = TransformPythonValue(filename);
 		options["filename"] = val;
@@ -757,7 +756,7 @@ unique_ptr<DuckDBPyRelation> DuckDBPyConnection::ReadJSON(
 	auto &name = path_like.files;
 	auto file_like_object_wrapper = std::move(path_like.dependency);
 
-	ParseMultiFileReaderOptions(options, filename, hive_partitioning, union_by_name, hive_types, hive_types_autocast);
+	ParseMultiFileOptions(options, filename, hive_partitioning, union_by_name, hive_types, hive_types_autocast);
 
 	if (!py::none().is(columns)) {
 		if (!py::is_dict_like(columns)) {
@@ -1135,8 +1134,7 @@ unique_ptr<DuckDBPyRelation> DuckDBPyConnection::ReadCSV(const py::object &name_
 	auto file_like_object_wrapper = std::move(path_like.dependency);
 	named_parameter_map_t bind_parameters;
 
-	ParseMultiFileReaderOptions(bind_parameters, filename, hive_partitioning, union_by_name, hive_types,
-	                            hive_types_autocast);
+	ParseMultiFileOptions(bind_parameters, filename, hive_partitioning, union_by_name, hive_types, hive_types_autocast);
 
 	// First check if the header is explicitly set
 	// when false this affects the returned types, so it needs to be known at initialization of the relation
@@ -1679,14 +1677,14 @@ unique_ptr<DuckDBPyRelation> DuckDBPyConnection::FromDF(const PandasDataFrame &v
 	return make_uniq<DuckDBPyRelation>(std::move(rel));
 }
 
-unique_ptr<DuckDBPyRelation> DuckDBPyConnection::FromParquet(const string &file_glob, bool binary_as_string,
-                                                             bool file_row_number, bool filename,
-                                                             bool hive_partitioning, bool union_by_name,
-                                                             const py::object &compression) {
+unique_ptr<DuckDBPyRelation> DuckDBPyConnection::FromParquetInternal(Value &&file_param, bool binary_as_string,
+                                                                     bool file_row_number, bool filename,
+                                                                     bool hive_partitioning, bool union_by_name,
+                                                                     const py::object &compression) {
 	auto &connection = con.GetConnection();
 	string name = "parquet_" + StringUtil::GenerateRandomName();
 	vector<Value> params;
-	params.emplace_back(file_glob);
+	params.emplace_back(std::move(file_param));
 	named_parameter_map_t named_parameters({{"binary_as_string", Value::BOOLEAN(binary_as_string)},
 	                                        {"file_row_number", Value::BOOLEAN(file_row_number)},
 	                                        {"filename", Value::BOOLEAN(filename)},
@@ -1704,32 +1702,27 @@ unique_ptr<DuckDBPyRelation> DuckDBPyConnection::FromParquet(const string &file_
 	return make_uniq<DuckDBPyRelation>(connection.TableFunction("parquet_scan", params, named_parameters)->Alias(name));
 }
 
+unique_ptr<DuckDBPyRelation> DuckDBPyConnection::FromParquet(const string &file_glob, bool binary_as_string,
+                                                             bool file_row_number, bool filename,
+                                                             bool hive_partitioning, bool union_by_name,
+                                                             const py::object &compression) {
+	auto file_param = Value(file_glob);
+	return FromParquetInternal(std::move(file_param), binary_as_string, file_row_number, filename, hive_partitioning,
+	                           union_by_name, compression);
+}
+
 unique_ptr<DuckDBPyRelation> DuckDBPyConnection::FromParquets(const vector<string> &file_globs, bool binary_as_string,
                                                               bool file_row_number, bool filename,
                                                               bool hive_partitioning, bool union_by_name,
                                                               const py::object &compression) {
-	auto &connection = con.GetConnection();
-	string name = "parquet_" + StringUtil::GenerateRandomName();
 	vector<Value> params;
 	auto file_globs_as_value = vector<Value>();
 	for (const auto &file : file_globs) {
 		file_globs_as_value.emplace_back(file);
 	}
-	params.emplace_back(Value::LIST(file_globs_as_value));
-	named_parameter_map_t named_parameters({{"binary_as_string", Value::BOOLEAN(binary_as_string)},
-	                                        {"file_row_number", Value::BOOLEAN(file_row_number)},
-	                                        {"filename", Value::BOOLEAN(filename)},
-	                                        {"hive_partitioning", Value::BOOLEAN(hive_partitioning)},
-	                                        {"union_by_name", Value::BOOLEAN(union_by_name)}});
-
-	if (!py::none().is(compression)) {
-		if (!py::isinstance<py::str>(compression)) {
-			throw InvalidInputException("from_parquet only accepts 'compression' as a string");
-		}
-		named_parameters["compression"] = Value(py::str(compression));
-	}
-
-	return make_uniq<DuckDBPyRelation>(connection.TableFunction("parquet_scan", params, named_parameters)->Alias(name));
+	auto file_param = Value::LIST(file_globs_as_value);
+	return FromParquetInternal(std::move(file_param), binary_as_string, file_row_number, filename, hive_partitioning,
+	                           union_by_name, compression);
 }
 
 unique_ptr<DuckDBPyRelation> DuckDBPyConnection::FromArrow(py::object &arrow_object) {
@@ -1739,7 +1732,7 @@ unique_ptr<DuckDBPyRelation> DuckDBPyConnection::FromArrow(py::object &arrow_obj
 		auto py_object_type = string(py::str(arrow_object.get_type().attr("__name__")));
 		throw InvalidInputException("Python Object Type %s is not an accepted Arrow Object.", py_object_type);
 	}
-	auto tableref = PythonReplacementScan::ReplacementObject(arrow_object, name, *connection.context);
+	auto tableref = PythonReplacementScan::ReplacementObject(arrow_object, name, *connection.context, true);
 	D_ASSERT(tableref);
 	auto rel = make_shared_ptr<ViewRelation>(connection.context, std::move(tableref), name);
 	return make_uniq<DuckDBPyRelation>(std::move(rel));
@@ -2291,10 +2284,13 @@ PyArrowObjectType DuckDBPyConnection::GetArrowType(const py::handle &obj) {
 		// First Verify Lib Types
 		auto table_class = import_cache.pyarrow.Table();
 		auto record_batch_reader_class = import_cache.pyarrow.RecordBatchReader();
+		auto message_reader_class = import_cache.pyarrow.ipc.MessageReader();
 		if (py::isinstance(obj, table_class)) {
 			return PyArrowObjectType::Table;
 		} else if (py::isinstance(obj, record_batch_reader_class)) {
 			return PyArrowObjectType::RecordBatchReader;
+		} else if (py::isinstance(obj, message_reader_class)) {
+			return PyArrowObjectType::MessageReader;
 		}
 
 		if (ModuleIsLoaded<PyarrowDatasetCacheItem>()) {
