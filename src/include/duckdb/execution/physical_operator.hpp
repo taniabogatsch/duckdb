@@ -22,6 +22,7 @@
 #include "duckdb/common/enums/order_preservation_type.hpp"
 #include "duckdb/common/case_insensitive_map.hpp"
 #include "duckdb/execution/partition_info.hpp"
+#include "duckdb/common/fixed_size_vector.hpp"
 
 namespace duckdb {
 class Event;
@@ -41,10 +42,6 @@ public:
 	    : type(type), types(std::move(types)), estimated_cardinality(estimated_cardinality) {
 	}
 
-	//	PhysicalOperator(PhysicalOperatorType type, array_ptr<reference<PhysicalOperator>> children, vector<LogicalType> types, idx_t estimated_cardinality)
-	//	    : type(type), children(std::move(children)), types(std::move(types)), estimated_cardinality(estimated_cardinality) {
-	//	}
-
 	virtual ~PhysicalOperator() {
 	}
 
@@ -56,6 +53,7 @@ public:
 	PhysicalOperatorType type;
 	// The children of this operator.
 	vector<reference<PhysicalOperator>> children;
+	unique_ptr<fixed_size_vector<reference<PhysicalOperator>>> childrenn;
 
 	//	// The children of this operator.
 	//	array_ptr<reference<PhysicalOperator>> children;
