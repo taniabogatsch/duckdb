@@ -35,8 +35,6 @@ public:
 	}
 
 public:
-
-	// TODO: make private! (and maybe rename to ensure we aren't using it anymore)
 	template <class OP_TYPE, class... ARGS>
 	PhysicalOperator &Make(ARGS &&... args) {
 		static_assert(std::is_base_of<PhysicalOperator, OP_TYPE>::value, "T must be a physical operator");
@@ -46,47 +44,22 @@ public:
 		return *ptr;
 	}
 
-	//    unique_ptr<QueryResult> QueryParamsRecursive(const string &query, vector<Value> &values);
-	//
-	//    template <typename T, typename... ARGS>
-	//    unique_ptr<QueryResult> QueryParamsRecursive(const string &query, vector<Value> &values, T value, ARGS... args) {
-	//        values.push_back(Value::CreateValue<T>(value));
-	//        return QueryParamsRecursive(query, values, args...);
-	//    }
-
-	template <class OP_TYPE, class CHILD_TYPE, class... ARGS>
-	PhysicalOperator &RecursiveMakeOpWithChildren(fixed_size_vector<CHILD_TYPE> &children, idx_t remaining, ARGS... args) {
-		return Make<OP_TYPE>(std::forward<ARGS>(args)...);
+	template <class CHILD_TYPE, class... ARGS>
+	void MakeChildrenRecursive(fixed_size_vector<CHILD_TYPE> &children) {
+		return;
 	}
 
-	template <class OP_TYPE, class CHILD_TYPE, class... ARGS>
-	PhysicalOperator &RecursiveMakeOpWithChildren(fixed_size_vector<CHILD_TYPE> &children, idx_t remaining, CHILD_TYPE child, ARGS... args) {
-		if (remaining == 0) {
-			return RecursiveMakeOpWithChildren<OP_TYPE>(children, remaining);
-		}
+	template <class CHILD_TYPE, class... ARGS>
+	void MakeChildrenRecursive(fixed_size_vector<CHILD_TYPE> &children, CHILD_TYPE child, ARGS... args) {
 		children.push_back(child);
-		return RecursiveMakeOpWithChildren<OP_TYPE>(children, remaining - 1, args...);
+		MakeChildrenRecursive(children, args...);
 	}
 
-	template <class OP_TYPE, class... ARGS>
-	PhysicalOperator &MakeOpWithChildren(ARGS &&... args) {
-		static_assert(std::is_base_of<PhysicalOperator, OP_TYPE>::value, "OP_TYPE must be a physical operator");
-
-		auto children = make_uniq<fixed_size_vector<reference<PhysicalOperator>>>(arena, OP_TYPE::CHILD_COUNT);
-		auto &op = RecursiveMakeOpWithChildren<OP_TYPE>(*children, OP_TYPE::CHILD_COUNT, args...);
-
-		// TODO: remove children, and rename childrenn to children
-		op.childrenn = std::move(children);
-		auto &c = *op.childrenn;
-
-		for (idx_t i = 0; i < c.size(); i++) {
-			op.children.push_back(c[i]);
-		}
-
-		for (auto &child : c) {
-			op.children.push_back(child);
-		}
-		return op;
+	template <class... ARGS>
+	fixed_size_vector<reference<PhysicalOperator>> MakeChildren(const idx_t child_count, ARGS &&... args) {
+		fixed_size_vector<reference<PhysicalOperator>> children(arena, child_count);
+		MakeChildrenRecursive(children, args...);
+		return children;
 	}
 
 	PhysicalOperator &Root() {
@@ -141,9 +114,9 @@ public:
 		return physical_plan->Make<T>(std::forward<ARGS>(args)...);
 	}
 
-	template <class OP_TYPE, class... ARGS>
-	PhysicalOperator &MakeOpWithChildren(ARGS &&... args) {
-		return physical_plan->MakeOpWithChildren<OP_TYPE>(std::forward<ARGS>(args)...);
+	template <class... ARGS>
+	fixed_size_vector<reference<PhysicalOperator>> MakeChildren(const idx_t child_count, ARGS &&... args) {
+		return physical_plan->MakeChildren(child_count, std::forward<ARGS>(args)...);
 	}
 
 public:

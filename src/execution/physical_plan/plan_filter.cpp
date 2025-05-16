@@ -14,9 +14,19 @@ PhysicalOperator &PhysicalPlanGenerator::CreatePlan(LogicalFilter &op) {
 	D_ASSERT(op.children.size() == 1);
 	reference<PhysicalOperator> plan = CreatePlan(*op.children[0]);
 	if (!op.expressions.empty()) {
+		// Create a filter, if there is anything to filter.
 		D_ASSERT(!plan.get().GetTypes().empty());
-		// create a filter if there is anything to filter
-		auto &filter = MakeOpWithChildren<PhysicalFilter>(plan, plan.get().GetTypes(), std::move(op.expressions), op.estimated_cardinality);
+
+		auto children = MakeChildren(PhysicalFilter::CHILD_COUNT, plan);
+		auto &filter = Make<PhysicalFilter>(plan.get().GetTypes(), std::move(op.expressions), op.estimated_cardinality);
+
+		// TODO: into OP constructor, remove children, and rename childrenn to children
+		filter.childrenn = make_uniq<fixed_size_vector<reference<PhysicalOperator>>>(std::move(children));
+		auto &c = filter.childrenn;
+		for (auto &child : *c) {
+			filter.children.push_back(child);
+		}
+
 		plan = filter;
 	}
 	if (op.HasProjectionMap()) {
@@ -25,10 +35,7 @@ PhysicalOperator &PhysicalPlanGenerator::CreatePlan(LogicalFilter &op) {
 		for (idx_t i = 0; i < op.projection_map.size(); i++) {
 			select_list.push_back(make_uniq<BoundReferenceExpression>(op.types[i], op.projection_map[i]));
 		}
-		// TODO: or set them one-by-one? children[0] = plan.
-//		auto children = MakeArray({plan});
 		auto &proj = Make<PhysicalProjection>(op.types, std::move(select_list), op.estimated_cardinality);
-		// TODO: pass to constructor? Assign afterwards?
 		proj.children.push_back(plan);
 		plan = proj;
 	}
