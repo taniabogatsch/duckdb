@@ -22,6 +22,7 @@
 #include "duckdb/common/enums/order_preservation_type.hpp"
 #include "duckdb/common/case_insensitive_map.hpp"
 #include "duckdb/execution/partition_info.hpp"
+#include "duckdb/common/fixed_size_vector.hpp"
 
 namespace duckdb {
 class Event;
@@ -31,8 +32,7 @@ class Pipeline;
 class PipelineBuildState;
 class MetaPipeline;
 
-//! PhysicalOperator is the base class of the physical operators present in the
-//! execution plan
+//! PhysicalOperator is the base class of the physical operators in the execution plan.
 class PhysicalOperator {
 public:
 	static constexpr const PhysicalOperatorType TYPE = PhysicalOperatorType::INVALID;
@@ -51,8 +51,12 @@ public:
 
 	//! The physical operator type
 	PhysicalOperatorType type;
-	//! The set of children of the operator
+	// The children of this operator.
 	vector<reference<PhysicalOperator>> children;
+	unique_ptr<fixed_size_vector<reference<PhysicalOperator>>> childrenn;
+
+	//	// The children of this operator.
+	//	array_ptr<reference<PhysicalOperator>> children;
 	//! The types returned by this physical operator
 	vector<LogicalType> types;
 	//! The estimated cardinality of this physical operator

@@ -16,6 +16,7 @@
 #include "duckdb/catalog/dependency_list.hpp"
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/unordered_set.hpp"
+#include "duckdb/common/fixed_size_vector.hpp"
 
 namespace duckdb {
 class ClientContext;
@@ -34,13 +35,31 @@ public:
 	}
 
 public:
-	template <class T, class... ARGS>
+	template <class OP_TYPE, class... ARGS>
 	PhysicalOperator &Make(ARGS &&... args) {
-		static_assert(std::is_base_of<PhysicalOperator, T>::value, "T must be a physical operator");
-		auto mem = arena.AllocateAligned(sizeof(T));
-		auto ptr = new (mem) T(std::forward<ARGS>(args)...);
+		static_assert(std::is_base_of<PhysicalOperator, OP_TYPE>::value, "T must be a physical operator");
+		auto mem = arena.AllocateAligned(sizeof(OP_TYPE));
+		auto ptr = new (mem) OP_TYPE(std::forward<ARGS>(args)...);
 		ops.push_back(*ptr);
 		return *ptr;
+	}
+
+	template <class CHILD_TYPE, class... ARGS>
+	void MakeChildrenRecursive(fixed_size_vector<CHILD_TYPE> &children) {
+		return;
+	}
+
+	template <class CHILD_TYPE, class... ARGS>
+	void MakeChildrenRecursive(fixed_size_vector<CHILD_TYPE> &children, CHILD_TYPE child, ARGS... args) {
+		children.push_back(child);
+		MakeChildrenRecursive(children, args...);
+	}
+
+	template <class... ARGS>
+	fixed_size_vector<reference<PhysicalOperator>> MakeChildren(const idx_t child_count, ARGS &&... args) {
+		fixed_size_vector<reference<PhysicalOperator>> children(arena, child_count);
+		MakeChildrenRecursive(children, args...);
+		return children;
 	}
 
 	PhysicalOperator &Root() {
@@ -93,6 +112,11 @@ public:
 	template <class T, class... ARGS>
 	PhysicalOperator &Make(ARGS &&... args) {
 		return physical_plan->Make<T>(std::forward<ARGS>(args)...);
+	}
+
+	template <class... ARGS>
+	fixed_size_vector<reference<PhysicalOperator>> MakeChildren(const idx_t child_count, ARGS &&... args) {
+		return physical_plan->MakeChildren(child_count, std::forward<ARGS>(args)...);
 	}
 
 public:

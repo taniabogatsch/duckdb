@@ -19,6 +19,7 @@ namespace duckdb {
 class PhysicalFilter : public CachingPhysicalOperator {
 public:
 	static constexpr const PhysicalOperatorType TYPE = PhysicalOperatorType::FILTER;
+	static constexpr const idx_t CHILD_COUNT = 1;
 
 public:
 	PhysicalFilter(vector<LogicalType> types, vector<unique_ptr<Expression>> select_list, idx_t estimated_cardinality);
