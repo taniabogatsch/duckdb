@@ -53,25 +53,13 @@ public:
 	//! Get a new pointer to a node and initialize it.
 	static void New(ART &art, Node &node, const NType type);
 	//! Free the node and its children.
+	//! FIXME: remove recursion.
 	static void Free(ART &art, Node &node);
 
 	//! Get a reference to the allocator.
 	static FixedSizeAllocator &GetAllocator(const ART &art, const NType type);
 	//! Get the index of a node type's allocator.
 	static uint8_t GetAllocatorIdx(const NType type);
-
-	//! Get a reference to a node.
-	template <class NODE>
-	static inline NODE &Ref(const ART &art, const Node ptr, const NType type) {
-		D_ASSERT(ptr.GetType() != NType::PREFIX);
-		return *(GetAllocator(art, type).Get<NODE>(ptr, !std::is_const<NODE>::value));
-	}
-	//! Get a node pointer, if the node is in memory, else nullptr.
-	template <class NODE>
-	static inline unsafe_optional_ptr<NODE> InMemoryRef(const ART &art, const Node ptr, const NType type) {
-		D_ASSERT(ptr.GetType() != NType::PREFIX);
-		return GetAllocator(art, type).GetIfLoaded<NODE>(ptr);
-	}
 
 	//! Replace the child at byte.
 	void ReplaceChild(const ART &art, const uint8_t byte, const Node child = Node()) const;
@@ -167,6 +155,56 @@ struct NodeChildren {
 
 	array_ptr<uint8_t> bytes;
 	array_ptr<Node> children;
+};
+
+template <class T>
+class ConstNodeHandle {
+public:
+	ConstNodeHandle(ART &art, const Node node)
+	    : handle(Node::GetAllocator(art, node.GetType()).Get(node)), n(handle.GetRef<T>()) {
+		n = handle.GetRef<T>();
+	}
+
+	ConstNodeHandle(const ConstNodeHandle &) = delete;
+	ConstNodeHandle &operator=(const ConstNodeHandle &) = delete;
+
+	ConstNodeHandle(ConstNodeHandle &&other) noexcept : handle(std::move(other.handle)), n(other.n) {
+	}
+	ConstNodeHandle &operator=(ConstNodeHandle &&other) noexcept = delete;
+
+public:
+	const T &Get() const {
+		return n;
+	}
+
+private:
+	SegmentHandle handle;
+	const T &n;
+};
+
+template <class T>
+class NodeHandle {
+public:
+	NodeHandle(ART &art, const Node node)
+	    : handle(Node::GetAllocator(art, node.GetType()).Get(node)), n(handle.GetRef<T>()) {
+		handle.MarkModified();
+	}
+
+	NodeHandle(const NodeHandle &) = delete;
+	NodeHandle &operator=(const NodeHandle &) = delete;
+
+	NodeHandle(NodeHandle &&other) noexcept : handle(std::move(other.handle)), n(other.n) {
+	}
+	NodeHandle &operator=(NodeHandle &&other) noexcept = delete;
+
+public:
+	T &Get() {
+		return n;
+	}
+
+private:
+	SegmentHandle handle;
+	T &n;
 };
 
 } // namespace duckdb

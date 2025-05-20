@@ -119,6 +119,10 @@ public:
 	}
 
 	~SegmentHandle() {
+		// TODO: Did we mess up a move?
+		// TODO: If so, maybe we need if (ptr) { ... } for correct reader counts.
+		D_ASSERT(ptr);
+
 		auto &buffer_ref = buffer.get();
 		lock_guard<mutex> l(buffer_ref.lock);
 		buffer_ref.readers--;

@@ -30,14 +30,16 @@ private:
 	uint8_t key[CAPACITY];
 
 public:
-	//! Get a new BaseLeaf and initialize it.
-	static BaseLeaf &New(ART &art, Node &node) {
+	//! Get a new BaseLeaf handle and initialize the base leaf.
+	static NodeHandle<BaseLeaf> New(ART &art, Node &node) {
 		node = Node::GetAllocator(art, TYPE).New();
 		node.SetMetadata(static_cast<uint8_t>(TYPE));
 
-		auto &n = Node::Ref<BaseLeaf>(art, node, TYPE);
+		auto handle = NodeHandle<BaseLeaf>(art, node);
+		auto &n = handle.Get();
+
 		n.count = 0;
-		return n;
+		return handle;
 	}
 
 	//! Returns true, if the byte exists, else false.
@@ -51,7 +53,7 @@ public:
 	}
 
 	//! Returns a pointer to the bytes in the leaf.
-	//! The pointer's data is valid as long as the leaf is valid.
+	//! The pointer data is valid as long as the leaf is valid.
 	array_ptr<uint8_t> GetBytes() {
 		return array_ptr<uint8_t>(key, count);
 	}
@@ -70,7 +72,7 @@ public:
 
 private:
 	static void InsertByteInternal(BaseLeaf &n, const uint8_t byte);
-	static BaseLeaf &DeleteByteInternal(ART &art, Node &node, const uint8_t byte);
+	static NodeHandle<BaseLeaf> DeleteByteInternal(ART &art, Node &node, const uint8_t byte);
 };
 
 //! Node7Leaf holds up to seven sorted bytes.
