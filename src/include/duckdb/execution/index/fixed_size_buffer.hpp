@@ -31,8 +31,7 @@ public:
 };
 
 //! A fixed-size buffer holds fixed-size segments of data. It lazily deserializes a buffer, if on-disk and not
-//! yet in memory, and it only serializes dirty and non-written buffers to disk during
-//! serialization.
+//! in memory, and it only serializes dirty and non-written buffers to disk during serialization.
 class FixedSizeBuffer {
 	friend class FixedSizeAllocator;
 	friend class SegmentHandle;
@@ -62,11 +61,11 @@ private:
 		return block_pointer.IsValid();
 	}
 
-	//! Serializes a buffer (if dirty or not on disk)
+	//! Serializes a buffer, if dirty or not on disk.
 	void Serialize(PartialBlockManager &partial_block_manager, const idx_t available_segments, const idx_t segment_size,
 	               const idx_t bitmask_offset);
 
-	//! Load a buffer from disk (if not in-memory)
+	//! Load a buffer from disk, if not in memory.
 	void LoadFromDisk();
 	//! Returns the first free offset in a bitmask
 	uint32_t GetOffset(const idx_t bitmask_count, const idx_t available_segments);
@@ -77,19 +76,16 @@ private:
 	//! Block manager of the database instance
 	BlockManager &block_manager;
 
-	// Number of active segments
-	atomic<idx_t> readers;
-
 	//! The number of allocated segments
 	idx_t segment_count;
 	//! The size of allocated memory in this buffer (necessary for copying while pinning)
 	idx_t allocation_size;
 
-	//! True: the in-memory buffer is no longer consistent with a (possibly existing) copy on disk
+	//! True: the in-memory buffer is no longer consistent with its optional copy on disk.
 	bool dirty;
-	//! True: can be vacuumed after the vacuum operation
+	//! True: can be vacuumed after the vacuum operation.
 	bool vacuum;
-	//! True: has been loaded from disk
+	//! True: has been loaded from disk.
 	bool loaded;
 
 	//! Partial block id and offset
@@ -100,62 +96,57 @@ private:
 	shared_ptr<BlockHandle> block_handle;
 	//! The lock for this fixed size buffer handle
 	mutex lock;
+
+	//! The number of active segments.
+	atomic<idx_t> readers;
 };
 
 class SegmentHandle {
 public:
-	SegmentHandle() = default;
+	SegmentHandle(FixedSizeBuffer &buffer_p, const idx_t offset) : buffer(buffer_p) {
+		auto &buffer_ref = buffer.get();
+		lock_guard<mutex> l(buffer_ref.lock);
+
+		if (!buffer_ref.InMemory() && !buffer_ref.loaded) {
+			buffer_ref.LoadFromDisk();
+		}
+		if (!buffer_ref.InMemory() && buffer_ref.loaded) {
+			buffer_ref.block_manager.buffer_manager.Pin(buffer_ref.block_handle);
+		}
+
+		ptr = buffer_ref.buffer_handle.Ptr() + offset;
+		buffer_ref.readers++;
+	}
+
+	~SegmentHandle() {
+		auto &buffer_ref = buffer.get();
+		lock_guard<mutex> l(buffer_ref.lock);
+		buffer_ref.readers--;
+
+		// FIXME: oscillation?
+		if (buffer_ref.readers == 0) {
+			D_ASSERT(buffer_ref.InMemory());
+			buffer_ref.buffer_handle.Destroy();
+			buffer_ref.loaded = true;
+		}
+	}
 
 	SegmentHandle(const SegmentHandle &) = delete;
 	SegmentHandle &operator=(const SegmentHandle &) = delete;
 
-	// Support move!
-	SegmentHandle(SegmentHandle &&other) noexcept : buffer_ptr(other.buffer_ptr), ptr(other.ptr) {
+	SegmentHandle(SegmentHandle &&other) noexcept : buffer(other.buffer), ptr(other.ptr) {
 		other.ptr = nullptr;
-		other.buffer_ptr = nullptr;
 	}
-
 	SegmentHandle &operator=(SegmentHandle &&other) noexcept {
 		if (this != &other) {
-			buffer_ptr = other.buffer_ptr;
+			buffer = other.buffer;
 			ptr = other.ptr;
 			other.ptr = nullptr;
-			other.buffer_ptr = nullptr;
 		}
 		return *this;
 	}
 
-	SegmentHandle(FixedSizeBuffer &buffer_p, idx_t offset) : buffer_ptr(&buffer_p) {
-
-		auto &buffer = *buffer_ptr;
-		lock_guard<mutex> l(buffer.lock);
-
-		if (!buffer.InMemory() && !buffer.loaded) {
-			buffer.LoadFromDisk();
-		}
-		if (!buffer.InMemory() && buffer.loaded) {
-			buffer.block_manager.buffer_manager.Pin(buffer.block_handle);
-		}
-
-		ptr = buffer.buffer_handle.Ptr() + offset;
-
-		++buffer.readers;
-	}
-
-	~SegmentHandle() {
-		if (buffer_ptr) {
-			auto &buffer = *buffer_ptr;
-
-			lock_guard<mutex> l(buffer.lock);
-			--buffer.readers;
-
-			if (buffer.readers == 0) {
-				D_ASSERT(buffer.InMemory());
-				buffer.buffer_handle.Destroy();
-			}
-		}
-	}
-
+public:
 	template <class T>
 	const T &GetRef() const {
 		return *reinterpret_cast<const T *>(ptr);
@@ -177,13 +168,13 @@ public:
 	}
 
 	void MarkModified() {
-		auto &buffer = *buffer_ptr;
-		lock_guard<mutex> l(buffer.lock);
-		buffer.dirty = true;
+		auto &buffer_ref = buffer.get();
+		lock_guard<mutex> l(buffer_ref.lock);
+		buffer_ref.dirty = true;
 	}
 
 private:
-	optional_ptr<FixedSizeBuffer> buffer_ptr;
+	reference<FixedSizeBuffer> buffer;
 	data_ptr_t ptr;
 };
 

@@ -43,37 +43,33 @@ public:
 	//! Free the segment of the IndexPointer
 	void Free(const IndexPointer ptr);
 
-	//! Returns the data_ptr_t to a segment, and sets the dirty flag of the buffer containing that segment.
+	//! Get a segment handle.
 	inline SegmentHandle Get(const IndexPointer ptr) {
 		D_ASSERT(ptr.GetOffset() < available_segments_per_buffer);
-		D_ASSERT(buffers.find(ptr.GetBufferId()) != buffers.end());
 
 		auto buffer_it = buffers.find(ptr.GetBufferId());
+		D_ASSERT(buffer_it != buffers.end());
 
 		auto offset = ptr.GetOffset() * segment_size + bitmask_offset;
 		auto &buffer = *buffer_it->second;
-
-		SegmentHandle res(buffer, offset);
-		return std::move(res);
+		return SegmentHandle(buffer, offset);
 	}
 
-	// Fetches a segment handle, unless it exists solely in persistent storage.
-	// I.e. it has not been loaded, created in memory, or evicted.
-	inline bool GetIfNotOnDisk(SegmentHandle &result, const IndexPointer ptr) {
+	//! Get a segment handle, unless it exists solely in persistent storage.
+	//! I.e. it has not been loaded, created in memory, or evicted.
+	inline unsafe_unique_ptr<SegmentHandle> GetIfUsed(const IndexPointer ptr) {
 		D_ASSERT(ptr.GetOffset() < available_segments_per_buffer);
-		D_ASSERT(buffers.find(ptr.GetBufferId()) != buffers.end());
 
-		auto &buffer_it = buffers.find(ptr.GetBufferId())->second;
-		auto &buffer = *buffer_it;
+		auto buffer_it = buffers.find(ptr.GetBufferId());
+		D_ASSERT(buffer_it != buffers.end());
+		auto &buffer = *buffer_it->second;
 
 		if (!buffer.InMemory() && !buffer.loaded) {
-			return false;
+			return nullptr;
 		}
 
 		auto offset = ptr.GetOffset() * segment_size + bitmask_offset;
-
-		result = SegmentHandle(buffer, offset);
-		return true;
+		return make_unsafe_uniq<SegmentHandle>(buffer, offset);
 	}
 
 	//! Resets the allocator, e.g., during 'DELETE FROM table'
