@@ -34,7 +34,7 @@ private:
 
 public:
 	//! Get a new Node256 and initialize it.
-	static Node256 &New(ART &art, Node &node);
+	static NodeHandle<Node256> New(ART &art, Node &node);
 	//! Free the node and its children.
 	static void Free(ART &art, Node &node);
 
@@ -97,6 +97,6 @@ public:
 	}
 
 private:
-	static Node256 &GrowNode48(ART &art, Node &node256, Node &node48);
+	static void GrowNode48(ART &art, Node &node256, Node &node48);
 };
 } // namespace duckdb

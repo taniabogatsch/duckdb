@@ -103,48 +103,50 @@ private:
 
 class SegmentHandle {
 public:
-	SegmentHandle(FixedSizeBuffer &buffer_p, const idx_t offset) : buffer(buffer_p) {
-		auto &buffer_ref = buffer.get();
-		lock_guard<mutex> l(buffer_ref.lock);
+	SegmentHandle() = default;
+	SegmentHandle(FixedSizeBuffer &buffer_p, const idx_t offset) : buffer_ptr(buffer_p) {
+		lock_guard<mutex> l(buffer_ptr->lock);
 
-		if (!buffer_ref.InMemory() && !buffer_ref.loaded) {
-			buffer_ref.LoadFromDisk();
+		if (!buffer_ptr->InMemory() && !buffer_ptr->loaded) {
+			buffer_ptr->LoadFromDisk();
 		}
-		if (!buffer_ref.InMemory() && buffer_ref.loaded) {
-			buffer_ref.block_manager.buffer_manager.Pin(buffer_ref.block_handle);
+		if (!buffer_ptr->InMemory() && buffer_ptr->loaded) {
+			buffer_ptr->block_manager.buffer_manager.Pin(buffer_ptr->block_handle);
 		}
 
-		ptr = buffer_ref.buffer_handle.Ptr() + offset;
-		buffer_ref.readers++;
+		ptr = buffer_ptr->buffer_handle.Ptr() + offset;
+		buffer_ptr->readers++;
 	}
 
 	~SegmentHandle() {
-		// TODO: Did we mess up a move?
-		// TODO: If so, maybe we need if (ptr) { ... } for correct reader counts.
-		D_ASSERT(ptr);
+		if (!buffer_ptr) {
+			return;
+		}
 
-		auto &buffer_ref = buffer.get();
-		lock_guard<mutex> l(buffer_ref.lock);
-		buffer_ref.readers--;
+		lock_guard<mutex> l(buffer_ptr->lock);
+		buffer_ptr->readers--;
 
 		// FIXME: oscillation?
-		if (buffer_ref.readers == 0) {
-			D_ASSERT(buffer_ref.InMemory());
-			buffer_ref.buffer_handle.Destroy();
-			buffer_ref.loaded = true;
-		}
+		// FIXME: enable unpinning buffers without readers.
+//		if (buffer_ptr->readers == 0) {
+//			D_ASSERT(buffer_ptr->InMemory());
+//			buffer_ptr->buffer_handle.Destroy();
+//			buffer_ptr->loaded = true;
+//		}
 	}
 
 	SegmentHandle(const SegmentHandle &) = delete;
 	SegmentHandle &operator=(const SegmentHandle &) = delete;
 
-	SegmentHandle(SegmentHandle &&other) noexcept : buffer(other.buffer), ptr(other.ptr) {
+	SegmentHandle(SegmentHandle &&other) noexcept : buffer_ptr(other.buffer_ptr), ptr(other.ptr) {
+		other.buffer_ptr = nullptr;
 		other.ptr = nullptr;
 	}
 	SegmentHandle &operator=(SegmentHandle &&other) noexcept {
 		if (this != &other) {
-			buffer = other.buffer;
+			buffer_ptr = other.buffer_ptr;
 			ptr = other.ptr;
+			other.buffer_ptr = nullptr;
 			other.ptr = nullptr;
 		}
 		return *this;
@@ -172,14 +174,17 @@ public:
 	}
 
 	void MarkModified() {
-		auto &buffer_ref = buffer.get();
-		lock_guard<mutex> l(buffer_ref.lock);
-		buffer_ref.dirty = true;
+		lock_guard<mutex> l(buffer_ptr->lock);
+		buffer_ptr->dirty = true;
+	}
+
+	bool Empty() const {
+		return buffer_ptr == nullptr;
 	}
 
 private:
-	reference<FixedSizeBuffer> buffer;
-	data_ptr_t ptr;
+	optional_ptr<FixedSizeBuffer> buffer_ptr = nullptr;
+	data_ptr_t ptr = nullptr;
 };
 
 } // namespace duckdb

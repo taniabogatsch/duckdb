@@ -57,7 +57,7 @@ public:
 
 	//! Get a segment handle, unless it exists solely in persistent storage.
 	//! I.e. it has not been loaded, created in memory, or evicted.
-	inline unsafe_unique_ptr<SegmentHandle> GetIfUsed(const IndexPointer ptr) {
+	inline SegmentHandle GetIfUsed(const IndexPointer ptr) {
 		D_ASSERT(ptr.GetOffset() < available_segments_per_buffer);
 
 		auto buffer_it = buffers.find(ptr.GetBufferId());
@@ -65,11 +65,11 @@ public:
 		auto &buffer = *buffer_it->second;
 
 		if (!buffer.InMemory() && !buffer.loaded) {
-			return nullptr;
+			return SegmentHandle();
 		}
 
 		auto offset = ptr.GetOffset() * segment_size + bitmask_offset;
-		return make_unsafe_uniq<SegmentHandle>(buffer, offset);
+		return SegmentHandle(buffer, offset);
 	}
 
 	//! Resets the allocator, e.g., during 'DELETE FROM table'

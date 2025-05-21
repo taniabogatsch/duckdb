@@ -17,6 +17,8 @@
 
 namespace duckdb {
 
+// FIXME: we still need to get rid of all the Node references - instead, returning handles.
+
 enum class NType : uint8_t {
 	PREFIX = 1,
 	LEAF = 2,
@@ -62,7 +64,7 @@ public:
 	static uint8_t GetAllocatorIdx(const NType type);
 
 	//! Replace the child at byte.
-	void ReplaceChild(const ART &art, const uint8_t byte, const Node child = Node()) const;
+	void ReplaceChild(ART &art, const uint8_t byte, const Node child = Node()) const;
 	//! Insert the child at byte.
 	static void InsertChild(ART &art, Node &node, const uint8_t byte, const Node child = Node());
 	//! Delete the child at byte.
@@ -138,10 +140,13 @@ public:
 
 private:
 	template <class NODE>
-	static void TransformToDeprecatedInternal(ART &art, unsafe_optional_ptr<NODE> ptr,
-	                                          unsafe_unique_ptr<FixedSizeAllocator> &allocator) {
-		if (ptr) {
-			NODE::Iterator(*ptr, [&](Node &child) { Node::TransformToDeprecated(art, child, allocator); });
+	static void TransformToDeprecatedInternal(ART &art, Node &node, unsafe_unique_ptr<FixedSizeAllocator> &deprecated_allocator) {
+		auto allocator = Node::GetAllocator(art, node.GetType());
+		auto handle = allocator.GetIfUsed(node);
+		if (handle) {
+			NODE::Iterator(handle->GetRef<NODE>(), [&](Node &child) {
+				Node::TransformToDeprecated(art, child, deprecated_allocator);
+			});
 		}
 	}
 };
@@ -162,7 +167,6 @@ class ConstNodeHandle {
 public:
 	ConstNodeHandle(ART &art, const Node node)
 	    : handle(Node::GetAllocator(art, node.GetType()).Get(node)), n(handle.GetRef<T>()) {
-		n = handle.GetRef<T>();
 	}
 
 	ConstNodeHandle(const ConstNodeHandle &) = delete;

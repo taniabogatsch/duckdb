@@ -121,19 +121,27 @@ uint8_t Node::GetAllocatorIdx(const NType type) {
 // Inserts
 //===--------------------------------------------------------------------===//
 
-void Node::ReplaceChild(const ART &art, const uint8_t byte, const Node child) const {
+void Node::ReplaceChild(ART &art, const uint8_t byte, const Node child) const {
 	D_ASSERT(HasMetadata());
 
 	auto type = GetType();
 	switch (type) {
-	case NType::NODE_4:
-		return Node4::ReplaceChild(Ref<Node4>(art, *this, type), byte, child);
-	case NType::NODE_16:
-		return Node16::ReplaceChild(Ref<Node16>(art, *this, type), byte, child);
-	case NType::NODE_48:
-		return Ref<Node48>(art, *this, type).ReplaceChild(byte, child);
-	case NType::NODE_256:
-		return Ref<Node256>(art, *this, type).ReplaceChild(byte, child);
+	case NType::NODE_4: {
+		auto handle = NodeHandle<Node4>(art, *this);
+		return Node4::ReplaceChild(handle.Get(), byte, child);
+	}
+	case NType::NODE_16: {
+		auto handle = NodeHandle<Node16>(art, *this);
+		return Node16::ReplaceChild(handle.Get(), byte, child);
+	}
+	case NType::NODE_48: {
+		auto handle = NodeHandle<Node48>(art, *this);
+		return handle.Get().ReplaceChild(byte, child);
+	}
+	case NType::NODE_256: {
+		auto handle = NodeHandle<Node256>(art, *this);
+		return handle.Get().ReplaceChild(byte, child);
+	}
 	default:
 		throw InternalException("Invalid node type for ReplaceChild: %s.", EnumUtil::ToString(type));
 	}
@@ -202,14 +210,21 @@ unsafe_optional_ptr<Node> GetChildInternal(ART &art, NODE &node, const uint8_t b
 
 	auto type = node.GetType();
 	switch (type) {
-	case NType::NODE_4:
-		return Node4::GetChild(Node::Ref<Node4>(art, node, type), byte);
-	case NType::NODE_16:
-		return Node16::GetChild(Node::Ref<Node16>(art, node, type), byte);
-	case NType::NODE_48:
-		return Node48::GetChild(Node::Ref<Node48>(art, node, type), byte);
+	case NType::NODE_4: {
+		auto handle = NodeHandle<Node4>(art, node);
+		return Node4::GetChild(handle.Get(), byte);
+	}
+	case NType::NODE_16: {
+		auto handle = NodeHandle<Node16>(art, node);
+		return Node16::GetChild(handle.Get(), byte);
+	}
+	case NType::NODE_48: {
+		auto handle = NodeHandle<Node48>(art, node);
+		return Node48::GetChild(handle.Get(), byte);
+	}
 	case NType::NODE_256: {
-		return Node256::GetChild(Node::Ref<Node256>(art, node, type), byte);
+		auto handle = NodeHandle<Node256>(art, node);
+		return Node256::GetChild(handle.Get(), byte);
 	}
 	default:
 		throw InternalException("Invalid node type for GetChildInternal: %s.", EnumUtil::ToString(type));
@@ -230,14 +245,22 @@ unsafe_optional_ptr<Node> GetNextChildInternal(ART &art, NODE &node, uint8_t &by
 
 	auto type = node.GetType();
 	switch (type) {
-	case NType::NODE_4:
-		return Node4::GetNextChild(Node::Ref<Node4>(art, node, type), byte);
-	case NType::NODE_16:
-		return Node16::GetNextChild(Node::Ref<Node16>(art, node, type), byte);
-	case NType::NODE_48:
-		return Node48::GetNextChild(Node::Ref<Node48>(art, node, type), byte);
-	case NType::NODE_256:
-		return Node256::GetNextChild(Node::Ref<Node256>(art, node, type), byte);
+	case NType::NODE_4: {
+		auto handle = NodeHandle<Node4>(art, node);
+		return Node4::GetNextChild(handle.Get(), byte);
+	}
+	case NType::NODE_16: {
+		auto handle = NodeHandle<Node16>(art, node);
+		return Node16::GetNextChild(handle.Get(), byte);
+	}
+	case NType::NODE_48: {
+		auto handle = NodeHandle<Node48>(art, node);
+		return Node48::GetNextChild(handle.Get(), byte);
+	}
+	case NType::NODE_256: {
+		auto handle = NodeHandle<Node256>(art, node);
+		return Node256::GetNextChild(handle.Get(), byte);
+	}
 	default:
 		throw InternalException("Invalid node type for GetNextChildInternal: %s.", EnumUtil::ToString(type));
 	}
@@ -252,12 +275,18 @@ bool Node::HasByte(ART &art, uint8_t &byte) const {
 
 	auto type = GetType();
 	switch (type) {
-	case NType::NODE_7_LEAF:
-		return Ref<const Node7Leaf>(art, *this, NType::NODE_7_LEAF).HasByte(byte);
-	case NType::NODE_15_LEAF:
-		return Ref<const Node15Leaf>(art, *this, NType::NODE_15_LEAF).HasByte(byte);
-	case NType::NODE_256_LEAF:
-		return Ref<Node256Leaf>(art, *this, NType::NODE_256_LEAF).HasByte(byte);
+	case NType::NODE_7_LEAF: {
+		auto handle = ConstNodeHandle<const Node7Leaf>(art, *this);
+		return handle.Get().HasByte(byte);
+	}
+	case NType::NODE_15_LEAF: {
+		auto handle = ConstNodeHandle<const Node15Leaf>(art, *this);
+		return handle.Get().HasByte(byte);
+	}
+	case NType::NODE_256_LEAF: {
+		auto handle = NodeHandle<Node256Leaf>(art, *this);
+		return handle.Get().HasByte(byte);
+	}
 	default:
 		throw InternalException("Invalid node type for GetNextByte: %s.", EnumUtil::ToString(type));
 	}
@@ -268,12 +297,18 @@ bool Node::GetNextByte(ART &art, uint8_t &byte) const {
 
 	auto type = GetType();
 	switch (type) {
-	case NType::NODE_7_LEAF:
-		return Ref<const Node7Leaf>(art, *this, NType::NODE_7_LEAF).GetNextByte(byte);
-	case NType::NODE_15_LEAF:
-		return Ref<const Node15Leaf>(art, *this, NType::NODE_15_LEAF).GetNextByte(byte);
-	case NType::NODE_256_LEAF:
-		return Ref<Node256Leaf>(art, *this, NType::NODE_256_LEAF).GetNextByte(byte);
+	case NType::NODE_7_LEAF: {
+		auto handle = ConstNodeHandle<const Node7Leaf>(art, *this);
+		return handle.Get().GetNextByte(byte);
+	}
+	case NType::NODE_15_LEAF: {
+		auto handle = ConstNodeHandle<const Node15Leaf>(art, *this);
+		return handle.Get().GetNextByte(byte);
+	}
+	case NType::NODE_256_LEAF: {
+		auto handle = NodeHandle<Node256Leaf>(art, *this);
+		return handle.Get().GetNextByte(byte);
+	}
 	default:
 		throw InternalException("Invalid node type for GetNextByte: %s.", EnumUtil::ToString(type));
 	}
@@ -374,13 +409,13 @@ void Node::TransformToDeprecated(ART &art, Node &node,
 	case NType::LEAF:
 		return;
 	case NType::NODE_4:
-		return TransformToDeprecatedInternal(art, InMemoryRef<Node4>(art, node, type), deprecated_prefix_allocator);
+		return TransformToDeprecatedInternal<Node4>(art, node, deprecated_prefix_allocator);
 	case NType::NODE_16:
-		return TransformToDeprecatedInternal(art, InMemoryRef<Node16>(art, node, type), deprecated_prefix_allocator);
+		return TransformToDeprecatedInternal<Node16>(art, node, deprecated_prefix_allocator);
 	case NType::NODE_48:
-		return TransformToDeprecatedInternal(art, InMemoryRef<Node48>(art, node, type), deprecated_prefix_allocator);
+		return TransformToDeprecatedInternal<Node48>(art, node, deprecated_prefix_allocator);
 	case NType::NODE_256:
-		return TransformToDeprecatedInternal(art, InMemoryRef<Node256>(art, node, type), deprecated_prefix_allocator);
+		return TransformToDeprecatedInternal<Node256>(art, node, deprecated_prefix_allocator);
 	default:
 		throw InternalException("invalid node type for TransformToDeprecated: %s", EnumUtil::ToString(type));
 	}
@@ -452,7 +487,8 @@ void Node::VerifyAllocations(ART &art, unordered_map<uint8_t, idx_t> &node_count
 		case NType::LEAF_INLINED:
 			return ARTHandlingResult::SKIP;
 		case NType::LEAF: {
-			auto &leaf = Ref<Leaf>(art, node, type);
+			auto handle = NodeHandle<Leaf>(art, node);
+			auto &leaf = handle.Get();
 			leaf.DeprecatedVerifyAllocations(art, node_counts);
 			return ARTHandlingResult::SKIP;
 		}

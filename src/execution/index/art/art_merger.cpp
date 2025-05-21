@@ -113,12 +113,18 @@ ARTConflictType ARTMerger::MergeNodeAndInlined(NodeEntry &entry) {
 array_ptr<uint8_t> ARTMerger::GetBytes(Node &leaf) {
 	const auto type = leaf.GetType();
 	switch (type) {
-	case NType::NODE_7_LEAF:
-		return Node::Ref<Node7Leaf>(art, leaf, type).GetBytes();
-	case NType::NODE_15_LEAF:
-		return Node::Ref<Node15Leaf>(art, leaf, type).GetBytes();
-	case NType::NODE_256_LEAF:
-		return Node::Ref<Node256Leaf>(art, leaf, type).GetBytes(arena);
+	case NType::NODE_7_LEAF: {
+		auto handle = NodeHandle<Node7Leaf>(art, leaf);
+		return handle.Get().GetBytes();
+	}
+	case NType::NODE_15_LEAF: {
+		auto handle = NodeHandle<Node15Leaf>(art, leaf);
+		return handle.Get().GetBytes();
+	}
+	case NType::NODE_256_LEAF: {
+		auto handle = NodeHandle<Node256Leaf>(art, leaf);
+		return handle.Get().GetBytes(arena);
+	}
 	default:
 		throw InternalException("invalid node type for ARTMerger::GetBytes: %s", EnumUtil::ToString(type));
 	}
@@ -150,14 +156,22 @@ void ARTMerger::MergeLeaves(NodeEntry &entry) {
 NodeChildren ARTMerger::ExtractChildren(Node &node) {
 	const auto type = node.GetType();
 	switch (type) {
-	case NType::NODE_4:
-		return Node::Ref<Node4>(art, node, type).ExtractChildren(arena);
-	case NType::NODE_16:
-		return Node::Ref<Node16>(art, node, type).ExtractChildren(arena);
-	case NType::NODE_48:
-		return Node::Ref<Node48>(art, node, type).ExtractChildren(arena);
-	case NType::NODE_256:
-		return Node::Ref<Node256>(art, node, type).ExtractChildren(arena);
+	case NType::NODE_4: {
+		auto handle = NodeHandle<Node4>(art, node);
+		return handle.Get().ExtractChildren(arena);
+	}
+	case NType::NODE_16: {
+		auto handle = NodeHandle<Node16>(art, node);
+		return handle.Get().ExtractChildren(arena);
+	}
+	case NType::NODE_48: {
+		auto handle = NodeHandle<Node48>(art, node);
+		return handle.Get().ExtractChildren(arena);
+	}
+	case NType::NODE_256: {
+		auto handle = NodeHandle<Node256>(art, node);
+		return handle.Get().ExtractChildren(arena);
+	}
 	default:
 		throw InternalException("invalid node type for ARTMerger::GetChildren: %s", EnumUtil::ToString(type));
 	}
