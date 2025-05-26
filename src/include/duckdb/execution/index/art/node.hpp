@@ -143,8 +143,8 @@ private:
 	static void TransformToDeprecatedInternal(ART &art, Node &node, unsafe_unique_ptr<FixedSizeAllocator> &deprecated_allocator) {
 		auto allocator = Node::GetAllocator(art, node.GetType());
 		auto handle = allocator.GetIfUsed(node);
-		if (handle) {
-			NODE::Iterator(handle->GetRef<NODE>(), [&](Node &child) {
+		if (handle.Empty()) {
+			NODE::Iterator(handle.GetRef<NODE>(), [&](Node &child) {
 				Node::TransformToDeprecated(art, child, deprecated_allocator);
 			});
 		}
