@@ -43,6 +43,7 @@
 #include "duckdb/transaction/meta_transaction.hpp"
 #include "duckdb/transaction/transaction_context.hpp"
 #include "duckdb/transaction/transaction_manager.hpp"
+#include "duckdb/logging/log_type.hpp"
 
 namespace duckdb {
 
@@ -223,11 +224,6 @@ void ClientContext::BeginQueryInternal(ClientContextLock &lock, const string &qu
 
 ErrorData ClientContext::EndQueryInternal(ClientContextLock &lock, bool success, bool invalidate_transaction,
                                           optional_ptr<ErrorData> previous_error) {
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - client_data->start).count(); // Seconds.
-	DUCKDB_LOG_ERROR(*this, "duckdb.ClientContext.InternalQueryLatency", "%f", elapsed);
-	client_data->profiler->EndQuery();
-
 	if (active_query->executor) {
 		active_query->executor->CancelTasks();
 	}
@@ -260,6 +256,11 @@ ErrorData ClientContext::EndQueryInternal(ClientContextLock &lock, bool success,
 		error = ErrorData("Unhandled exception!");
 	} // LCOV_EXCL_STOP
 
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - client_data->start).count(); // Seconds.
+	DUCKDB_LOG_ERROR(*this, "duckdb.ClientContext.InternalQueryLatency", "%f", elapsed);
+	client_data->profiler->EndQuery();
+
 	// Refresh the logger
 	logger->Flush();
 	LoggingContext context(LogContextScope::CONNECTION);
@@ -274,7 +275,6 @@ ErrorData ClientContext::EndQueryInternal(ClientContextLock &lock, bool success,
 			s->QueryEnd(*this, previous_error);
 		}
 	}
-
 	return error;
 }
 
@@ -1265,7 +1265,7 @@ void ClientContext::TryBindRelation(Relation &relation, vector<ColumnDefinition>
 	RunFunctionInTransaction([&]() { InternalTryBindRelation(relation, result_columns); });
 }
 
-unordered_set<string> ClientContext::GetTableNames(const string &query) {
+unordered_set<string> ClientContext::GetTableNames(const string &query, const bool qualified) {
 	auto lock = LockContext();
 
 	auto statements = ParseStatementsInternal(*lock, query);
@@ -1277,7 +1277,8 @@ unordered_set<string> ClientContext::GetTableNames(const string &query) {
 	RunFunctionInTransactionInternal(*lock, [&]() {
 		// bind the expressions
 		auto binder = Binder::CreateBinder(*this);
-		binder->SetBindingMode(BindingMode::EXTRACT_NAMES);
+		auto mode = qualified ? BindingMode::EXTRACT_QUALIFIED_NAMES : BindingMode::EXTRACT_NAMES;
+		binder->SetBindingMode(mode);
 		binder->Bind(*statements[0]);
 		result = binder->GetTableNames();
 	});
