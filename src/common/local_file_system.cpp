@@ -468,7 +468,7 @@ idx_t LocalFileSystem::GetFilePointer(FileHandle &handle) {
 	return UnsafeNumericCast<idx_t>(position);
 }
 
-void LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+void LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location, optional_ptr<ClientContext> context) {
 	auto bytes_to_read = nr_bytes;
 	int fd = handle.Cast<UnixFileHandle>().fd;
 	auto read_buffer = char_ptr_cast(buffer);
@@ -488,7 +488,12 @@ void LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, i
 		nr_bytes -= bytes_read;
 		location += UnsafeNumericCast<idx_t>(bytes_read);
 	}
-	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_to_read, location - UnsafeNumericCast<idx_t>(bytes_to_read));
+
+	auto cast_bytes_to_read = UnsafeNumericCast<idx_t>(bytes_to_read);
+	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_to_read, location - cast_bytes_to_read);
+	if (context && context->client_data->profiler) {
+		context->client_data->profiler->AddBytesRead(cast_bytes_to_read);
+	}
 }
 
 int64_t LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes) {

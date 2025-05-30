@@ -49,7 +49,7 @@ unique_ptr<FileHandle> VirtualFileSystem::OpenFileExtended(const OpenFileInfo &f
 	return file_handle;
 }
 
-void VirtualFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+void VirtualFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location, optional_ptr<ClientContext> context) {
 	handle.file_system.Read(handle, buffer, nr_bytes, location);
 }
 

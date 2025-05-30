@@ -680,7 +680,7 @@ void Executor::Flush(ThreadContext &thread_context) {
 		global_profiler->Flush(thread_context.profiler);
 
 		auto blocked_time = blocked_thread_time.load();
-		global_profiler->SetInfo(double(blocked_time * WAIT_TIME_MS.count()) / 1000);
+		global_profiler->SetBlockedThreadTime(double(blocked_time * WAIT_TIME_MS.count()) / 1000);
 	}
 }
 

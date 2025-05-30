@@ -402,7 +402,7 @@ bool FileSystem::SupportsListFilesExtended() const {
 	return false;
 }
 
-void FileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+void FileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location, optional_ptr<ClientContext> context) {
 	throw NotImplementedException("%s: Read (with location) is not implemented!", GetName());
 }
 

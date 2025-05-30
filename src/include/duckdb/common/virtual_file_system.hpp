@@ -20,7 +20,7 @@ public:
 	VirtualFileSystem();
 	explicit VirtualFileSystem(unique_ptr<FileSystem> &&inner_file_system);
 
-	void Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override;
+	void Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location, optional_ptr<ClientContext> context = nullptr) override;
 	void Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override;
 
 	int64_t Read(FileHandle &handle, void *buffer, int64_t nr_bytes) override;

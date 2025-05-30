@@ -17,14 +17,15 @@ class OpenerFileSystem : public FileSystem {
 public:
 	virtual FileSystem &GetFileSystem() const = 0;
 	virtual optional_ptr<FileOpener> GetOpener() const = 0;
+	virtual optional_ptr<ClientContext> GetClientContext() = 0;
 
 	void VerifyNoOpener(optional_ptr<FileOpener> opener);
 	void VerifyCanAccessDirectory(const string &path);
 	void VerifyCanAccessFile(const string &path);
 
-	void Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override {
-		GetFileSystem().Read(handle, buffer, nr_bytes, location);
-	};
+	void Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location, optional_ptr<ClientContext> context_p) override {
+		GetFileSystem().Read(handle, buffer, nr_bytes, location, GetClientContext());
+	}
 
 	void Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override {
 		GetFileSystem().Write(handle, buffer, nr_bytes, location);
