@@ -11,24 +11,33 @@
 namespace duckdb {
 
 Prefix::Prefix(const ART &art, const Node ptr_p, const bool is_mutable, const bool set_in_memory) {
+	auto &allocator = Node::GetAllocator(art, PREFIX);
 	if (!set_in_memory) {
-		data = Node::GetAllocator(art, PREFIX).Get(ptr_p, is_mutable);
+		handle = allocator.Get(ptr_p);
+		if (is_mutable) {
+			handle.MarkModified();
+		}
+		data = handle.GetPtr();
 	} else {
-		data = Node::GetAllocator(art, PREFIX).GetIfLoaded(ptr_p);
-		if (!data) {
+		handle = allocator.GetIfUsed(ptr_p);
+		if (handle.Empty()) {
+			data = nullptr;
 			ptr = nullptr;
-			in_memory = false;
 			return;
 		}
+		if (is_mutable) {
+			handle.MarkModified();
+		}
+		data = handle.GetPtr();
 	}
 	ptr = reinterpret_cast<Node *>(data + Count(art) + 1);
-	in_memory = true;
 }
 
 Prefix::Prefix(unsafe_unique_ptr<FixedSizeAllocator> &allocator, const Node ptr_p, const idx_t count) {
-	data = allocator->Get(ptr_p, true);
+	handle = allocator->Get(ptr_p);
+	handle.MarkModified();
+	data = handle.GetPtr();
 	ptr = reinterpret_cast<Node *>(data + count + 1);
-	in_memory = true;
 }
 
 optional_idx Prefix::GetMismatchWithKey(ART &art, const Node &node, const ARTKey &key, idx_t &depth) {
@@ -279,7 +288,7 @@ void Prefix::TransformToDeprecated(ART &art, Node &node, unsafe_unique_ptr<Fixed
 		reference<Node> ref(node);
 		while (ref.get().GetType() == PREFIX && ref.get().GetGateStatus() == GateStatus::GATE_NOT_SET) {
 			Prefix prefix(art, ref, true, true);
-			if (!prefix.in_memory) {
+			if (prefix.handle.Empty()) {
 				return;
 			}
 			ref = *prefix.ptr;
@@ -296,7 +305,7 @@ void Prefix::TransformToDeprecated(ART &art, Node &node, unsafe_unique_ptr<Fixed
 	Node current_node = node;
 	while (current_node.GetType() == PREFIX && current_node.GetGateStatus() == GateStatus::GATE_NOT_SET) {
 		Prefix prefix(art, current_node, true, true);
-		if (!prefix.in_memory) {
+		if (prefix.handle.Empty()) {
 			return;
 		}
 
@@ -314,14 +323,15 @@ void Prefix::TransformToDeprecated(ART &art, Node &node, unsafe_unique_ptr<Fixed
 	return Node::TransformToDeprecated(art, *new_prefix.ptr, allocator);
 }
 
-Prefix Prefix::Append(ART &art, const uint8_t byte) {
+void Prefix::Append(ART &art, reference<Prefix> prefix, const uint8_t byte) {
+	auto &data = prefix.get().data;
 	if (data[Count(art)] != Count(art)) {
 		data[data[Count(art)]] = byte;
 		data[Count(art)]++;
-		return *this;
+		return;
 	}
 
-	auto prefix = NewInternal(art, *ptr, nullptr, 0, 0, PREFIX);
+	prefix = NewInternal(art, *ptr, nullptr, 0, 0, PREFIX);
 	return prefix.Append(art, byte);
 }
 

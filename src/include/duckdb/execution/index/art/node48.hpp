@@ -39,7 +39,7 @@ private:
 
 public:
 	//! Get a new Node48 and initialize it.
-	static Node48 &New(ART &art, Node &node);
+	static NodeHandle<Node48> New(ART &art, Node &node);
 	//! Free the node and its children.
 	static void Free(ART &art, Node &node);
 
@@ -102,7 +102,7 @@ public:
 	}
 
 private:
-	static Node48 &GrowNode16(ART &art, Node &node48, Node &node16);
-	static Node48 &ShrinkNode256(ART &art, Node &node48, Node &node256);
+	static void GrowNode16(ART &art, Node &node48, Node &node16);
+	static void ShrinkNode256(ART &art, Node &node48, Node &node256);
 };
 } // namespace duckdb

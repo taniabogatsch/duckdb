@@ -55,19 +55,19 @@ public:
 			}
 
 			case NType::NODE_4: {
-				IterateChildren<FUNC, Node4>(handler, entry.node, type);
+				IterateChildren<FUNC, Node4>(handler, entry.node);
 				break;
 			}
 			case NType::NODE_16: {
-				IterateChildren<FUNC, Node16>(handler, entry.node, type);
+				IterateChildren<FUNC, Node16>(handler, entry.node);
 				break;
 			}
 			case NType::NODE_48: {
-				IterateChildren<FUNC, Node48>(handler, entry.node, type);
+				IterateChildren<FUNC, Node48>(handler, entry.node);
 				break;
 			}
 			case NType::NODE_256: {
-				IterateChildren<FUNC, Node256>(handler, entry.node, type);
+				IterateChildren<FUNC, Node256>(handler, entry.node);
 				break;
 			}
 			default:
@@ -96,8 +96,15 @@ private:
 	}
 
 	template <class FUNC, class NODE_TYPE>
-	void IterateChildren(FUNC &&handler, NODE &node, const NType type) {
-		auto &n = Node::Ref<NODE_TYPE>(art, node, type);
+	void IterateChildren(FUNC &&handler, NODE &node) {
+		if (std::is_const<NODE>::value) {
+			auto handle = ConstNodeHandle<NODE_TYPE>(art, node);
+			auto &n = handle.Get();
+			NODE_TYPE::Iterator(n, [&](NODE &child) { Emplace(handler, child); });
+			return;
+		}
+		auto handle = NodeHandle<NODE_TYPE>(art, node);
+		auto &n = handle.Get();
 		NODE_TYPE::Iterator(n, [&](NODE &child) { Emplace(handler, child); });
 	}
 

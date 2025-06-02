@@ -32,9 +32,9 @@ public:
 	Prefix(const ART &art, const Node ptr_p, const bool is_mutable = false, const bool set_in_memory = false);
 	Prefix(unsafe_unique_ptr<FixedSizeAllocator> &allocator, const Node ptr_p, const idx_t count);
 
+	SegmentHandle handle;
 	data_ptr_t data;
 	Node *ptr;
-	bool in_memory;
 
 public:
 	static inline uint8_t Count(const ART &art) {
@@ -88,7 +88,7 @@ private:
 	static void ConcatGate(ART &art, Node &parent, uint8_t byte, const Node &child);
 	static void ConcatChildIsGate(ART &art, Node &parent, uint8_t byte, const Node &child);
 
-	Prefix Append(ART &art, const uint8_t byte);
+	static void Append(ART &art, reference<Prefix> prefix, const uint8_t byte);
 	void Append(ART &art, Node other);
 	Prefix TransformToDeprecatedAppend(ART &art, unsafe_unique_ptr<FixedSizeAllocator> &allocator, uint8_t byte);
 
