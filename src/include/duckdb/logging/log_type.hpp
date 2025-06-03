@@ -61,18 +61,10 @@ public:
 	static constexpr const char *NAME = "Timing";
 	static constexpr LogLevel LEVEL = LogLevel::LOG_TRACE;
 
-	TimingLogType() : LogType(NAME, LEVEL, GetLogType()) {
-	}
+	TimingLogType();
 
-	static LogicalType GetLogType() {
-		LogicalType result;
-		child_list_t<LogicalType> child_list = {{"path", LogicalType::VARCHAR}, {"timing", LogicalType::DOUBLE}};
-		return LogicalType::STRUCT(child_list);
-	}
-
-	static string ConstructLogMessage(const string &path, const double duration) {
-		return StringUtil::Format("{\"path\":\"%s\",\"duration\":\"%f\"}", path, duration);
-	}
+	static LogicalType GetLogType();
+	static string ConstructLogMessage(const string &path, const double duration);
 };
 
 class FileSystemLogType : public LogType {

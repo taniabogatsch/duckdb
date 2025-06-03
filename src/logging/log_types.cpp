@@ -12,6 +12,19 @@ constexpr LogLevel FileSystemLogType::LEVEL;
 constexpr LogLevel QueryLogType::LEVEL;
 constexpr LogLevel HTTPLogType::LEVEL;
 
+TimingLogType::TimingLogType() : LogType(NAME, LEVEL, GetLogType()) {
+}
+
+LogicalType TimingLogType::GetLogType() {
+	LogicalType result;
+	child_list_t<LogicalType> child_list = {{"path", LogicalType::VARCHAR}, {"timing", LogicalType::DOUBLE}};
+	return LogicalType::STRUCT(child_list);
+}
+
+string TimingLogType::ConstructLogMessage(const string &path, const double duration) {
+	return StringUtil::Format("{\"path\":\"%s\",\"duration\":\"%f\"}", path, duration);
+}
+
 FileSystemLogType::FileSystemLogType() : LogType(NAME, LEVEL, GetLogType()) {
 }
 
