@@ -8,6 +8,7 @@
 namespace duckdb {
 
 constexpr LogLevel DefaultLogType::LEVEL;
+constexpr LogLevel TimingLogType::LEVEL;
 constexpr LogLevel FileSystemLogType::LEVEL;
 constexpr LogLevel QueryLogType::LEVEL;
 constexpr LogLevel HTTPLogType::LEVEL;
