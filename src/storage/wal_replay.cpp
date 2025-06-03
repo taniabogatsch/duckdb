@@ -192,7 +192,7 @@ unique_ptr<WriteAheadLog> WriteAheadLog::Replay(FileSystem &fs, AttachedDatabase
 		fs.RemoveFile(wal_path);
 		auto end = system_clock::now();
 		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.WriteAheadLog.Replay.RemoveFile", "%f", elapsed);
+		DUCKDB_LOG(db.GetDatabase(), TimingLogType, "duckdb.WriteAheadLog.Replay.RemoveFile", elapsed);
 	}
 	return make_uniq<WriteAheadLog>(db, wal_path);
 }

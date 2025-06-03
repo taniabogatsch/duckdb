@@ -367,7 +367,7 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 	if (opener) {
 		auto end_open = system_clock::now();
 		auto elapsed_open = duration_cast<duration<double>>(end_open - start_open).count(); // Seconds.
-		DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.openSystemCall", "%f", elapsed_open);
+		DUCKDB_LOG(*opener, TimingLogType, "duckdb.LocalFileSystem.openSystemCall", elapsed_open);
 	}
 
 	if (fd == -1) {
@@ -375,7 +375,7 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 			if (opener) {
 				auto end = system_clock::now();
 				auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-				DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.ReturnNullIfNotExists", "%f", elapsed);
+				DUCKDB_LOG(*opener, TimingLogType, "duckdb.LocalFileSystem.ReturnNullIfNotExists", elapsed);
 			}
 			return nullptr;
 		}
@@ -383,7 +383,7 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 			if (opener) {
 				auto end = system_clock::now();
 				auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-				DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.ReturnNullIfExists", "%f", elapsed);
+				DUCKDB_LOG(*opener, TimingLogType, "duckdb.LocalFileSystem.ReturnNullIfExists", elapsed);
 			}
 			return nullptr;
 		}
@@ -464,7 +464,7 @@ unique_ptr<FileHandle> LocalFileSystem::OpenFile(const string &path_p, FileOpenF
 	if (opener) {
 		auto end = system_clock::now();
 		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.OpenReturnUnixFileHandle", "%f", elapsed);
+		DUCKDB_LOG(*opener, TimingLogType, "duckdb.LocalFileSystem.OpenReturnUnixFileHandle", elapsed);
 
 		file_handle->TryAddLogger(*opener);
 		DUCKDB_LOG_FILE_SYSTEM_OPEN((*file_handle));
@@ -711,7 +711,7 @@ void LocalFileSystem::RemoveFile(const string &filename, optional_ptr<FileOpener
 	if (opener) {
 		auto end = system_clock::now();
 		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG_ERROR(*opener, "duckdb.LocalFileSystem.RemoveFile", "%f", elapsed);
+		DUCKDB_LOG(*opener, TimingLogType, "duckdb.LocalFileSystem.RemoveFile", elapsed);
 	}
 }
 

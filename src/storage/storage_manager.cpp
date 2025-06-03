@@ -219,7 +219,7 @@ void SingleFileStorageManager::LoadDatabase(StorageOptions storage_options) {
 		table_io_manager = make_uniq<SingleFileTableIOManager>(*block_manager, row_group_size);
 		auto end = system_clock::now();
 		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.SingleFileBlockManager.LoadExistingDatabase", "%f", elapsed);
+		DUCKDB_LOG(db.GetDatabase(), TimingLogType, "duckdb.SingleFileBlockManager.LoadExistingDatabase", elapsed);
 
 		if (storage_options.block_alloc_size.IsValid()) {
 			// user-provided block alloc size
@@ -247,7 +247,7 @@ void SingleFileStorageManager::LoadDatabase(StorageOptions storage_options) {
 		checkpoint_reader.LoadFromStorage();
 		end = system_clock::now();
 		elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.CheckpointReader.LoadFromStorage", "%f", elapsed);
+		DUCKDB_LOG(db.GetDatabase(), TimingLogType, "duckdb.CheckpointReader.LoadFromStorage", elapsed);
 
 		auto wal_path = GetWALPath();
 
@@ -255,7 +255,7 @@ void SingleFileStorageManager::LoadDatabase(StorageOptions storage_options) {
 		wal = WriteAheadLog::Replay(fs, db, wal_path);
 		end = system_clock::now();
 		elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG_ERROR(db.GetDatabase(), "duckdb.WriteAheadLog.Replay", "%f", elapsed);
+		DUCKDB_LOG(db.GetDatabase(), TimingLogType, "duckdb.WriteAheadLog.Replay", elapsed);
 	}
 	if (row_group_size > 122880ULL && GetStorageVersion() < 4) {
 		throw InvalidInputException("Unsupported row group size %llu - row group sizes >= 122_880 are only supported "

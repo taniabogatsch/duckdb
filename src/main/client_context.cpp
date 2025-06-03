@@ -219,7 +219,7 @@ void ClientContext::BeginQueryInternal(ClientContextLock &lock, const string &qu
 	context.transaction_id = transaction.ActiveTransaction().global_transaction_id;
 	context.query_id = transaction.GetActiveQuery();
 	logger = db->GetLogManager().CreateLogger(context, true);
-	DUCKDB_LOG_ERROR(*this, "duckdb.ClientContext.BeginQuery", query);
+	DUCKDB_LOG(*this, QueryLogType, query);
 }
 
 ErrorData ClientContext::EndQueryInternal(ClientContextLock &lock, bool success, bool invalidate_transaction,
@@ -258,7 +258,7 @@ ErrorData ClientContext::EndQueryInternal(ClientContextLock &lock, bool success,
 
 	auto end = system_clock::now();
 	auto elapsed = duration_cast<duration<double>>(end - client_data->start).count(); // Seconds.
-	DUCKDB_LOG_ERROR(*this, "duckdb.ClientContext.InternalQueryLatency", "%f", elapsed);
+	DUCKDB_LOG(*this, TimingLogType, "duckdb.ClientContext.InternalQueryLatency", elapsed);
 	client_data->profiler->EndQuery();
 
 	// Refresh the logger
@@ -375,7 +375,7 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 	logical_planner.CreatePlan(std::move(statement));
 	auto end = system_clock::now();
 	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-	DUCKDB_LOG_ERROR(*this, "duckdb.Planner", "%f", elapsed);
+	DUCKDB_LOG(*this, TimingLogType, "duckdb.Planner", elapsed);
 
 	D_ASSERT(logical_planner.plan || !logical_planner.properties.bound_all_parameters);
 	profiler.EndPhase();
@@ -400,7 +400,7 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 		logical_plan = optimizer.Optimize(std::move(logical_plan));
 		end = system_clock::now();
 		elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG_ERROR(*this, "duckdb.Optimizer", "%f", elapsed);
+		DUCKDB_LOG(*this, TimingLogType, "duckdb.Optimizer", elapsed);
 
 		D_ASSERT(logical_plan);
 		profiler.EndPhase();
@@ -418,7 +418,7 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 	result->physical_plan = physical_planner.Plan(std::move(logical_plan));
 	end = system_clock::now();
 	elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-	DUCKDB_LOG_ERROR(*this, "duckdb.PhysicalPlanner", "%f", elapsed);
+	DUCKDB_LOG(*this, TimingLogType, "duckdb.PhysicalPlanner", elapsed);
 
 	profiler.EndPhase();
 	D_ASSERT(result->physical_plan);

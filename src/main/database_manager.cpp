@@ -84,7 +84,7 @@ optional_ptr<AttachedDatabase> DatabaseManager::AttachDatabase(ClientContext &co
 	}
 	auto end = system_clock::now();
 	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-	DUCKDB_LOG_ERROR(context, "duckdb.AttachDatabase.CreateCatalogEntry", "%f", elapsed);
+	DUCKDB_LOG(context, TimingLogType, "duckdb.AttachDatabase.CreateCatalogEntry", elapsed);
 
 	return GetDatabase(context, name);
 }

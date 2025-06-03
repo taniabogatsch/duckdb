@@ -11,6 +11,8 @@
 #include "duckdb/common/case_insensitive_map.hpp"
 #include "duckdb/common/common.hpp"
 
+#include <chrono>
+
 namespace duckdb {
 
 class AttachedDatabase;
@@ -33,7 +35,7 @@ public:
 	//! The query profiler of this client.
 	shared_ptr<QueryProfiler> profiler;
 	//! Start time of a query.
-	time_point<system_clock, duration<double>> start;
+	std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> start;
 
 	//! The set of temporary objects belonging to this client.
 	shared_ptr<AttachedDatabase> temporary_objects;
