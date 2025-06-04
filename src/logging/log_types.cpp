@@ -30,6 +30,10 @@ FileSystemLogType::FileSystemLogType() : LogType(NAME, LEVEL, GetLogType()) {
 }
 
 // FIXME: Manual JSON strings are not winning any style points
+string FileSystemLogType::ConstructLogMessage(const FileHandle &handle, const string &op, int64_t bytes, idx_t pos) {
+	return StringUtil::Format("{\"fs\":\"%s\",\"path\":\"%s\",\"op\":\"%s\",\"bytes\":\"%lld\",\"pos\":\"%llu\"}",
+	                          handle.file_system.GetName(), handle.path, op, bytes, pos);
+}
 string FileSystemLogType::ConstructLogMessage(const FileHandle &handle, const string &op, int64_t bytes, idx_t pos,
                                               const double duration) {
 	return StringUtil::Format(
