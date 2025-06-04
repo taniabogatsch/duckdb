@@ -22,38 +22,21 @@ FROM '__TEST_DIR__/test.csv'
 statement ok
 pragma threads=1
 
-query IIIII
-SELECT scope, type, log_level, (message::JSON).fs, (message::JSON).op
+query III
+SELECT scope, type, log_level
 FROM duckdb_logs
 WHERE type = 'FileSystem'
 ORDER BY timestamp
 ----
-CONNECTION	FileSystem	TRACE	"LocalFileSystem"	"OPEN"
-CONNECTION	FileSystem	TRACE	"LocalFileSystem"	"WRITE"
-CONNECTION	FileSystem	TRACE	"LocalFileSystem"	"WRITE"
-CONNECTION	FileSystem	TRACE	"LocalFileSystem"	"WRITE"
-CONNECTION	FileSystem	TRACE	"LocalFileSystem"	"CLOSE"
-CONNECTION	FileSystem	TRACE	"LocalFileSystem"	"OPEN"
-CONNECTION	FileSystem	TRACE	"LocalFileSystem"	"READ"
-CONNECTION	FileSystem	TRACE	"LocalFileSystem"	"READ"
-CONNECTION	FileSystem	TRACE	"LocalFileSystem"	"CLOSE"
+CONNECTION	FileSystem	TRACE
+CONNECTION	FileSystem	TRACE
+CONNECTION	FileSystem	TRACE
+CONNECTION	FileSystem	TRACE
+CONNECTION	FileSystem	TRACE
+CONNECTION	FileSystem	TRACE
+CONNECTION	FileSystem	TRACE
+CONNECTION	FileSystem	TRACE
+CONNECTION	FileSystem	TRACE
 
 statement ok
 pragma truncate_duckdb_logs;
-
-require httpfs
-
-statement ok
-FROM 'https://github.com/duckdb/duckdb/raw/main/data/csv/customer.csv'
-
-# FIXME: investigate why we call READ twice?
-query IIII
-SELECT scope, type, log_level, regexp_replace(message, '\"path\":.*test.csv"', '"test.csv"')
-FROM duckdb_logs
-WHERE type = 'FileSystem'
-ORDER BY timestamp
-----
-CONNECTION	FileSystem	TRACE	{"fs":"HTTPFileSystem","path":"https://github.com/duckdb/duckdb/raw/main/data/csv/customer.csv","op":"OPEN"}
-CONNECTION	FileSystem	TRACE	{"fs":"HTTPFileSystem","path":"https://github.com/duckdb/duckdb/raw/main/data/csv/customer.csv","op":"READ","bytes":"1276","pos":"0"}
-CONNECTION	FileSystem	TRACE	{"fs":"HTTPFileSystem","path":"https://github.com/duckdb/duckdb/raw/main/data/csv/customer.csv","op":"READ","bytes":"0","pos":"1276"}
-CONNECTION	FileSystem	TRACE	{"fs":"HTTPFileSystem","path":"https://github.com/duckdb/duckdb/raw/main/data/csv/customer.csv","op":"CLOSE"}

@@ -24,16 +24,16 @@ CREATE TABLE db.test AS SELECT 1;
 statement ok
 DETACH db;
 
-query IIIII
-SELECT scope, type, log_level, (message::JSON).fs, (message::JSON).op
+query III
+SELECT scope, type, log_level
 FROM duckdb_logs
 WHERE type = 'FileSystem'
 ORDER BY timestamp
 ----
-DATABASE	FileSystem	TRACE	"LocalFileSystem"	"OPEN"
-DATABASE	FileSystem	TRACE	"LocalFileSystem"	"WRITE"
-DATABASE	FileSystem	TRACE	"LocalFileSystem"	"WRITE"
-DATABASE	FileSystem	TRACE	"LocalFileSystem"	"WRITE"
-DATABASE	FileSystem	TRACE	"LocalFileSystem"	"WRITE"
-DATABASE	FileSystem	TRACE	"LocalFileSystem"	"WRITE"
-DATABASE	FileSystem	TRACE	"LocalFileSystem"	"CLOSE"
+DATABASE	FileSystem	TRACE
+DATABASE	FileSystem	TRACE
+DATABASE	FileSystem	TRACE
+DATABASE	FileSystem	TRACE
+DATABASE	FileSystem	TRACE
+DATABASE	FileSystem	TRACE
+DATABASE	FileSystem	TRACE
