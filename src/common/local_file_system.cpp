@@ -492,6 +492,8 @@ idx_t LocalFileSystem::GetFilePointer(FileHandle &handle) {
 }
 
 void LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+	auto start = system_clock::now();
+
 	auto bytes_to_read = nr_bytes;
 	int fd = handle.Cast<UnixFileHandle>().fd;
 	auto read_buffer = char_ptr_cast(buffer);
@@ -511,10 +513,15 @@ void LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, i
 		nr_bytes -= bytes_read;
 		location += UnsafeNumericCast<idx_t>(bytes_read);
 	}
-	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_to_read, location - UnsafeNumericCast<idx_t>(bytes_to_read));
+
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_to_read, location - UnsafeNumericCast<idx_t>(bytes_to_read), elapsed);
 }
 
 int64_t LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes) {
+	auto start = system_clock::now();
+
 	auto &unix_handle = handle.Cast<UnixFileHandle>();
 	int fd = unix_handle.fd;
 	int64_t bytes_read = read(fd, buffer, UnsafeNumericCast<size_t>(nr_bytes));
@@ -522,12 +529,18 @@ int64_t LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes
 		throw IOException("Could not read from file \"%s\": %s", {{"errno", std::to_string(errno)}}, handle.path,
 		                  strerror(errno));
 	}
-	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_read, unix_handle.current_pos);
+
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_read, unix_handle.current_pos, elapsed);
+
 	unix_handle.current_pos += UnsafeNumericCast<idx_t>(bytes_read);
 	return bytes_read;
 }
 
 void LocalFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+	auto start = system_clock::now();
+
 	int fd = handle.Cast<UnixFileHandle>().fd;
 	auto write_buffer = char_ptr_cast(buffer);
 
@@ -550,10 +563,14 @@ void LocalFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes, 
 		current_location += UnsafeNumericCast<idx_t>(bytes_written);
 	}
 
-	DUCKDB_LOG_FILE_SYSTEM_WRITE(handle, nr_bytes, location);
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_FILE_SYSTEM_WRITE(handle, nr_bytes, location, elapsed);
 }
 
 int64_t LocalFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes) {
+	auto start = system_clock::now();
+
 	auto &unix_handle = handle.Cast<UnixFileHandle>();
 	int fd = unix_handle.fd;
 
@@ -570,9 +587,11 @@ int64_t LocalFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_byte
 		bytes_to_write -= current_bytes_written;
 	}
 
-	DUCKDB_LOG_FILE_SYSTEM_WRITE(handle, nr_bytes, unix_handle.current_pos);
-	unix_handle.current_pos += UnsafeNumericCast<idx_t>(nr_bytes);
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_FILE_SYSTEM_WRITE(handle, nr_bytes, unix_handle.current_pos, elapsed);
 
+	unix_handle.current_pos += UnsafeNumericCast<idx_t>(nr_bytes);
 	return nr_bytes;
 }
 
@@ -1029,23 +1048,33 @@ static DWORD FSInternalRead(FileHandle &handle, HANDLE hFile, void *buffer, int6
 }
 
 void LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+	auto start = system_clock::now();
+
 	HANDLE hFile = ((WindowsFileHandle &)handle).fd;
 	auto bytes_read = FSInternalRead(handle, hFile, buffer, nr_bytes, location);
 	if (bytes_read != nr_bytes) {
 		throw IOException("Could not read all bytes from file \"%s\": wanted=%lld read=%lld", handle.path, nr_bytes,
 		                  bytes_read);
 	}
-	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_read, location);
+
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_read, location, elapsed);
 }
 
 int64_t LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes) {
+	auto start = system_clock::now();
+
 	HANDLE hFile = handle.Cast<WindowsFileHandle>().fd;
 	auto &pos = handle.Cast<WindowsFileHandle>().position;
 	auto n = std::min<idx_t>(std::max<idx_t>(GetFileSize(handle), pos) - pos, nr_bytes);
 	auto bytes_read = FSInternalRead(handle, hFile, buffer, n, pos);
 	pos += bytes_read;
 
-	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_read, pos - bytes_read);
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_read, pos - bytes_read, elapsed);
+
 	return bytes_read;
 }
 
@@ -1083,21 +1112,32 @@ static int64_t FSWrite(FileHandle &handle, HANDLE hFile, void *buffer, int64_t n
 }
 
 void LocalFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+	auto start = system_clock::now();
+
 	HANDLE hFile = handle.Cast<WindowsFileHandle>().fd;
 	auto bytes_written = FSWrite(handle, hFile, buffer, nr_bytes, location);
 	if (bytes_written != nr_bytes) {
 		throw IOException("Could not write all bytes from file \"%s\": wanted=%lld wrote=%lld", handle.path, nr_bytes,
 		                  bytes_written);
 	}
-	DUCKDB_LOG_FILE_SYSTEM_WRITE(handle, bytes_written, location);
+
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_FILE_SYSTEM_WRITE(handle, bytes_written, location, elapsed);
 }
 
 int64_t LocalFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes) {
+	auto start = system_clock::now();
+
 	HANDLE hFile = handle.Cast<WindowsFileHandle>().fd;
 	auto &pos = handle.Cast<WindowsFileHandle>().position;
 	auto bytes_written = FSWrite(handle, hFile, buffer, nr_bytes, pos);
 	pos += bytes_written;
-	DUCKDB_LOG_FILE_SYSTEM_WRITE(handle, bytes_written, pos - bytes_written);
+
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG_FILE_SYSTEM_WRITE(handle, bytes_written, pos - bytes_written, elapsed);
+
 	return bytes_written;
 }
 

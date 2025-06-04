@@ -102,6 +102,8 @@ Transaction &Transaction::Get(ClientContext &context, Catalog &catalog) {
 }
 
 ErrorData MetaTransaction::Commit() {
+	auto start = system_clock::now();
+
 	ErrorData error;
 #ifdef DEBUG
 	reference_set_t<AttachedDatabase> committed_tx;
@@ -129,6 +131,11 @@ ErrorData MetaTransaction::Commit() {
 			transaction_manager.RollbackTransaction(transaction);
 		}
 	}
+
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG(context, TimingLogType, "duckdb.MetaTransaction.Commit", elapsed);
+
 	return error;
 }
 
