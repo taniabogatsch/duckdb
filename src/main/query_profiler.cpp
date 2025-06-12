@@ -89,6 +89,7 @@ QueryProfiler &QueryProfiler::Get(ClientContext &context) {
 
 void QueryProfiler::StartQuery(string query, bool is_explain_analyze_p, bool start_at_optimizer) {
 	lock_guard<std::mutex> guard(lock);
+
 	if (is_explain_analyze_p) {
 		StartExplainAnalyze();
 	}
@@ -105,12 +106,13 @@ void QueryProfiler::StartQuery(string query, bool is_explain_analyze_p, bool sta
 		return;
 	}
 
-	running = true;
-	query_info.query_name = std::move(query);
 	tree_map.clear();
 	root = nullptr;
 	phase_timings.clear();
 	phase_stack.clear();
+
+	running = true;
+	query_info.query_name = std::move(query);
 	main_query.Start();
 }
 

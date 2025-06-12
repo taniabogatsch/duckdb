@@ -173,10 +173,6 @@ public:
 	DUCKDB_API string ToJSON() const;
 	DUCKDB_API void WriteToFile(const char *path, string &info) const;
 
-	idx_t OperatorSize() {
-		return tree_map.size();
-	}
-
 	void Finalize(ProfilingNode &node);
 
 	//! Return the root of the query tree
@@ -213,11 +209,6 @@ private:
 	TreeMap tree_map;
 	//! Whether or not we are running as part of a explain_analyze query
 	bool is_explain_analyze;
-
-public:
-	const TreeMap &GetTreeMap() const {
-		return tree_map;
-	}
 
 private:
 	//! The timer used to time the individual phases of the planning process

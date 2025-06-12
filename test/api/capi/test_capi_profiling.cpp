@@ -234,3 +234,30 @@ TEST_CASE("Test invalid use of profiling API", "[capi]") {
 	duckdb_destroy_value(&map);
 	tester.Cleanup();
 }
+
+TEST_CASE("Test resetting the profiling info after an error", "[capi]") {
+	CAPITester tester;
+	duckdb::unique_ptr<CAPIResult> result;
+	REQUIRE(tester.OpenDatabase(nullptr));
+
+	REQUIRE_NO_FAIL(tester.Query("PRAGMA enable_profiling = 'no_output'"));
+
+	// Run a query and check that the profiling information exists.
+	REQUIRE_NO_FAIL(tester.Query("SELECT 42"));
+	auto info = duckdb_get_profiling_info(tester.connection);
+	REQUIRE(info != nullptr);
+	auto value = duckdb_profiling_info_get_value(info, "QUERY_NAME");
+	REQUIRE(value != nullptr);
+	duckdb_destroy_value(&value);
+
+	// Fail a query.
+	auto res = tester.Query("SELECT 42 FROM does_not_exist");
+	REQUIRE(res->HasError());
+
+	info = duckdb_get_profiling_info(tester.connection);
+	value = duckdb_profiling_info_get_value(info, "QUERY_NAME");
+	REQUIRE(value != nullptr);
+	REQUIRE(info == nullptr);
+
+	tester.Cleanup();
+}
