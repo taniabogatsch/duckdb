@@ -99,6 +99,9 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, str
 		if (StringUtil::CIEquals(entry.first, "encryption_key")) {
 			continue;
 		}
+		if (StringUtil::CIEquals(entry.first, "encryption_cipher")) {
+			continue;
+		}
 		if (StringUtil::CIEquals(entry.first, "row_group_size")) {
 			continue;
 		}
@@ -186,11 +189,15 @@ void AttachedDatabase::Initialize(optional_ptr<ClientContext> context, StorageOp
 	}
 	if (storage) {
 		auto start = system_clock::now();
-		storage->Initialize(options);
+		storage->Initialize(context, options);
 		auto end = system_clock::now();
 		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
 		DUCKDB_LOG(db, TimingLogType, "duckdb.AttachedDatabase.Storage.Initialize", elapsed);
 	}
+}
+
+void AttachedDatabase::FinalizeLoad(optional_ptr<ClientContext> context) {
+	catalog->FinalizeLoad(context);
 }
 
 StorageManager &AttachedDatabase::GetStorageManager() {
