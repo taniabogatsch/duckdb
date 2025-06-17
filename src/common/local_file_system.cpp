@@ -513,7 +513,6 @@ void LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, i
 		nr_bytes -= bytes_read;
 		location += UnsafeNumericCast<idx_t>(bytes_read);
 	}
-	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_to_read, location - UnsafeNumericCast<idx_t>(bytes_to_read));
 
 	auto end = system_clock::now();
 	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
@@ -531,12 +530,10 @@ int64_t LocalFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes
 		throw IOException("Could not read from file \"%s\": %s", {{"errno", std::to_string(errno)}}, handle.path,
 		                  strerror(errno));
 	}
-	DUCKDB_LOG_FILE_SYSTEM_READ(handle, bytes_read, unix_handle.current_pos);
 
 	auto end = system_clock::now();
 	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
 	DUCKDB_LOG_FILE_SYSTEM_READ_DURATION(handle, bytes_read, unix_handle.current_pos, elapsed);
-
 	unix_handle.current_pos += UnsafeNumericCast<idx_t>(bytes_read);
 
 	return bytes_read;
