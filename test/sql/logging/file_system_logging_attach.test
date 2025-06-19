@@ -1,6 +1,10 @@
 # name: test/sql/logging/file_system_logging_attach.test
 # group: [logging]
 
+# We directly compare to the number of bytes written in the last statement,
+# which is the block size.
+require block_size 262144
+
 require parquet
 
 require json
@@ -10,13 +14,13 @@ require noforcestorage
 require no_alternative_verify
 
 statement ok
-set enable_logging=true;
+SET enable_logging=true;
 
 statement ok
-set logging_level='trace';
+SET logging_level='trace';
 
 statement ok
-attach '__TEST_DIR__/filehandle_logging.db' as db;
+ATTACH '__TEST_DIR__/filehandle_logging.db' AS db;
 
 statement ok
 CREATE TABLE db.test AS SELECT 1;
