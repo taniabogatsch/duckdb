@@ -189,7 +189,7 @@ void AttachedDatabase::Initialize(optional_ptr<ClientContext> context, StorageOp
 	}
 	if (storage) {
 		auto start = system_clock::now();
-		storage->Initialize(context, options);
+		storage->Initialize(QueryContext(context), options);
 		auto end = system_clock::now();
 		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
 		DUCKDB_LOG(db, TimingLogType, "duckdb.AttachedDatabase.Storage.Initialize", elapsed);
@@ -270,7 +270,7 @@ void AttachedDatabase::Close() {
 			}
 			CheckpointOptions options;
 			options.wal_action = CheckpointWALAction::DELETE_WAL;
-			storage->CreateCheckpoint(nullptr, options);
+			storage->CreateCheckpoint(QueryContext(), options);
 		}
 	} catch (...) { // NOLINT
 	}
