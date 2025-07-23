@@ -18,14 +18,15 @@
 
 namespace duckdb {
 
-BaseAppender::BaseAppender(Allocator &allocator, const AppenderType type_p)
-    : allocator(allocator), column(0), appender_type(type_p) {
+BaseAppender::BaseAppender(optional_ptr<ClientContext> client_context, Allocator &allocator, const AppenderType type_p)
+    : client_context(client_context), allocator(allocator), column(0), appender_type(type_p) {
 }
 
-BaseAppender::BaseAppender(Allocator &allocator_p, vector<LogicalType> types_p, const AppenderType type_p,
-                           const idx_t flush_count_p)
-    : allocator(allocator_p), types(std::move(types_p)), collection(make_uniq<ColumnDataCollection>(allocator, types)),
-      column(0), appender_type(type_p), flush_count(flush_count_p) {
+BaseAppender::BaseAppender(optional_ptr<ClientContext> client_context, Allocator &allocator_p,
+                           vector<LogicalType> types_p, const AppenderType type_p, const idx_t flush_count_p)
+    : client_context(client_context), allocator(allocator_p), types(std::move(types_p)),
+      collection(make_uniq<ColumnDataCollection>(allocator, types)), column(0), appender_type(type_p),
+      flush_count(flush_count_p) {
 	InitializeChunk();
 }
 
@@ -52,7 +53,7 @@ const vector<LogicalType> &BaseAppender::GetActiveTypes() const {
 }
 
 InternalAppender::InternalAppender(ClientContext &context_p, TableCatalogEntry &table_p, const idx_t flush_count_p)
-    : BaseAppender(Allocator::DefaultAllocator(), table_p.GetTypes(), AppenderType::PHYSICAL, flush_count_p),
+    : BaseAppender(context_p, Allocator::DefaultAllocator(), table_p.GetTypes(), AppenderType::PHYSICAL, flush_count_p),
       context(context_p), table(table_p) {
 }
 
@@ -61,7 +62,7 @@ InternalAppender::~InternalAppender() {
 }
 
 Appender::Appender(Connection &con, const string &database_name, const string &schema_name, const string &table_name)
-    : BaseAppender(Allocator::DefaultAllocator(), AppenderType::LOGICAL), context(con.context) {
+    : BaseAppender(con.context, Allocator::DefaultAllocator(), AppenderType::LOGICAL), context(con.context) {
 
 	description = con.TableInfo(database_name, schema_name, table_name);
 	if (!description) {
@@ -411,6 +412,7 @@ void BaseAppender::AppendValue(const Value &value) {
 }
 
 void BaseAppender::AppendDataChunk(DataChunk &chunk_p) {
+	auto start = system_clock::now();
 	auto chunk_types = chunk_p.GetTypes();
 	auto &appender_types = GetActiveTypes();
 
@@ -419,6 +421,11 @@ void BaseAppender::AppendDataChunk(DataChunk &chunk_p) {
 		collection->Append(chunk_p);
 		if (collection->Count() >= flush_count) {
 			Flush();
+		}
+		if (client_context) {
+			auto end = system_clock::now();
+			auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+			DUCKDB_LOG(*client_context, TimingLogType, "duckdb.BaseAppender.AppendDataChunk.TypesMatch", elapsed);
 		}
 		return;
 	}
@@ -453,6 +460,11 @@ void BaseAppender::AppendDataChunk(DataChunk &chunk_p) {
 	if (collection->Count() >= flush_count) {
 		Flush();
 	}
+	if (client_context) {
+		auto end = system_clock::now();
+		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+		DUCKDB_LOG(*client_context, TimingLogType, "duckdb.BaseAppender.AppendDataChunk.CastTypes", elapsed);
+	}
 }
 
 void BaseAppender::FlushChunk() {
@@ -472,6 +484,7 @@ void BaseAppender::Flush() {
 		throw InvalidInputException("Failed to Flush appender: incomplete append to row!");
 	}
 
+	auto start = system_clock::now();
 	FlushChunk();
 	if (collection->Count() == 0) {
 		return;
@@ -480,6 +493,11 @@ void BaseAppender::Flush() {
 	FlushInternal(*collection);
 	collection->Reset();
 	column = 0;
+	if (client_context) {
+		auto end = system_clock::now();
+		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+		DUCKDB_LOG(*client_context, TimingLogType, "duckdb.BaseAppender.Flush", elapsed);
+	}
 }
 
 void Appender::FlushInternal(ColumnDataCollection &collection) {
