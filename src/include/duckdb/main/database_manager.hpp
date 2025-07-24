@@ -70,6 +70,11 @@ public:
 	//! transaction, to a vector holding AttachedDatabase references
 	vector<reference<AttachedDatabase>> GetDatabases(ClientContext &context,
 	                                                 const optional_idx max_db_count = optional_idx());
+	//! Returns the approximate count of attached databases.
+	idx_t ApproxDatabaseCount() {
+		lock_guard<mutex> path_lock(db_paths_lock);
+		return db_paths_to_name.size();
+	}
 	//! Scans the catalog set and returns each committed database entry
 	vector<reference<AttachedDatabase>> GetDatabases();
 	//! Removes all databases from the catalog set. This is necessary for the database instance's destructor,
