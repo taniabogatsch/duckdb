@@ -541,8 +541,8 @@ bundle-library-obj: bundle-setup
 bundle-library: release
 	make bundle-library-o
 
-gather-libs: release
-	cd build/release && \
+gather-libs: reldebug
+	cd build/reldebug && \
 	rm -rf libs && \
 	mkdir -p libs && \
 	cp src/libduckdb_static.a libs/. && \

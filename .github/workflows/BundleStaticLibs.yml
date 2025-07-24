@@ -85,7 +85,7 @@ jobs:
 
       - name: Print platform
         shell: bash
-        run: ./build/release/duckdb -c "PRAGMA platform;"
+        run: ./build/reldebug/duckdb -c "PRAGMA platform;"
 
       - name: Deploy
         shell: bash
@@ -94,7 +94,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DUCKDB_STAGING_KEY }}
         run: |
           python3 scripts/amalgamation.py
-          zip -r -j static-libs-osx-${{ matrix.architecture }}.zip src/include/duckdb.h build/release/libs/
+          zip -r -j static-libs-osx-${{ matrix.architecture }}.zip src/include/duckdb.h build/reldebug/libs/
           ./scripts/upload-assets-to-staging.sh github_release static-libs-osx-${{ matrix.architecture }}.zip
 
       - uses: actions/upload-artifact@v4
@@ -151,7 +151,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.S3_DUCKDB_STAGING_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DUCKDB_STAGING_KEY }}
         run: |
-          zip -r -j static-libs-windows-mingw.zip src/include/duckdb.h build/release/libs/
+          zip -r -j static-libs-windows-mingw.zip src/include/duckdb.h build/reldebug/libs/
           ./scripts/upload-assets-to-staging.sh github_release static-libs-windows-mingw.zip
 
       - uses: actions/upload-artifact@v4
@@ -203,7 +203,7 @@ jobs:
           "
       - name: Print platform
         shell: bash
-        run: ./build/release/duckdb -c "PRAGMA platform;"
+        run: ./build/reldebug/duckdb -c "PRAGMA platform;"
 
       - name: Deploy
         shell: bash
@@ -212,7 +212,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_DUCKDB_STAGING_KEY }}
         run: |
           python3 scripts/amalgamation.py
-          zip -r -j static-libs-linux-${{ matrix.config.arch }}.zip src/include/duckdb.h build/release/libs/
+          zip -r -j static-libs-linux-${{ matrix.config.arch }}.zip src/include/duckdb.h build/reldebug/libs/
           ./scripts/upload-assets-to-staging.sh github_release static-libs-linux-${{ matrix.config.arch }}.zip
       - uses: actions/upload-artifact@v4
         with:
