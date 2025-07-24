@@ -545,7 +545,7 @@ CatalogEntry &CatalogSet::GetCommittedEntry(CatalogEntry &current) {
 }
 
 SimilarCatalogEntry CatalogSet::SimilarEntry(CatalogTransaction transaction, const string &name) {
-	auto start = system_clock::now();
+	auto start = std::chrono::system_clock::now();
 	unique_lock<mutex> lock(catalog_lock);
 	CreateDefaultEntries(transaction, lock);
 
@@ -557,8 +557,8 @@ SimilarCatalogEntry CatalogSet::SimilarEntry(CatalogTransaction transaction, con
 			result.name = kv.first;
 		}
 	}
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	auto end = std::chrono::system_clock::now();
+	auto elapsed = duration_cast<std::chrono::duration<double>>(end - start).count(); // Seconds.
 	DUCKDB_LOG(catalog.GetDatabase(), TimingLogType, "duckdb.CatalogSet.SimilarEntry.catalog_lock", elapsed);
 	return result;
 }
@@ -681,7 +681,7 @@ void CatalogSet::CreateDefaultEntries(CatalogTransaction transaction, unique_loc
 
 void CatalogSet::Scan(CatalogTransaction transaction, const std::function<void(CatalogEntry &)> &callback) {
 	// Lock the catalog set.
-	auto start = system_clock::now();
+	auto start = std::chrono::system_clock::now();
 	unique_lock<mutex> lock(catalog_lock);
 	CreateDefaultEntries(transaction, lock);
 
@@ -692,14 +692,14 @@ void CatalogSet::Scan(CatalogTransaction transaction, const std::function<void(C
 			callback(entry_for_transaction);
 		}
 	}
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	auto end = std::chrono::system_clock::now();
+	auto elapsed = duration_cast<std::chrono::duration<double>>(end - start).count(); // Seconds.
 	DUCKDB_LOG(catalog.GetDatabase(), TimingLogType, "duckdb.CatalogSet.ScanWithTransaction.catalog_lock", elapsed);
 }
 
 void CatalogSet::ScanWithReturn(CatalogTransaction transaction, const std::function<bool(CatalogEntry &)> &callback) {
 	// Lock the catalog set.
-	auto start = system_clock::now();
+	auto start = std::chrono::system_clock::now();
 	unique_lock<mutex> lock(catalog_lock);
 	CreateDefaultEntries(transaction, lock);
 
@@ -712,8 +712,8 @@ void CatalogSet::ScanWithReturn(CatalogTransaction transaction, const std::funct
 			}
 		}
 	}
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	auto end = std::chrono::system_clock::now();
+	auto elapsed = duration_cast<std::chrono::duration<double>>(end - start).count(); // Seconds.
 	DUCKDB_LOG(catalog.GetDatabase(), TimingLogType, "duckdb.CatalogSet.ScanWithReturnWithTransaction.catalog_lock",
 	           elapsed);
 }
@@ -729,7 +729,7 @@ void CatalogSet::ScanWithReturn(ClientContext &context, const std::function<bool
 void CatalogSet::ScanWithPrefix(CatalogTransaction transaction, const std::function<void(CatalogEntry &)> &callback,
                                 const string &prefix) {
 	// lock the catalog set
-	auto start = system_clock::now();
+	auto start = std::chrono::system_clock::now();
 	unique_lock<mutex> lock(catalog_lock);
 	CreateDefaultEntries(transaction, lock);
 
@@ -743,14 +743,14 @@ void CatalogSet::ScanWithPrefix(CatalogTransaction transaction, const std::funct
 			callback(entry_for_transaction);
 		}
 	}
-	auto end_time = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end_time - start).count(); // Seconds.
+	auto end_time = std::chrono::system_clock::now();
+	auto elapsed = duration_cast<std::chrono::duration<double>>(end_time - start).count(); // Seconds.
 	DUCKDB_LOG(catalog.GetDatabase(), TimingLogType, "duckdb.CatalogSet.ScanWithPrefix.catalog_lock", elapsed);
 }
 
 void CatalogSet::Scan(const std::function<void(CatalogEntry &)> &callback) {
 	// lock the catalog set
-	auto start = system_clock::now();
+	auto start = std::chrono::system_clock::now();
 	lock_guard<mutex> lock(catalog_lock);
 	for (auto &kv : map.Entries()) {
 		auto &entry = *kv.second;
@@ -759,8 +759,8 @@ void CatalogSet::Scan(const std::function<void(CatalogEntry &)> &callback) {
 			callback(commited_entry);
 		}
 	}
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	auto end = std::chrono::system_clock::now();
+	auto elapsed = duration_cast<std::chrono::duration<double>>(end - start).count(); // Seconds.
 	DUCKDB_LOG(catalog.GetDatabase(), TimingLogType, "duckdb.CatalogSet.Scan.catalog_lock", elapsed);
 }
 
