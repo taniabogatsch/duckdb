@@ -333,6 +333,7 @@ void StandardBufferManager::Prefetch(vector<shared_ptr<BlockHandle>> &handles) {
 }
 
 BufferHandle StandardBufferManager::Pin(shared_ptr<BlockHandle> &handle) {
+	auto start = system_clock::now();
 	// we need to be careful not to return the BufferHandle to this block while holding the BlockHandle's lock
 	// as exiting this function's scope may cause the destructor of the BufferHandle to be called while holding the lock
 	// the destructor calls Unpin, which grabs the BlockHandle's lock again, causing a deadlock
@@ -389,11 +390,19 @@ BufferHandle StandardBufferManager::Pin(shared_ptr<BlockHandle> &handle) {
 	// we should have a valid BufferHandle by now, either because the block was already loaded, or because we loaded it
 	// return it without holding the BlockHandle's lock
 	D_ASSERT(buf.IsValid());
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG(db, TimingLogType, "duckdb.StandardBufferManager.Pin", elapsed);
+
 	return buf;
 }
 
 void StandardBufferManager::PurgeQueue(const BlockHandle &handle) {
+	auto start = system_clock::now();
 	buffer_pool.PurgeQueue(handle);
+	auto end = system_clock::now();
+	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+	DUCKDB_LOG(db, TimingLogType, "duckdb.StandardBufferManager.PurgeQueue", elapsed);
 }
 
 void StandardBufferManager::AddToEvictionQueue(shared_ptr<BlockHandle> &handle) {

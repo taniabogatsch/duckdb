@@ -59,6 +59,17 @@ public:
 	}
 };
 
+class TimingLogType : public LogType {
+public:
+	static constexpr const char *NAME = "Timing";
+	static constexpr LogLevel LEVEL = LogLevel::LOG_TRACE;
+
+	TimingLogType();
+
+	static LogicalType GetLogType();
+	static string ConstructLogMessage(const string &path, const double duration);
+};
+
 class FileSystemLogType : public LogType {
 public:
 	static constexpr const char *NAME = "FileSystem";
@@ -70,6 +81,8 @@ public:
 	static LogicalType GetLogType();
 
 	static string ConstructLogMessage(const FileHandle &handle, const string &op, int64_t bytes, idx_t pos);
+	static string ConstructLogMessage(const FileHandle &handle, const string &op, int64_t bytes, idx_t pos,
+	                                  const double duration);
 	static string ConstructLogMessage(const FileHandle &handle, const string &op);
 };
 

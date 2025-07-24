@@ -254,7 +254,12 @@ void SingleFileStorageManager::LoadDatabase(StorageOptions storage_options) {
 		checkpoint_reader.LoadFromStorage();
 
 		auto wal_path = GetWALPath();
+
+		auto start = system_clock::now();
 		wal = WriteAheadLog::Replay(fs, db, wal_path);
+		auto end = system_clock::now();
+		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
+		DUCKDB_LOG(db.GetDatabase(), TimingLogType, "duckdb.WriteAheadLog.Replay", elapsed);
 	}
 	if (row_group_size > 122880ULL && GetStorageVersion() < 4) {
 		throw InvalidInputException("Unsupported row group size %llu - row group sizes >= 122_880 are only supported "

@@ -31,6 +31,8 @@ public:
 	//! The amount of tuples that are gathered in the column data collection before flushing.
 	static constexpr const idx_t DEFAULT_FLUSH_COUNT = STANDARD_VECTOR_SIZE * 100ULL;
 
+	optional_ptr<ClientContext> client_context;
+
 protected:
 	//! The allocator for the column data collection.
 	Allocator &allocator;
@@ -50,9 +52,9 @@ protected:
 	idx_t flush_count = DEFAULT_FLUSH_COUNT;
 
 protected:
-	DUCKDB_API BaseAppender(Allocator &allocator, const AppenderType type);
-	DUCKDB_API BaseAppender(Allocator &allocator, vector<LogicalType> types, const AppenderType type,
-	                        const idx_t flush_count = DEFAULT_FLUSH_COUNT);
+	DUCKDB_API BaseAppender(optional_ptr<ClientContext> client_context, Allocator &allocator, const AppenderType type);
+	DUCKDB_API BaseAppender(optional_ptr<ClientContext> client_context, Allocator &allocator, vector<LogicalType> types,
+	                        const AppenderType type, const idx_t flush_count = DEFAULT_FLUSH_COUNT);
 
 public:
 	DUCKDB_API virtual ~BaseAppender();
@@ -125,8 +127,6 @@ protected:
 };
 
 class Appender : public BaseAppender {
-	//! A shared pointer to the context of this appender.
-	shared_ptr<ClientContext> context;
 	//! The table description including the column names.
 	unique_ptr<TableDescription> description;
 	//! All table default values.
@@ -142,6 +142,9 @@ public:
 	DUCKDB_API Appender(Connection &con, const string &schema_name, const string &table_name);
 	DUCKDB_API Appender(Connection &con, const string &table_name);
 	DUCKDB_API ~Appender() override;
+
+	//! A shared pointer to the context of this appender.
+	shared_ptr<ClientContext> context;
 
 public:
 	void AppendDefault();
