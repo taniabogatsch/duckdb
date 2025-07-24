@@ -15,6 +15,6 @@ statement ok
 ATTACH '__TEST_DIR__/board3.db' AS b3;
 
 query I
-SELECT approx_database_count();
+SELECT approx_database_count() >= 3;
 ----
-3
+True

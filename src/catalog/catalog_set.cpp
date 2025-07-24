@@ -17,6 +17,8 @@
 #include "duckdb/common/exception/transaction_exception.hpp"
 #include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
 
+#include <chrono>
+
 namespace duckdb {
 
 void CatalogEntryMap::AddEntry(unique_ptr<CatalogEntry> entry) {
