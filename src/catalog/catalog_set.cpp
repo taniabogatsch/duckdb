@@ -16,8 +16,7 @@
 #include "duckdb/catalog/dependency_list.hpp"
 #include "duckdb/common/exception/transaction_exception.hpp"
 #include "duckdb/catalog/catalog_entry/schema_catalog_entry.hpp"
-
-#include <chrono>
+#include "duckdb/common/chrono.hpp"
 
 namespace duckdb {
 
