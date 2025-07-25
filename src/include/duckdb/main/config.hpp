@@ -49,6 +49,7 @@ class CastFunctionSet;
 class CollationBinding;
 class ClientContext;
 class ErrorManager;
+class WarningManager;
 class CompressionFunction;
 class TableFunctionRef;
 class OperatorExtension;
@@ -351,6 +352,8 @@ public:
 	vector<OptimizerExtension> optimizer_extensions;
 	//! Error manager
 	unique_ptr<ErrorManager> error_manager;
+	//! Warning manager.
+	unique_ptr<WarningManager> warning_manager;
 	//! A reference to the (shared) default allocator (Allocator::DefaultAllocator)
 	shared_ptr<Allocator> default_allocator;
 	//! Extensions made to binder

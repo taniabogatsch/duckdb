@@ -14,6 +14,7 @@
 #include "duckdb/main/database_path_and_type.hpp"
 #include "duckdb/main/db_instance_cache.hpp"
 #include "duckdb/main/error_manager.hpp"
+#include "duckdb/main/warning_manager.hpp"
 #include "duckdb/main/extension_helper.hpp"
 #include "duckdb/main/secret/secret_manager.hpp"
 #include "duckdb/parallel/task_scheduler.hpp"
@@ -48,6 +49,7 @@ DBConfig::DBConfig() {
 	collation_bindings = make_uniq<CollationBinding>();
 	index_types = make_uniq<IndexTypeSet>();
 	error_manager = make_uniq<ErrorManager>();
+	warning_manager = make_uniq<WarningManager>();
 	secret_manager = make_uniq<SecretManager>();
 	http_util = make_shared_ptr<HTTPUtil>();
 	storage_extensions["__open_file__"] = OpenFileStorageExtension::Create();
@@ -465,6 +467,10 @@ void DatabaseInstance::Configure(DBConfig &new_config, const char *database_path
 	config.error_manager = std::move(new_config.error_manager);
 	if (!config.error_manager) {
 		config.error_manager = make_uniq<ErrorManager>();
+	}
+	config.warning_manager = std::move(new_config.warning_manager);
+	if (!config.warning_manager) {
+		config.warning_manager = make_uniq<WarningManager>();
 	}
 	if (!config.default_allocator) {
 		config.default_allocator = Allocator::DefaultAllocatorReference();

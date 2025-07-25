@@ -9,6 +9,7 @@
 #include "duckdb/common/types.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/error_manager.hpp"
+#include "duckdb/main/warning_manager.hpp"
 #include "duckdb/parser/parser.hpp"
 #include "sqlite3.h"
 #include "sqlite3_udf_wrapper.hpp"
@@ -72,6 +73,10 @@ struct sqlite3_stmt {
 	duckdb::unique_ptr<sqlite3_string_buffer[]> current_text;
 };
 
+void print_warning(const string &msg) {
+	std::cout << msg << std::endl;
+}
+
 void sqlite3_randomness(int N, void *pBuf) {
 	static bool init = false;
 	if (!init) {
@@ -122,6 +127,7 @@ int sqlite3_open_v2(const char *filename, /* Database filename (UTF-8) */
 		if (flags & DUCKDB_LATEST_STORAGE_VERSION) {
 			config.options.serialization_compatibility = SerializationCompatibility::FromString("latest");
 		}
+		config.warning_manager->SetWarningCallback(print_warning);
 		config.error_manager->AddCustomError(
 		    ErrorType::UNSIGNED_EXTENSION,
 		    "Extension \"%s\" could not be loaded because its signature is either missing or invalid and unsigned "

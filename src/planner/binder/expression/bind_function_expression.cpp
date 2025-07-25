@@ -4,6 +4,7 @@
 #include "duckdb/catalog/catalog_entry/scalar_macro_catalog_entry.hpp"
 #include "duckdb/execution/expression_executor.hpp"
 #include "duckdb/function/function_binder.hpp"
+#include "duckdb/main/warning_manager.hpp"
 #include "duckdb/parser/expression/function_expression.hpp"
 #include "duckdb/parser/expression/lambda_expression.hpp"
 #include "duckdb/planner/binder.hpp"
@@ -49,6 +50,10 @@ BindResult ExpressionBinder::TryBindLambdaOrJson(FunctionExpression &function, i
 
 	if (!lambda_bind_result.HasError()) {
 		if (!invalid_syntax) {
+			if (config.lambda_syntax == LambdaSyntax::DEFAULT) {
+				auto &db_config = DBConfig::GetConfig(context);
+				db_config.warning_manager->InvokeWarning(msg);
+			}
 			return lambda_bind_result;
 		}
 		return BindResult(msg);

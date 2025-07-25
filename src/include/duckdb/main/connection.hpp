@@ -15,12 +15,12 @@
 #include "duckdb/main/materialized_query_result.hpp"
 #include "duckdb/main/pending_query_result.hpp"
 #include "duckdb/main/prepared_statement.hpp"
+#include "duckdb/main/profiling_node.hpp"
 #include "duckdb/main/query_result.hpp"
 #include "duckdb/main/relation.hpp"
 #include "duckdb/main/stream_query_result.hpp"
 #include "duckdb/main/table_description.hpp"
 #include "duckdb/parser/sql_statement.hpp"
-#include "duckdb/main/profiling_node.hpp"
 
 namespace duckdb {
 
@@ -32,8 +32,6 @@ class DuckDB;
 class LogicalOperator;
 class SelectStatement;
 struct CSVReaderOptions;
-
-typedef void (*warning_callback_t)(std::string);
 
 //! A connection to a database. This represents a (client) connection that can
 //! be used to query the database.
@@ -50,7 +48,6 @@ public:
 	DUCKDB_API ~Connection();
 
 	shared_ptr<ClientContext> context;
-	warning_callback_t warning_cb;
 
 public:
 	//! Returns query profiling information for the current query
