@@ -88,6 +88,7 @@ void Connection::DisableProfiling() {
 
 void Connection::EnableQueryVerification() {
 	ClientConfig::GetConfig(*context).query_verification_enabled = true;
+	ClientConfig::GetConfig(*context).verify_serializer = true;
 }
 
 void Connection::DisableQueryVerification() {

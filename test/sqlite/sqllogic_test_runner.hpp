@@ -43,7 +43,7 @@ public:
 	duckdb::unique_ptr<Command> top_level_loop;
 	bool original_sqlite_test = false;
 	bool output_sql = false;
-	bool enable_verification = false;
+	bool enable_verification = true;
 	bool skip_reload = false;
 	unordered_map<string, string> environment_variables;
 	string local_extension_repo;
