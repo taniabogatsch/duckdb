@@ -10,6 +10,7 @@ namespace duckdb {
 
 constexpr LogLevel DefaultLogType::LEVEL;
 constexpr LogLevel TimingLogType::LEVEL;
+constexpr LogLevel CountLogType::LEVEL;
 constexpr LogLevel FileSystemLogType::LEVEL;
 constexpr LogLevel QueryLogType::LEVEL;
 constexpr LogLevel HTTPLogType::LEVEL;
@@ -26,6 +27,19 @@ LogicalType TimingLogType::GetLogType() {
 
 string TimingLogType::ConstructLogMessage(const string &path, const double duration) {
 	return StringUtil::Format("{\"path\":\"%s\",\"duration\":\"%f\"}", path, duration);
+}
+
+CountLogType::CountLogType() : LogType(NAME, LEVEL, GetLogType()) {
+}
+
+LogicalType CountLogType::GetLogType() {
+	LogicalType result;
+	child_list_t<LogicalType> child_list = {{"object", LogicalType::VARCHAR}, {"count", LogicalType::UBIGINT}};
+	return LogicalType::STRUCT(child_list);
+}
+
+string CountLogType::ConstructLogMessage(const string &object, const idx_t count) {
+	return StringUtil::Format("{\"object\":\"%s\",\"count\":\"%d\"}", object, count);
 }
 
 FileSystemLogType::FileSystemLogType() : LogType(NAME, LEVEL, GetLogType()) {

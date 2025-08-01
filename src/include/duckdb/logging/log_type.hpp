@@ -70,6 +70,17 @@ public:
 	static string ConstructLogMessage(const string &path, const double duration);
 };
 
+class CountLogType : public LogType {
+public:
+	static constexpr const char *NAME = "Count";
+	static constexpr LogLevel LEVEL = LogLevel::LOG_TRACE;
+
+	CountLogType();
+
+	static LogicalType GetLogType();
+	static string ConstructLogMessage(const string &object, const idx_t count);
+};
+
 class FileSystemLogType : public LogType {
 public:
 	static constexpr const char *NAME = "FileSystem";
