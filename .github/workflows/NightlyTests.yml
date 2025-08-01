@@ -56,9 +56,9 @@ jobs:
 
      - name: Build
        shell: bash
-       run: make debug
+       run: make release
 
      - name: Test
        shell: bash
        run: |
-         python3 scripts/run_tests_one_by_one.py build/debug/test/unittest --time_execution
+         python3 scripts/run_tests_one_by_one.py build/release/test/unittest --time_execution
