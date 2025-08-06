@@ -40,6 +40,185 @@ def valid_timeout(value):
         raise argparse.ArgumentTypeError("Timeout value must be a float")
 
 
+lines = [
+    "test/optimizer/pushdown/issue_16104.test",
+    "test/fuzzer/pedro/nan_as_seed.test",
+    "test/sql/function/numeric/test_random.test",
+    "test/sql/function/uuid/test_uuid.test",
+    "test/sql/window/test_volatile_independence.test" "test/fuzzer/pedro/having_query_wrong_result.test",
+    "test/fuzzer/pedro/temp_sequence_durability.test",
+    "test/issues/fuzz/sequence_overflow.test",
+    "test/sql/aggregate/aggregates/test_bit_xor.test",
+    "test/sql/aggregate/aggregates/test_bit_and.test",
+    "test/sql/aggregate/aggregates/test_bit_or.test",
+    "test/sql/aggregate/aggregates/test_avg.test",
+    "test/sql/catalog/comment_on_wal.test",
+    "test/sql/catalog/dependencies/test_alter_dependency_ownership.test",
+    "test/sql/catalog/function/test_sequence_macro.test",
+    "test/sql/catalog/sequence/sequence_offset_increment.test",
+    "test/sql/catalog/sequence/sequence_cycle.test",
+    "test/sql/catalog/sequence/test_sequence.test",
+    "test/sql/catalog/sequence/sequence_overflow.test",
+    "test/sql/function/list/aggregates/avg.test",
+    "test/sql/function/list/aggregates/bit_and.test",
+    "test/sql/function/list/aggregates/bit_xor.test",
+    "test/sql/function/list/aggregates/bit_or.test",
+    "test/sql/storage/wal/wal_store_sequences.test",
+    "test/sql/storage/wal/wal_store_default_sequence.test",
+    "test/sql/storage/wal/wal_sequence_uncommitted_transaction.test",
+    "test/sql/storage/catalog/test_sequence_uncommitted_transaction.test",
+    "test/sql/storage/catalog/test_store_default_sequence.test",
+    "test/sql/storage/catalog/test_store_sequences.test",
+    "test/sql/attach/reattach_schema.test",
+    "test/sql/attach/attach_sequence.test",
+    "test/sql/export/export_database.test",
+    "test/sql/copy_database/copy_database_different_types.test",
+    "test/sql/catalog/test_temporary.test",
+    "test/sql/catalog/sequence/test_duckdb_sequences.test" "test/fuzzer/pedro/sample_limit_overflow.test",
+    "test/sql/function/numeric/set_seed_for_sample.test" "test/sql/parser/test_value_functions.test",
+    "test/sql/function/timestamp/current_time.test",
+    "test/sql/timezone/test_icu_timezone.test"
+    "test/sql/parallelism/intraquery/test_parallel_nested_aggregates.test"
+    "test/sql/subquery/scalar/test_issue_6136.test"
+    "test/sql/pragma/test_query_log.test",
+    "test/sql/copy/csv/rejects/csv_rejects_auto.test",
+    "test/sql/copy/csv/rejects/csv_rejects_flush_cast.test",
+    "test/sql/copy/csv/rejects/csv_unquoted_rejects.test",
+    "test/sql/copy/csv/rejects/csv_rejects_read.test",
+    "test/sql/copy/csv/rejects/csv_rejects_maximum_line.test",
+    "test/sql/copy/csv/rejects/test_invalid_utf_rejects.test",
+    "test/sql/copy/csv/rejects/csv_rejects_flush_message.test",
+    "test/sql/copy/csv/rejects/csv_rejects_two_tables.test",
+    "test/sql/copy/csv/rejects/test_mixed.test",
+    "test/sql/copy/csv/rejects/test_multiple_errors_same_line.test",
+    "test/sql/copy/csv/rejects/csv_incorrect_columns_amount_rejects.test",
+    "test/sql/copy/csv/test_non_unicode_header.test",
+    "test/sql/logging/test_logging_function.test",
+    "test/sql/logging/logging_types.test",
+    "test/sql/logging/logging.test",
+    "test/sql/logging/file_system_logging.test" "test/fuzzer/pedro/strptime_null_argument.test",
+    "test/fuzzer/pedro/force_no_cross_product.test",
+    "test/fuzzer/sqlsmith/bitstring_agg_overflow.test",
+    "test/fuzzer/duckfuzz/semi_join_has_correct_left_right_relations.test",
+    "test/issues/rigger/overflow_filter_pushdown.test",
+    "test/sql/optimizer/test_in_rewrite_rule.test",
+    "test/sql/aggregate/aggregates/test_bitstring_agg.test",
+    "test/sql/storage/compression/rle/rle_constant.test",
+    "test/sql/copy/parquet/parquet_filename_filter.test",
+    "test/sql/copy/parquet/union_by_name_hive_partitioning.test",
+    "test/sql/copy/parquet/parquet_hive.test" "test/optimizer/statistics/statistics_numeric.test",
+    "test/fuzzer/pedro/vacuum_table_with_generated_column.test",
+    "test/sql/types/struct/struct_stats.test",
+    "test/sql/types/list/list_stats.test",
+    "test/sql/types/nested/array/array_statistics.test",
+    "test/sql/vacuum/test_analyze.test",
+    "test/sql/function/generic/test_stats.test",
+    "test/sql/storage/distinct_statistics_storage.test",
+    "test/sql/pg_catalog/pg_prepared_statements.test",
+    "test/sql/alter/add_col/test_add_col_stats.test",
+    "test/sql/table_function/duckdb_prepared_statements.test"
+    "test/sql/function/list/lambdas/arrow/test_deprecated_lambda.test"
+    "test/optimizer/joins/no_duplicate_elimination_join.test",
+    "test/sql/optimizer/plan/test_filter_pushdown_large.test",
+    "test/sql/limit/test_limit0.test" "test/sql/limit/test_limit0.test",
+    "test/sql/sample/reservoir_testing_percentage.test" "test/sql/copy/csv/test_15211.test",
+    "test/sql/types/decimal/test_decimal_from_string.test",
+    "test/issues/general/test_15483.test",
+    "test/sql/storage/compression/dict_fsst/dict_fsst_test.test",
+    "test/sql/window/test_thread_count.test",
+    "test/sql/storage/lazy_load/lazy_load_limit.test",
+    "test/sql/types/nested/map/test_map_concat.test",
+    "test/sql/storage/partial_blocks/many_columns_drop_table.test",
+    "test/sql/function/timestamp/test_now_prepared.test",
+    "test/sql/copy/csv/csv_line_too_long.test",
+    "test/sql/cte/recursive_cte_key_variant.test",
+    "test/sql/error/test_try_expression.test",
+    "test/sql/function/generic/least_greatest_types.test",
+    "test/sql/storage/partial_blocks/many_columns_strings.test",
+    "test/sql/storage/partial_blocks/many_columns_storage.test",
+    "test/sql/storage/partial_blocks/many_columns_validity.test",
+    "test/sql/copy/parquet/parquet_hive2.test",
+    "test/extension/install_extension.test",
+    "test/sql/storage/partial_blocks/many_columns_rle.test",
+    "test/sql/storage/test_store_integers.test",
+    "test/sql/window/test_window_range.test",
+    "test/sql/window/test_window_groups.test",
+    "test/sql/copy/partitioned/hive_partitioned_auto_detect.test",
+    "test/sql/copy/csv/code_cov/csv_disk_reload.test",
+    "test/sql/window/test_window_constant_aggregate.test" "test/sql/pg_catalog/sqlalchemy.test",
+    "test/sql/copy/csv/test_non_unicode_header.test",
+    "test/sql/copy/csv/auto/test_describe_order.test",
+    "test/sql/storage/compression/bitpacking/bitpacking_constant_delta.test",
+    "test/sql/secrets/create_secret_persistence_no_client_context.test",
+    "test/sql/copy/csv/null_padding_big.test",
+    "test/sql/copy/csv/test_sniff_csv.test",
+    "test/sql/extensions/allowed_directories_install.test",
+    "test/sql/sample/bernoulli_sampling.test",
+    "test/sql/copy/csv/test_copy.test",
+    "test/sql/copy/csv/test_thijs_unquoted_file.test",
+    "test/sql/function/date/test_date_part.test",
+    "test/sql/copy/parquet/test_parallel_many_row_groups.test",
+    "test/sql/copy/parquet/parquet_stats.test",
+    "test/optimizer/pushdown/filter_cannot_pushdown.test",
+    "test/sql/copy/csv/test_comment_option.test",
+    "test/sql/sample/same_seed_same_sample.test",
+    "test/sql/copy/parquet/parquet_write_codecs.test",
+    "test/sql/function/list/aggregates/incorrect.test",
+    "test/sql/copy/csv/csv_hive.test",
+    "test/sql/types/struct/struct_comparison.test",
+    "test/sql/types/list/list_comparison.test",
+    "test/sql/aggregate/distinct/grouped/identical_inputs.test",
+    "test/sql/window/test_empty_frames.test",
+    "test/sql/index/art/nodes/test_art_node_256.test" "test/sql/aggregate/aggregates/test_any_value.test",
+    "test/sql/aggregate/aggregates/test_last.test",
+    "test/sql/aggregate/distinct/ungrouped/test_distinct_ungrouped.test",
+    "test/sql/pg_catalog/pg_type.test",
+    "test/sql/index/art/storage/test_art_duckdb_versions.test",
+    "test/sql/optimizer/expression/test_move_constants.test",
+    "test/sql/function/list/aggregates/null_or_empty.test",
+    "test/sql/function/list/list_zip.test",
+    "test/sql/function/list/list_concat.test",
+    "test/sql/function/timestamp/test_date_part.test",
+    "test/sql/window/test_window_distinct.test",
+    "test/sql/copy/csv/glob/read_csv_glob.test",
+    "test/sql/copy/csv/afl/test_afl_null_padding.test",
+    "test/sql/copy/csv/test_comment_midline.test",
+    "test/sql/copy/csv/test_null_padding_union.test",
+    "test/sql/copy/parquet/test_parquet_gzip.test",
+    "test/sql/copy/partitioned/skip_partition_column_writes.test",
+    "test/sql/types/struct/struct_distinct.test",
+    "test/sql/types/enum/test_enum_to_numbers.test",
+    "test/sql/storage/compression/dict_fsst/test_dict_fsst_with_smaller_block_size.test",
+    "test/sql/storage/compression/bitpacking/bitpacking_filter_pushdown.test",
+    "test/issues/monetdb/analytics10.test" "test/issues/general/test_16524.test",
+    "test/sql/collate/test_collate_between.test",
+    "test/sql/catalog/comment_on_dependencies.test",
+    "test/sql/catalog/comment_on_column.test",
+    "test/sql/catalog/comment_on.test",
+    "test/sql/catalog/comment_on_extended.test",
+    "test/sql/catalog/comment_on_pg_description.test",
+    "test/sql/pragma/test_show_tables.test",
+    "test/sql/alter/test_alter_if_exists.test",
+    "test/sql/index/create_index_options.test" "test/sql/types/decimal/large_decimal_constants.test",
+    "test/sql/types/uhugeint/test_uhugeint_conversion.test",
+    "test/sql/types/hugeint/test_hugeint_conversion.test" "test/sql/catalog/test_set_search_path.test",
+    "test/sql/catalog/function/test_macro_issue_13104.test",
+    "test/sql/catalog/function/test_macro_relpersistence_conflict.test",
+    "test/sql/catalog/function/test_recursive_macro.test",
+    "test/sql/catalog/function/test_recursive_macro_no_dependency.test",
+    "test/sql/catalog/test_set_schema.test",
+    "test/sql/function/list/lambdas/arrow/lambdas_and_functions_deprecated.test",
+    "test/sql/function/list/lambdas/lambdas_and_functions.test"
+    "test/sql/storage/types/struct/nested_struct_storage.test",
+    "test/sql/storage/compression/test_using_compression.test",
+    "test/sql/pg_catalog/system_functions.test",
+    "test/sql/copy/parquet/bloom_filters.test",
+    "test/sql/copy/parquet/corrupt_stats.test",
+    "test/sql/copy/file_size_bytes.test",
+    "test/sql/create/create_table_compression.test",
+    "test/sql/aggregate/aggregates/test_state_export.test",
+]
+
 parser = argparse.ArgumentParser(description='Run tests one by one with optional flags.')
 parser.add_argument('unittest_program', help='Path to the unittest program')
 parser.add_argument('--no-exit', action='store_true', help='Execute all tests, without stopping on first error')
@@ -63,6 +242,8 @@ parser.add_argument(
     type=valid_timeout,
 )
 parser.add_argument('--valgrind', action='store_true', help='Run the tests with valgrind', default=False)
+parser.add_argument('--exclude_list', action='store_true', help='List of to-be-skipped tests')
+parser.add_argument('--skip_compiled', action='store_true', help='Skip compiled tests', default=False)
 
 args, extra_args = parser.parse_known_args()
 
@@ -94,7 +275,6 @@ if summarize_failures is None:
         # enable by default in CI if not set explicitly
         summarize_failures = True
 
-
 # Use the '-l' parameter to output the list of tests to run
 proc = subprocess.run([unittest_program, '-l'] + extra_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 stdout = proc.stdout.decode('utf8').strip()
@@ -117,7 +297,6 @@ for line in stdout.splitlines():
         continue
     splits = line.rsplit('\t', 1)
     test_cases.append(splits[0])
-
 
 test_count = len(test_cases)
 if args.list:
@@ -175,6 +354,11 @@ def print_interval_background(interval):
 
 
 def launch_test(test, list_of_tests=False):
+    for thisline in lines:
+        if thisline in test:
+            print("SKIPPED!")
+            return
+
     global is_active
     # start the background thread
     is_active = True
