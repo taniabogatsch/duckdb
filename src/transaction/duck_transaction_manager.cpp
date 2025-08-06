@@ -14,7 +14,6 @@
 #include "duckdb/main/attached_database.hpp"
 #include "duckdb/main/database_manager.hpp"
 #include "duckdb/transaction/meta_transaction.hpp"
-#include "duckdb/logging/logger.hpp"
 
 namespace duckdb {
 
@@ -314,10 +313,6 @@ ErrorData DuckTransactionManager::CommitTransaction(ClientContext &context, Tran
 	// We do not need to hold the transaction lock during cleanup of transactions,
 	// as they (1) have been removed, or (2) exited old_transactions.
 	t_lock.unlock();
-
-	DUCKDB_LOG(db.GetDatabase(), CountLogType, "active transactions", active_transaction_count);
-	DUCKDB_LOG(db.GetDatabase(), CountLogType, "recently committed transactions", recently_committed_transaction_count);
-	DUCKDB_LOG(db.GetDatabase(), CountLogType, "old transactions", old_transactions_count);
 
 	{
 		lock_guard<mutex> c_lock(cleanup_lock);

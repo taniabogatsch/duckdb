@@ -31,7 +31,6 @@
 #include "duckdb/transaction/meta_transaction.hpp"
 #include "duckdb/transaction/transaction_manager.hpp"
 #include "duckdb/catalog/dependency_manager.hpp"
-#include "duckdb/common/chrono.hpp"
 
 namespace duckdb {
 
@@ -130,8 +129,6 @@ static catalog_entry_vector_t GetCatalogEntries(vector<reference<SchemaCatalogEn
 }
 
 void SingleFileCheckpointWriter::CreateCheckpoint() {
-	auto start = system_clock::now();
-
 	auto &config = DBConfig::Get(db);
 	auto &storage_manager = db.GetStorageManager().Cast<SingleFileStorageManager>();
 	if (storage_manager.InMemory()) {
@@ -255,10 +252,6 @@ void SingleFileCheckpointWriter::CreateCheckpoint() {
 	if (!wal_is_empty) {
 		storage_manager.ResetWAL();
 	}
-
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-	DUCKDB_LOG(db.GetDatabase(), TimingLogType, "duckdb.SingleFileCheckpointWriter.CreateCheckpoint", elapsed);
 }
 
 void CheckpointReader::LoadCheckpoint(CatalogTransaction transaction, MetadataReader &reader) {

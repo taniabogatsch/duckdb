@@ -178,18 +178,10 @@ void AttachedDatabase::Initialize(optional_ptr<ClientContext> context, StorageOp
 	if (IsSystem()) {
 		catalog->Initialize(context, true);
 	} else {
-		auto start = system_clock::now();
 		catalog->Initialize(context, false);
-		auto end = system_clock::now();
-		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG(db, TimingLogType, "duckdb.AttachedDatabase.Catalog.Initialize", elapsed);
 	}
 	if (storage) {
-		auto start = system_clock::now();
 		storage->Initialize(options);
-		auto end = system_clock::now();
-		auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG(db, TimingLogType, "duckdb.AttachedDatabase.Storage.Initialize", elapsed);
 	}
 }
 

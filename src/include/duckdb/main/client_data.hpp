@@ -15,8 +15,6 @@
 #include "duckdb/common/atomic.hpp"
 #include "duckdb/execution/operator/csv_scanner/csv_state_machine_cache.hpp"
 
-#include <chrono>
-
 namespace duckdb {
 class AttachedDatabase;
 class BufferedFileWriter;
@@ -37,8 +35,6 @@ struct ClientData {
 
 	//! Query profiler
 	shared_ptr<QueryProfiler> profiler;
-	//! Start time of a query.
-	std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<double>> start;
 
 	//! The set of temporary objects that belong to this client
 	shared_ptr<AttachedDatabase> temporary_objects;

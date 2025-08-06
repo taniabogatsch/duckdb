@@ -258,10 +258,6 @@ ErrorData ClientContext::EndQueryInternal(ClientContextLock &lock, bool success,
 		error = ErrorData("Unhandled exception!");
 	} // LCOV_EXCL_STOP
 
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - client_data->start).count(); // Seconds.
-	DUCKDB_LOG(*this, TimingLogType, "duckdb.ClientContext.InternalQueryLatency", elapsed);
-
 	// Refresh the logger
 	logger->Flush();
 	LoggingContext context(LogContextScope::CONNECTION);
@@ -373,11 +369,7 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 		}
 	}
 
-	auto start = system_clock::now();
 	logical_planner.CreatePlan(std::move(statement));
-	auto end = system_clock::now();
-	auto elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-	DUCKDB_LOG(*this, TimingLogType, "duckdb.Planner", elapsed);
 	D_ASSERT(logical_planner.plan || !logical_planner.properties.bound_all_parameters);
 	profiler.EndPhase();
 
@@ -396,11 +388,7 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 	if (config.enable_optimizer && logical_plan->RequireOptimizer()) {
 		profiler.StartPhase(MetricsType::ALL_OPTIMIZERS);
 		Optimizer optimizer(*logical_planner.binder, *this);
-		start = system_clock::now();
 		logical_plan = optimizer.Optimize(std::move(logical_plan));
-		end = system_clock::now();
-		elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-		DUCKDB_LOG(*this, TimingLogType, "duckdb.Optimizer", elapsed);
 		D_ASSERT(logical_plan);
 		profiler.EndPhase();
 
@@ -412,11 +400,7 @@ ClientContext::CreatePreparedStatementInternal(ClientContextLock &lock, const st
 	// Convert the logical query plan into a physical query plan.
 	profiler.StartPhase(MetricsType::PHYSICAL_PLANNER);
 	PhysicalPlanGenerator physical_planner(*this);
-	start = system_clock::now();
 	result->physical_plan = physical_planner.Plan(std::move(logical_plan));
-	end = system_clock::now();
-	elapsed = duration_cast<duration<double>>(end - start).count(); // Seconds.
-	DUCKDB_LOG(*this, TimingLogType, "duckdb.PhysicalPlanner", elapsed);
 	profiler.EndPhase();
 	D_ASSERT(result->physical_plan);
 	return result;
@@ -901,8 +885,6 @@ unique_ptr<PendingQueryResult> ClientContext::PendingStatementOrPreparedStatemen
 	// start the profiler
 	auto &profiler = QueryProfiler::Get(*this);
 	profiler.StartQuery(query, IsExplainAnalyze(statement ? statement.get() : prepared->unbound_statement.get()));
-	auto start = system_clock::now();
-	client_data->start = start;
 
 	bool invalidate_query = true;
 	try {
