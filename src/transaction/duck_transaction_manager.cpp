@@ -306,10 +306,6 @@ ErrorData DuckTransactionManager::CommitTransaction(ClientContext &context, Tran
 		cleanup_queue.emplace(std::move(cleanup_info));
 	}
 
-	auto active_transaction_count = active_transactions.size();
-	auto recently_committed_transaction_count = recently_committed_transactions.size();
-	auto old_transactions_count = old_transactions.size();
-
 	// We do not need to hold the transaction lock during cleanup of transactions,
 	// as they (1) have been removed, or (2) exited old_transactions.
 	t_lock.unlock();
