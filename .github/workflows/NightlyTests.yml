@@ -56,7 +56,10 @@ jobs:
 
      - name: Build
        shell: bash
-       run: make release
+       env:
+         CORE_EXTENSIONS: "json;parquet;icu;tpch;tpcds"
+         GEN: ninja
+       run: make
 
      - name: Test
        shell: bash
