@@ -80,9 +80,8 @@ lines = [
     "test/sql/function/numeric/set_seed_for_sample.test",
     "test/sql/parser/test_value_functions.test",
     "test/sql/function/timestamp/current_time.test",
-    "test/sql/timezone/test_icu_timezone.test"
-    "test/sql/parallelism/intraquery/test_parallel_nested_aggregates.test"
-    "test/sql/subquery/scalar/test_issue_6136.test"
+    "test/sql/parallelism/intraquery/test_parallel_nested_aggregates.test",
+    "test/sql/subquery/scalar/test_issue_6136.test",
     "test/sql/pragma/test_query_log.test",
     "test/sql/copy/csv/rejects/csv_rejects_auto.test",
     "test/sql/copy/csv/rejects/csv_rejects_flush_cast.test",
@@ -121,8 +120,8 @@ lines = [
     "test/sql/storage/distinct_statistics_storage.test",
     "test/sql/pg_catalog/pg_prepared_statements.test",
     "test/sql/alter/add_col/test_add_col_stats.test",
-    "test/sql/table_function/duckdb_prepared_statements.test"
-    "test/sql/function/list/lambdas/arrow/test_deprecated_lambda.test"
+    "test/sql/table_function/duckdb_prepared_statements.test",
+    "test/sql/function/list/lambdas/arrow/test_deprecated_lambda.test",
     "test/optimizer/joins/no_duplicate_elimination_join.test",
     "test/sql/optimizer/plan/test_filter_pushdown_large.test",
     "test/sql/limit/test_limit0.test" "test/sql/limit/test_limit0.test",
@@ -219,7 +218,7 @@ lines = [
     "test/sql/catalog/function/test_recursive_macro_no_dependency.test",
     "test/sql/catalog/test_set_schema.test",
     "test/sql/function/list/lambdas/arrow/lambdas_and_functions_deprecated.test",
-    "test/sql/function/list/lambdas/lambdas_and_functions.test"
+    "test/sql/function/list/lambdas/lambdas_and_functions.test",
     "test/sql/storage/types/struct/nested_struct_storage.test",
     "test/sql/storage/compression/test_using_compression.test",
     "test/sql/pg_catalog/system_functions.test",
@@ -254,7 +253,8 @@ lines = [
     "test/sql/window/test_volatile_independence.test",
     "test/sql/copy/parquet/parquet_hive.test",
     "test/sql/table_function/duckdb_prepared_statements.test",
-    "test/sql/pragma/test_query_log.test"
+    "test/sql/pragma/test_query_log.test",
+    "test/sql/timezone/test_icu_timezone.test"
 ]
 
 parser = argparse.ArgumentParser(description='Run tests one by one with optional flags.')

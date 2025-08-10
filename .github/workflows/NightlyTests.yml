@@ -59,9 +59,9 @@ jobs:
        env:
          CORE_EXTENSIONS: "json;parquet;icu;tpch;tpcds"
          GEN: ninja
-       run: make
+       run: make debug
 
      - name: Test
        shell: bash
        run: |
-         python3 scripts/run_tests_one_by_one.py build/release/test/unittest --time_execution
+         python3 scripts/run_tests_one_by_one.py build/debug/test/unittest --time_execution
