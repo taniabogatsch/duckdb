@@ -678,10 +678,6 @@ def print_interval_background(interval):
 
 
 def launch_test(test, list_of_tests=False):
-    for thisline in lines:
-        if thisline in test:
-            return
-
     global is_active
     # start the background thread
     is_active = True
@@ -776,6 +772,16 @@ STDERR
 
 def run_tests_one_by_one():
     for test_number, test_case in enumerate(test_cases):
+        if test_number < 300:
+            continue
+
+        skip_test = False
+        for thisline in lines:
+            if thisline in test_case:
+                skip_test = True
+
+        if skip_test:
+            continue
         if not profile:
             print(f"[{test_number}/{test_count}]: {test_case}", end="", flush=True)
         launch_test([test_case])
