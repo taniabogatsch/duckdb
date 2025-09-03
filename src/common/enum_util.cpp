@@ -109,6 +109,7 @@
 #include "duckdb/function/macro_function.hpp"
 #include "duckdb/function/partition_stats.hpp"
 #include "duckdb/function/scalar/compressed_materialization_utils.hpp"
+#include "duckdb/function/scalar/error_function_utils.hpp"
 #include "duckdb/function/scalar/strftime_format.hpp"
 #include "duckdb/function/table/arrow/arrow_type_info.hpp"
 #include "duckdb/function/table/arrow/enum/arrow_datetime_type.hpp"
@@ -1333,6 +1334,26 @@ const char* EnumUtil::ToChars<DistinctType>(DistinctType value) {
 template<>
 DistinctType EnumUtil::FromString<DistinctType>(const char *value) {
 	return static_cast<DistinctType>(StringUtil::StringToEnum(GetDistinctTypeValues(), 2, "DistinctType", value));
+}
+
+const StringUtil::EnumStringLiteral *GetErrorSeverityTypeValues() {
+	static constexpr StringUtil::EnumStringLiteral values[] {
+		{ static_cast<uint32_t>(ErrorSeverityType::USER), "USER" },
+		{ static_cast<uint32_t>(ErrorSeverityType::INTERNAL), "INTERNAL" },
+		{ static_cast<uint32_t>(ErrorSeverityType::FATAL), "FATAL" },
+		{ static_cast<uint32_t>(ErrorSeverityType::SEGMENTATION_VIOLATION), "SEGMENTATION_VIOLATION" }
+	};
+	return values;
+}
+
+template<>
+const char* EnumUtil::ToChars<ErrorSeverityType>(ErrorSeverityType value) {
+	return StringUtil::EnumToString(GetErrorSeverityTypeValues(), 4, "ErrorSeverityType", static_cast<uint32_t>(value));
+}
+
+template<>
+ErrorSeverityType EnumUtil::FromString<ErrorSeverityType>(const char *value) {
+	return static_cast<ErrorSeverityType>(StringUtil::StringToEnum(GetErrorSeverityTypeValues(), 4, "ErrorSeverityType", value));
 }
 
 const StringUtil::EnumStringLiteral *GetErrorTypeValues() {

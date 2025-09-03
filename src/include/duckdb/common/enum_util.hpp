@@ -144,6 +144,8 @@ enum class DestroyBufferUpon : uint8_t;
 
 enum class DistinctType : uint8_t;
 
+enum class ErrorSeverityType : uint8_t;
+
 enum class ErrorType : uint16_t;
 
 enum class ExceptionFormatValueType : uint8_t;
@@ -608,6 +610,9 @@ const char* EnumUtil::ToChars<DestroyBufferUpon>(DestroyBufferUpon value);
 
 template<>
 const char* EnumUtil::ToChars<DistinctType>(DistinctType value);
+
+template<>
+const char* EnumUtil::ToChars<ErrorSeverityType>(ErrorSeverityType value);
 
 template<>
 const char* EnumUtil::ToChars<ErrorType>(ErrorType value);
@@ -1221,6 +1226,9 @@ DestroyBufferUpon EnumUtil::FromString<DestroyBufferUpon>(const char *value);
 
 template<>
 DistinctType EnumUtil::FromString<DistinctType>(const char *value);
+
+template<>
+ErrorSeverityType EnumUtil::FromString<ErrorSeverityType>(const char *value);
 
 template<>
 ErrorType EnumUtil::FromString<ErrorType>(const char *value);

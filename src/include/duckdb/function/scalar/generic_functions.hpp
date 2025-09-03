@@ -37,12 +37,12 @@ struct GetVariableFun {
 
 struct ErrorFun {
 	static constexpr const char *Name = "error";
-	static constexpr const char *Parameters = "message";
-	static constexpr const char *Description = "Throws the given error message";
-	static constexpr const char *Example = "error('access_mode')";
-	static constexpr const char *Categories = "";
+	static constexpr const char *Parameters = "message::VARCHAR\001message::VARCHAR,severity::VARCHAR";
+	static constexpr const char *Description = "Throws an Invalid Input Error containing the message.\001Invoke an error containing the message (if applicable). The error severity can be 'USER', 'INTERNAL', 'FATAL', or 'SEGMENTATION_FAULT'.";
+	static constexpr const char *Example = "error('my_message')\001error('my_fatal_message', 'FATAL')";
+	static constexpr const char *Categories = "\001";
 
-	static ScalarFunction GetFunction();
+	static ScalarFunctionSet GetFunctions();
 };
 
 struct CreateSortKeyFun {

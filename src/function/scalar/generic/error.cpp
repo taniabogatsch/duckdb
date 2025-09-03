@@ -1,34 +1,81 @@
 #include "duckdb/function/scalar/generic_functions.hpp"
 
-#include <iostream>
+#include "duckdb/function/scalar/error_function_utils.hpp"
 
 namespace duckdb {
 
 namespace {
 
-static void ErrorFunction(DataChunk &args, ExpressionState &state, Vector &result) {
-	UnifiedVectorFormat vdata;
-	args.data[0].ToUnifiedFormat(args.size(), vdata);
+static void InvalidInputErrorFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	UnifiedVectorFormat message_col;
+	args.data[0].ToUnifiedFormat(args.size(), message_col);
+	auto message_col_data = UnifiedVectorFormat::GetData<string_t>(message_col);
 
-	auto strings = UnifiedVectorFormat::GetData<string_t>(vdata);
 	for (idx_t i = 0; i < args.size(); i++) {
-		auto idx = vdata.sel->get_index(i);
-		if (!vdata.validity.RowIsValid(idx)) {
+		auto message_idx = message_col.sel->get_index(i);
+		if (!message_col.validity.RowIsValid(message_idx)) {
 			FlatVector::SetNull(result, i, true);
 			continue;
 		}
-		throw InvalidInputException(strings[idx].GetString());
+		throw InvalidInputException(message_col_data[message_idx].GetString());
 	}
 }
 
-} // namespace
+static void ErrorFunction(DataChunk &args, ExpressionState &state, Vector &result) {
+	UnifiedVectorFormat message_col;
+	args.data[0].ToUnifiedFormat(args.size(), message_col);
+	auto message_col_data = UnifiedVectorFormat::GetData<string_t>(message_col);
 
-ScalarFunction ErrorFun::GetFunction() {
-	auto fun = ScalarFunction("error", {LogicalType::VARCHAR}, LogicalType::SQLNULL, ErrorFunction);
+	UnifiedVectorFormat severity_col;
+	args.data[1].ToUnifiedFormat(args.size(), severity_col);
+	auto severity_col_data = UnifiedVectorFormat::GetData<string_t>(severity_col);
+
+	for (idx_t i = 0; i < args.size(); i++) {
+		auto message_idx = message_col.sel->get_index(i);
+		auto severity_idx = severity_col.sel->get_index(i);
+		if (!message_col.validity.RowIsValid(message_idx) || !severity_col.validity.RowIsValid(severity_idx)) {
+			FlatVector::SetNull(result, i, true);
+			continue;
+		}
+
+		auto severity_str = severity_col_data[severity_idx].GetString();
+		auto severity = EnumUtil::FromString<ErrorSeverityType>(severity_str);
+		auto message = message_col_data[message_idx].GetString();
+		switch (severity) {
+			case ErrorSeverityType::USER:
+				throw InvalidInputException(message);
+			case ErrorSeverityType::INTERNAL:
+				throw InternalException(message);
+			case ErrorSeverityType::FATAL:
+				throw FatalException(message);
+			case ErrorSeverityType::SEGMENTATION_VIOLATION: {
+				std::vector<uint8_t> dummy;
+				if (dummy[0] == message_idx) {
+					throw InternalException("expected segmentation violation");
+				}
+			}
+		}
+	}
+}
+
+} // anonymous namespace
+
+ScalarFunctionSet ErrorFun::GetFunctions() {
+	ScalarFunctionSet error_fun_set("error");
+
+	ScalarFunction invalid_input_error_fun({LogicalType::VARCHAR}, LogicalType::SQLNULL, InvalidInputErrorFunction);
 	// Set the function with side effects to avoid the optimization.
-	fun.stability = FunctionStability::VOLATILE;
-	BaseScalarFunction::SetReturnsError(fun);
-	return fun;
+	invalid_input_error_fun.stability = FunctionStability::VOLATILE;
+	BaseScalarFunction::SetReturnsError(invalid_input_error_fun);
+	error_fun_set.AddFunction(invalid_input_error_fun);
+
+	ScalarFunction error_fun({LogicalType::VARCHAR, LogicalType::VARCHAR}, LogicalType::SQLNULL, ErrorFunction);
+	// Set the function with side effects to avoid the optimization.
+	error_fun.stability = FunctionStability::VOLATILE;
+	BaseScalarFunction::SetReturnsError(error_fun);
+	error_fun_set.AddFunction(error_fun);
+
+	return error_fun_set;
 }
 
 } // namespace duckdb

@@ -16,10 +16,25 @@
     },
     {
         "name": "error",
-        "parameters": "message",
-        "description": "Throws the given error message",
-        "example": "error('access_mode')",
-        "type": "scalar_function"
+        "variants": [
+            {
+                "parameters": [
+                    {"name": "message", "type": "VARCHAR"}
+                ],
+                "description": "Throws an Invalid Input Error containing the message.",
+                "example": "error('my_message')"
+            },
+            {
+                "parameters": [
+                    {"name": "message", "type": "VARCHAR"},
+                    {"name": "severity", "type": "VARCHAR"}
+                ],
+                "description": "Invoke an error containing the message (if applicable). The error severity can be 'USER', 'INTERNAL', 'FATAL', or 'SEGMENTATION_FAULT'.",
+                "example": "error('my_fatal_message', 'FATAL')"
+            }
+        ],
+        "type": "scalar_function_set",
+        "aliases": []
     },
     {
         "name": "create_sort_key",
