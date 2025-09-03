@@ -1,6 +1,9 @@
 #include "duckdb/function/scalar/generic_functions.hpp"
 
+#include "duckdb/common/printer.hpp"
 #include "duckdb/function/scalar/error_function_utils.hpp"
+
+#include <signal.h>
 
 namespace duckdb {
 
@@ -42,18 +45,21 @@ static void ErrorFunction(DataChunk &args, ExpressionState &state, Vector &resul
 		auto severity = EnumUtil::FromString<ErrorSeverityType>(severity_str);
 		auto message = message_col_data[message_idx].GetString();
 		switch (severity) {
-			case ErrorSeverityType::USER:
-				throw InvalidInputException(message);
-			case ErrorSeverityType::INTERNAL:
-				throw InternalException(message);
-			case ErrorSeverityType::FATAL:
-				throw FatalException(message);
-			case ErrorSeverityType::SEGMENTATION_VIOLATION: {
-				std::vector<uint8_t> dummy;
-				if (dummy[0] == message_idx) {
-					throw InternalException("expected segmentation violation");
-				}
-			}
+		case ErrorSeverityType::USER:
+			throw InvalidInputException(message);
+		case ErrorSeverityType::INTERNAL:
+			throw InternalException(message);
+		case ErrorSeverityType::FATAL:
+			throw FatalException(message);
+		case ErrorSeverityType::SIGNAL_SIGSEGV:
+			raise(SIGSEGV);
+			break;
+		case ErrorSeverityType::SIGNAL_SIGABRT:
+			raise(SIGABRT);
+			break;
+		case ErrorSeverityType::SIGNAL_SIGBUS:
+			raise(SIGBUS);
+			break;
 		}
 	}
 }

@@ -12,6 +12,13 @@
 
 namespace duckdb {
 
-enum class ErrorSeverityType : uint8_t { USER = 0, INTERNAL = 1, FATAL = 2, SEGMENTATION_VIOLATION = 3 };
+enum class ErrorSeverityType : uint8_t {
+	USER = 0,
+	INTERNAL = 1,
+	FATAL = 2,
+	SIGNAL_SIGSEGV = 3,
+	SIGNAL_SIGABRT = 4,
+	SIGNAL_SIGBUS = 5
+};
 
 } // namespace duckdb

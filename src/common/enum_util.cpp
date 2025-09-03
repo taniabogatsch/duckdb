@@ -1341,19 +1341,21 @@ const StringUtil::EnumStringLiteral *GetErrorSeverityTypeValues() {
 		{ static_cast<uint32_t>(ErrorSeverityType::USER), "USER" },
 		{ static_cast<uint32_t>(ErrorSeverityType::INTERNAL), "INTERNAL" },
 		{ static_cast<uint32_t>(ErrorSeverityType::FATAL), "FATAL" },
-		{ static_cast<uint32_t>(ErrorSeverityType::SEGMENTATION_VIOLATION), "SEGMENTATION_VIOLATION" }
+		{ static_cast<uint32_t>(ErrorSeverityType::SIGNAL_SIGSEGV), "SIGNAL_SIGSEGV" },
+		{ static_cast<uint32_t>(ErrorSeverityType::SIGNAL_SIGABRT), "SIGNAL_SIGABRT" },
+		{ static_cast<uint32_t>(ErrorSeverityType::SIGNAL_SIGBUS), "SIGNAL_SIGBUS" }
 	};
 	return values;
 }
 
 template<>
 const char* EnumUtil::ToChars<ErrorSeverityType>(ErrorSeverityType value) {
-	return StringUtil::EnumToString(GetErrorSeverityTypeValues(), 4, "ErrorSeverityType", static_cast<uint32_t>(value));
+	return StringUtil::EnumToString(GetErrorSeverityTypeValues(), 6, "ErrorSeverityType", static_cast<uint32_t>(value));
 }
 
 template<>
 ErrorSeverityType EnumUtil::FromString<ErrorSeverityType>(const char *value) {
-	return static_cast<ErrorSeverityType>(StringUtil::StringToEnum(GetErrorSeverityTypeValues(), 4, "ErrorSeverityType", value));
+	return static_cast<ErrorSeverityType>(StringUtil::StringToEnum(GetErrorSeverityTypeValues(), 6, "ErrorSeverityType", value));
 }
 
 const StringUtil::EnumStringLiteral *GetErrorTypeValues() {

@@ -42,3 +42,8 @@ statement error
 SELECT error('hello world') IS NULL
 ----
 hello world
+
+statement error
+SELECT error('hello world', 'USER')
+----
+hello world

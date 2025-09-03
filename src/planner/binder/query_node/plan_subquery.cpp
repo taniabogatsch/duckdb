@@ -125,7 +125,8 @@ static unique_ptr<Expression> PlanUncorrelatedSubquery(Binder &binder, BoundSubq
 			          "previous behavior of returning a random row.")));
 
 			auto error_function_set = ErrorFun::GetFunctions();
-			auto error_expr = function_binder.BindScalarFunction(error_function_set.functions[0], std::move(error_children));
+			auto error_expr =
+			    function_binder.BindScalarFunction(error_function_set.functions[0], std::move(error_children));
 			error_expr->return_type = first_ref->return_type;
 			auto case_expr =
 			    make_uniq<BoundCaseExpression>(std::move(count_check), std::move(error_expr), std::move(first_ref));
