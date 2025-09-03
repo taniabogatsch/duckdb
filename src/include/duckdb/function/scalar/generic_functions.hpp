@@ -37,8 +37,8 @@ struct GetVariableFun {
 
 struct ErrorFun {
 	static constexpr const char *Name = "error";
-	static constexpr const char *Parameters = "message::VARCHAR\001message::VARCHAR,severity::VARCHAR";
-	static constexpr const char *Description = "Throws an Invalid Input Error containing the message.\001Invoke an error containing the message (if applicable). The error severity can be 'USER', 'INTERNAL', 'FATAL', or 'SEGMENTATION_FAULT'.";
+	static constexpr const char *Parameters = "message::VARCHAR\001message::VARCHAR,error_type::VARCHAR";
+	static constexpr const char *Description = "Throws an Invalid Input Error containing the message.\001Invoke an error containing the message (if applicable). The error type can be 'USER', 'INTERNAL', 'FATAL', 'SIGNAL_SIGSEGV', 'SIGNAL_SIGABRT', or 'SIGNAL_SIGBUS'.";
 	static constexpr const char *Example = "error('my_message')\001error('my_fatal_message', 'FATAL')";
 	static constexpr const char *Categories = "\001";
 

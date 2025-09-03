@@ -27,9 +27,9 @@
             {
                 "parameters": [
                     {"name": "message", "type": "VARCHAR"},
-                    {"name": "severity", "type": "VARCHAR"}
+                    {"name": "error_type", "type": "VARCHAR"}
                 ],
-                "description": "Invoke an error containing the message (if applicable). The error severity can be 'USER', 'INTERNAL', 'FATAL', or 'SEGMENTATION_FAULT'.",
+                "description": "Invoke an error containing the message (if applicable). The error type can be 'USER', 'INTERNAL', 'FATAL', 'SIGNAL_SIGSEGV', 'SIGNAL_SIGABRT', or 'SIGNAL_SIGBUS'.",
                 "example": "error('my_fatal_message', 'FATAL')"
             }
         ],

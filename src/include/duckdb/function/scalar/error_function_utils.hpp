@@ -12,7 +12,7 @@
 
 namespace duckdb {
 
-enum class ErrorSeverityType : uint8_t {
+enum class ErrorFunType : uint8_t {
 	USER = 0,
 	INTERNAL = 1,
 	FATAL = 2,

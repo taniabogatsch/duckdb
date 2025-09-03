@@ -1336,26 +1336,26 @@ DistinctType EnumUtil::FromString<DistinctType>(const char *value) {
 	return static_cast<DistinctType>(StringUtil::StringToEnum(GetDistinctTypeValues(), 2, "DistinctType", value));
 }
 
-const StringUtil::EnumStringLiteral *GetErrorSeverityTypeValues() {
+const StringUtil::EnumStringLiteral *GetErrorFunTypeValues() {
 	static constexpr StringUtil::EnumStringLiteral values[] {
-		{ static_cast<uint32_t>(ErrorSeverityType::USER), "USER" },
-		{ static_cast<uint32_t>(ErrorSeverityType::INTERNAL), "INTERNAL" },
-		{ static_cast<uint32_t>(ErrorSeverityType::FATAL), "FATAL" },
-		{ static_cast<uint32_t>(ErrorSeverityType::SIGNAL_SIGSEGV), "SIGNAL_SIGSEGV" },
-		{ static_cast<uint32_t>(ErrorSeverityType::SIGNAL_SIGABRT), "SIGNAL_SIGABRT" },
-		{ static_cast<uint32_t>(ErrorSeverityType::SIGNAL_SIGBUS), "SIGNAL_SIGBUS" }
+		{ static_cast<uint32_t>(ErrorFunType::USER), "USER" },
+		{ static_cast<uint32_t>(ErrorFunType::INTERNAL), "INTERNAL" },
+		{ static_cast<uint32_t>(ErrorFunType::FATAL), "FATAL" },
+		{ static_cast<uint32_t>(ErrorFunType::SIGNAL_SIGSEGV), "SIGNAL_SIGSEGV" },
+		{ static_cast<uint32_t>(ErrorFunType::SIGNAL_SIGABRT), "SIGNAL_SIGABRT" },
+		{ static_cast<uint32_t>(ErrorFunType::SIGNAL_SIGBUS), "SIGNAL_SIGBUS" }
 	};
 	return values;
 }
 
 template<>
-const char* EnumUtil::ToChars<ErrorSeverityType>(ErrorSeverityType value) {
-	return StringUtil::EnumToString(GetErrorSeverityTypeValues(), 6, "ErrorSeverityType", static_cast<uint32_t>(value));
+const char* EnumUtil::ToChars<ErrorFunType>(ErrorFunType value) {
+	return StringUtil::EnumToString(GetErrorFunTypeValues(), 6, "ErrorFunType", static_cast<uint32_t>(value));
 }
 
 template<>
-ErrorSeverityType EnumUtil::FromString<ErrorSeverityType>(const char *value) {
-	return static_cast<ErrorSeverityType>(StringUtil::StringToEnum(GetErrorSeverityTypeValues(), 6, "ErrorSeverityType", value));
+ErrorFunType EnumUtil::FromString<ErrorFunType>(const char *value) {
+	return static_cast<ErrorFunType>(StringUtil::StringToEnum(GetErrorFunTypeValues(), 6, "ErrorFunType", value));
 }
 
 const StringUtil::EnumStringLiteral *GetErrorTypeValues() {

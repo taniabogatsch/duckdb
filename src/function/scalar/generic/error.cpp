@@ -42,22 +42,22 @@ static void ErrorFunction(DataChunk &args, ExpressionState &state, Vector &resul
 		}
 
 		auto severity_str = severity_col_data[severity_idx].GetString();
-		auto severity = EnumUtil::FromString<ErrorSeverityType>(severity_str);
+		auto severity = EnumUtil::FromString<ErrorFunType>(severity_str);
 		auto message = message_col_data[message_idx].GetString();
 		switch (severity) {
-		case ErrorSeverityType::USER:
+		case ErrorFunType::USER:
 			throw InvalidInputException(message);
-		case ErrorSeverityType::INTERNAL:
+		case ErrorFunType::INTERNAL:
 			throw InternalException(message);
-		case ErrorSeverityType::FATAL:
+		case ErrorFunType::FATAL:
 			throw FatalException(message);
-		case ErrorSeverityType::SIGNAL_SIGSEGV:
+		case ErrorFunType::SIGNAL_SIGSEGV:
 			raise(SIGSEGV);
 			break;
-		case ErrorSeverityType::SIGNAL_SIGABRT:
+		case ErrorFunType::SIGNAL_SIGABRT:
 			raise(SIGABRT);
 			break;
-		case ErrorSeverityType::SIGNAL_SIGBUS:
+		case ErrorFunType::SIGNAL_SIGBUS:
 			raise(SIGBUS);
 			break;
 		}
