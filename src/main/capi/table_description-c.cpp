@@ -13,17 +13,16 @@ duckdb_state duckdb_table_description_create(duckdb_connection connection, const
 
 duckdb_state duckdb_table_description_create_ext(duckdb_connection connection, const char *catalog, const char *schema,
                                                  const char *table, duckdb_table_description *out) {
-	Connection *conn = reinterpret_cast<Connection *>(connection);
-
 	if (!out) {
 		return DuckDBError;
 	}
-	auto wrapper = new TableDescriptionWrapper();
-	*out = reinterpret_cast<duckdb_table_description>(wrapper);
-
 	if (!connection || !table) {
 		return DuckDBError;
 	}
+
+	auto wrapper = new TableDescriptionWrapper();
+	*out = reinterpret_cast<duckdb_table_description>(wrapper);
+
 	if (catalog == nullptr) {
 		catalog = INVALID_CATALOG;
 	}
@@ -32,6 +31,7 @@ duckdb_state duckdb_table_description_create_ext(duckdb_connection connection, c
 	}
 
 	try {
+		Connection *conn = reinterpret_cast<Connection *>(connection);
 		wrapper->description = conn->TableInfo(catalog, schema, table);
 	} catch (std::exception &ex) {
 		ErrorData error(ex);
@@ -112,4 +112,17 @@ char *duckdb_table_description_get_column_name(duckdb_table_description table_de
 	result[name.size()] = '\0';
 
 	return result;
+}
+
+duckdb_logical_type duckdb_table_description_get_column_type(duckdb_table_description table_description, idx_t index) {
+	auto wrapper = reinterpret_cast<TableDescriptionWrapper *>(table_description);
+	if (GetTableDescription(wrapper, index) == DuckDBError) {
+		return duckdb_logical_type(nullptr);
+	}
+
+	auto &table = wrapper->description;
+	auto &column = table->columns[index];
+
+	auto logical_type = new duckdb::LogicalType(column.Type());
+	return reinterpret_cast<duckdb_logical_type>(logical_type);
 }

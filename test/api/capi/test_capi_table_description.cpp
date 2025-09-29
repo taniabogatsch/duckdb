@@ -76,6 +76,20 @@ TEST_CASE("Test the table description in the C API", "[capi]") {
 		REQUIRE(!expected.compare(column_name));
 		duckdb_free(column_name);
 	}
+
+	SECTION("Passing nullptr to get_type") {
+		REQUIRE(duckdb_table_description_get_column_type(nullptr, 0) == nullptr);
+	}
+	SECTION("Out of range column for get_type") {
+		REQUIRE(duckdb_table_description_get_column_type(table_description, 1) == nullptr);
+	}
+	SECTION("In range column - get the type") {
+		auto column_type = duckdb_table_description_get_column_type(table_description, 0);
+		auto column_type_id = duckdb_get_type_id(column_type);
+		REQUIRE(column_type_id == DUCKDB_TYPE_INTEGER);
+		duckdb_destroy_logical_type(&column_type);
+	}
+
 	duckdb_table_description_destroy(&table_description);
 }
 
