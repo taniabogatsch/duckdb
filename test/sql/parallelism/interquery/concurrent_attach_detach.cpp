@@ -10,6 +10,9 @@
 
 using namespace duckdb;
 
+// TODO: profile each x query and check if it matches
+// TODO: send random interrupts every x to connection (don't interrupt open connections)
+
 namespace {
 
 string test_dir_path;
@@ -29,19 +32,25 @@ const idx_t worker_count = 40;
 const idx_t iteration_count = 100;
 const idx_t nr_initial_rows = 2050;
 
-vector<vector<string>> logging;
+vector<string> logging[worker_count] = {{}};
 atomic<bool> success {true};
+idx_t query_count[worker_count] = {0};
+bool active_transaction[worker_count] = {false};
 
 void addLog(const idx_t worker_id, const string &msg) {
 	logging[worker_id].push_back(msg);
 }
 
-duckdb::unique_ptr<MaterializedQueryResult> execQuery(Connection &conn, const string &query) {
+duckdb::unique_ptr<MaterializedQueryResult> execQuery(Connection &conn, const string &query, const idx_t worker_id) {
+	query_count[worker_id]++;
 	auto result = conn.Query(query);
 	if (result->HasError()) {
 		Printer::PrintF("Failed to execute query %s:\n------\n%s\n-------", query, result->GetError());
 		success = false;
 	}
+
+	// Profile every 10th query.
+
 	return result;
 }
 
@@ -62,30 +71,30 @@ public:
 	mutex mu;
 	map<idx_t, idx_t> m;
 
-	void addWorker(Connection &conn, const idx_t i) {
+	void addWorker(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 		lock_guard<mutex> lock(mu);
 
-		if (m.find(i) != m.end()) {
-			m[i]++;
-			return;
+		if (m.find(db_id) != m.end()) {
+			m[db_id]++;
+		} else {
+			m[db_id] = 1;
 		}
-		m[i] = 1;
 
-		string query = "ATTACH '" + getDBPath(i) + "'";
-		execQuery(conn, query);
+		string query = "ATTACH IF NOT EXISTS'" + getDBPath(db_id) + "'";
+		execQuery(conn, query, worker_id);
 	}
 
-	void removeWorker(Connection &conn, const idx_t i) {
+	void removeWorker(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 		lock_guard<mutex> lock(mu);
 
-		m[i]--;
-		if (m[i] != 0) {
+		m[db_id]--;
+		if (m[db_id] != 0) {
 			return;
 		}
 
-		m.erase(i);
-		string query = "DETACH " + getDBName(i);
-		execQuery(conn, query);
+		m.erase(db_id);
+		string query = "DETACH " + getDBName(db_id);
+		execQuery(conn, query, worker_id);
 	}
 };
 
@@ -97,12 +106,15 @@ void createTbl(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 	db_infos[db_id].tables.emplace_back(TableInfo {nr_initial_rows});
 	db_infos[db_id].table_count++;
 
+	// Create the table.
 	string tbl_path = StringUtil::Format("%s.tbl_%d", getDBName(db_id), tbl_id);
 	string create_sql = StringUtil::Format(
 	    "CREATE TABLE %s(i BIGINT PRIMARY KEY, s VARCHAR, ts TIMESTAMP, obj STRUCT(key1 UBIGINT, key2 VARCHAR))",
 	    tbl_path);
 	addLog(worker_id, "; q: " + create_sql);
-	execQuery(conn, create_sql);
+	execQuery(conn, create_sql, worker_id);
+
+	// Insert initial rows.
 	string insert_sql = "INSERT INTO " + tbl_path +
 	                    " SELECT "
 	                    "range::UBIGINT AS i, "
@@ -113,7 +125,7 @@ void createTbl(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 	                    "FROM range(" +
 	                    to_string(nr_initial_rows) + ")";
 	addLog(worker_id, "; q: " + insert_sql);
-	execQuery(conn, insert_sql);
+	execQuery(conn, insert_sql, worker_id);
 }
 
 void lookup(Connection &conn, const idx_t db_id, const idx_t worker_id) {
@@ -133,7 +145,9 @@ void lookup(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 	auto table_name = getDBName(db_id) + ".tbl_" + to_string(tbl_id);
 	string query = "SELECT i, s, ts, obj FROM " + table_name + " WHERE i = " + to_string(expected_max_val);
 	addLog(worker_id, "q: " + query);
-	auto result = execQuery(conn, query);
+
+	// Verify the results.
+	auto result = execQuery(conn, query, worker_id);
 	if (result->RowCount() == 0) {
 		Printer::PrintF("FAILURE - No rows returned from query");
 		success = false;
@@ -160,8 +174,8 @@ void lookup(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 
 void append_internal(Connection &conn, const idx_t db_id, const idx_t tbl_id, const idx_t worker_id,
                      const vector<idx_t> &ids) {
+	// Log appender command.
 	auto tbl_str = "tbl_" + to_string(tbl_id);
-	// set appender
 	addLog(worker_id, "db: " + getDBName(db_id) + "; table: " + tbl_str + "; append rows");
 
 	try {
@@ -175,18 +189,17 @@ void append_internal(Connection &conn, const idx_t db_id, const idx_t tbl_id, co
 		const vector<LogicalType> types = {LogicalType::UBIGINT, LogicalType::VARCHAR, LogicalType::TIMESTAMP,
 		                                   LogicalType::STRUCT(struct_children)};
 
-		// fill up datachunk
 		chunk.Initialize(*conn.context, types);
-		// int
+		// UBIGINT
 		auto &col_ubigint = chunk.data[0];
 		auto data_ubigint = FlatVector::GetData<uint64_t>(col_ubigint);
-		// varchar
+		// VARCHAR
 		auto &col_varchar = chunk.data[1];
 		auto data_varchar = FlatVector::GetData<string_t>(col_varchar);
-		// timestamp
+		// TIMESTAMP
 		auto &col_ts = chunk.data[2];
 		auto data_ts = FlatVector::GetData<timestamp_t>(col_ts);
-		// struct
+		// STRUCT(UBIGINT, VARCHAR)
 		auto &col_struct = chunk.data[3];
 		auto &data_struct_entries = StructVector::GetEntries(col_struct);
 		auto &entry_ubigint = data_struct_entries[0];
@@ -212,7 +225,7 @@ void append_internal(Connection &conn, const idx_t db_id, const idx_t tbl_id, co
 		success = false;
 		return;
 	} catch (...) {
-		addLog(worker_id, "Caught error when using Appender!");
+		addLog(worker_id, "Caught unknown exception when using Appender");
 		success = false;
 		return;
 	}
@@ -253,7 +266,7 @@ void delete_internal(Connection &conn, const idx_t db_id, const idx_t tbl_id, co
 	    StringUtil::Format("WITH ids (id) AS (VALUES %s) DELETE FROM %s.%s.%s AS t USING ids WHERE t.i = ids.id",
 	                       delete_list, getDBName(db_id), DEFAULT_SCHEMA, tbl_str);
 	addLog(worker_id, "q: " + delete_sql);
-	execQuery(conn, delete_sql);
+	execQuery(conn, delete_sql, worker_id);
 }
 
 void apply_changes(Connection &conn, const idx_t db_id, const idx_t worker_id) {
@@ -262,9 +275,11 @@ void apply_changes(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 	if (max_tbl_id == 0) {
 		return;
 	}
-	// select a random table to delete from
+
+	// Select a random table to delete from.
 	auto tbl_id = std::rand() % max_tbl_id;
-	// select some random tuples to apply changes to
+
+	// Select some random tuples to apply changes to.
 	auto current_num_rows = db_infos[db_id].tables[tbl_id].size;
 	idx_t delete_count = std::rand() % (STANDARD_VECTOR_SIZE / 3);
 	if (delete_count == 0) {
@@ -278,10 +293,21 @@ void apply_changes(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 	for (auto &id : unique_ids) {
 		ids.push_back(id);
 	}
-	execQuery(conn, "BEGIN");
+
+	// Apply the changes.
+	active_transaction[worker_id] = true;
+	execQuery(conn, "BEGIN", worker_id);
 	delete_internal(conn, db_id, tbl_id, worker_id, ids);
 	append_internal(conn, db_id, tbl_id, worker_id, ids);
-	execQuery(conn, "COMMIT");
+
+	// Randomly COMMIT or ROLLBACK.
+	auto commit = std::rand() % 2 == 0;
+	if (commit) {
+		execQuery(conn, "COMMIT", worker_id);
+	} else {
+		execQuery(conn, "ROLLBACK", worker_id);
+	}
+	active_transaction[worker_id] = false;
 }
 
 void describe_tbl(Connection &conn, const idx_t db_id, const idx_t worker_id) {
@@ -290,9 +316,11 @@ void describe_tbl(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 	if (max_tbl_id == 0) {
 		return;
 	}
+
 	auto tbl_id = std::rand() % max_tbl_id;
 	auto tbl_str = "tbl_" + to_string(tbl_id);
 	lock.unlock();
+
 	auto actual_describe = std::rand() % 2 == 0;
 	string describe_sql;
 	if (actual_describe) {
@@ -302,15 +330,7 @@ void describe_tbl(Connection &conn, const idx_t db_id, const idx_t worker_id) {
 	}
 
 	addLog(worker_id, "q: " + describe_sql);
-	execQuery(conn, describe_sql);
-}
-
-void checkpoint_db(Connection &conn, const idx_t db_id, const idx_t worker_id) {
-	unique_lock<mutex> lock(db_infos[db_id].mu);
-	string checkpoint_sql = "CHECKPOINT " + getDBName(db_id);
-	addLog(worker_id, "q: " + checkpoint_sql);
-	// checkpoint can fail, we don't care
-	conn.Query(checkpoint_sql);
+	execQuery(conn, describe_sql, worker_id);
 }
 
 void workUnit(std::unique_ptr<Connection> conn, const idx_t worker_id) {
@@ -320,10 +340,10 @@ void workUnit(std::unique_ptr<Connection> conn, const idx_t worker_id) {
 		}
 
 		try {
-			idx_t scenario_id = std::rand() % 10;
+			idx_t scenario_id = std::rand() % 9;
 			idx_t db_id = std::rand() % db_count;
 
-			db_pool.addWorker(*conn, db_id);
+			db_pool.addWorker(*conn, db_id, worker_id);
 
 			switch (scenario_id) {
 			case 0:
@@ -345,15 +365,12 @@ void workUnit(std::unique_ptr<Connection> conn, const idx_t worker_id) {
 			case 8:
 				describe_tbl(*conn, db_id, worker_id);
 				break;
-			case 9:
-				checkpoint_db(*conn, db_id, worker_id);
-				break;
 			default:
 				addLog(worker_id, "invalid scenario: " + to_string(scenario_id));
 				success = false;
 				return;
 			}
-			db_pool.removeWorker(*conn, db_id);
+			db_pool.removeWorker(*conn, db_id, worker_id);
 
 		} catch (const std::exception &e) {
 			addLog(worker_id, "Caught exception when running iterations: " + string(e.what()));
@@ -373,24 +390,26 @@ TEST_CASE("Run a concurrent ATTACH/DETACH scenario", "[interquery][.]") {
 	DuckDB db(nullptr);
 	Connection init_conn(db);
 
-	execQuery(init_conn, "SET catalog_error_max_schemas = '0'");
-	execQuery(init_conn, "SET threads = '1'");
-	execQuery(init_conn, "SET storage_compatibility_version = 'latest'");
-	execQuery(init_conn, "CALL enable_logging()");
-	execQuery(init_conn, "PRAGMA enable_profiling='no_output'");
+	execQuery(init_conn, "SET catalog_error_max_schemas = '0'", 0);
+	execQuery(init_conn, "SET threads = '1'", 0);
+	execQuery(init_conn, "SET storage_compatibility_version = 'latest'", 0);
+	execQuery(init_conn, "CALL enable_logging()", 0);
+	execQuery(init_conn, "PRAGMA enable_profiling = 'no_output'", 0);
+	execQuery(init_conn, "SET profiling_coverage = 'ALL'", 0);
+	execQuery(init_conn, "SET default_block_size = 16384", 0);
 
-	logging.resize(worker_count);
+	// Spawn workers.
 	vector<std::thread> workers;
-	for (idx_t i = 0; i < worker_count; i++) {
+	for (idx_t worker_id = 0; worker_id < worker_count; worker_id++) {
 		auto conn = make_uniq<Connection>(db);
-		workers.emplace_back(workUnit, std::move(conn), i);
+		workers.emplace_back(workUnit, std::move(conn), worker_id);
 	}
 
 	for (auto &worker : workers) {
 		worker.join();
 	}
 	if (!success) {
-		for (idx_t worker_id = 0; worker_id < logging.size(); worker_id++) {
+		for (idx_t worker_id = 0; worker_id < worker_count; worker_id++) {
 			for (auto &log : logging[worker_id]) {
 				Printer::PrintF("thread %d; %s", worker_id, log);
 			}
