@@ -5,18 +5,12 @@ using namespace duckdb;
 using namespace std;
 
 static void CAPIRegisterCustomType(duckdb_connection connection, const char *name, duckdb_type duckdb_type,
-                                   duckdb_state expected_outcome) {
-	duckdb_state status;
-
+                                   duckdb_state expected) {
 	auto base_type = duckdb_create_logical_type(duckdb_type);
 	duckdb_logical_type_set_alias(base_type, name);
-
-	status = duckdb_register_logical_type(connection, base_type, nullptr);
-	REQUIRE(status == expected_outcome);
-
+	auto state = duckdb_register_logical_type(connection, base_type, nullptr);
+	REQUIRE(state == expected);
 	duckdb_destroy_logical_type(&base_type);
-	duckdb_destroy_logical_type(&base_type);
-	duckdb_destroy_logical_type(nullptr);
 }
 
 static void Vec3DAddFunction(duckdb_function_info info, duckdb_data_chunk input, duckdb_vector output) {

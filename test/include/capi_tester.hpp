@@ -11,9 +11,9 @@
 
 #include "catch.hpp"
 #include "duckdb.h"
-#include "test_helpers.hpp"
 #include "duckdb/common/arrow/arrow.hpp"
 #include "duckdb/common/exception.hpp"
+#include "test_helpers.hpp"
 
 namespace duckdb {
 
@@ -80,8 +80,8 @@ public:
 	bool HasError() const {
 		return !success;
 	}
-	void Query(duckdb_connection connection, string query) {
-		success = (duckdb_query(connection, query.c_str(), &result) == DuckDBSuccess);
+	void Query(duckdb_connection con, const string &query) {
+		success = (duckdb_query(con, query.c_str(), &result) == DuckDBSuccess);
 		if (!success) {
 			REQUIRE(ErrorMessage() != nullptr);
 			REQUIRE(ErrorType() != DUCKDB_ERROR_INVALID);
@@ -269,7 +269,7 @@ public:
 		return duckdb_connect(database, &connection) == DuckDBSuccess;
 	}
 
-	duckdb::unique_ptr<CAPIResult> Query(string query) {
+	duckdb::unique_ptr<CAPIResult> Query(const string &query) {
 		D_ASSERT(connection);
 		auto result = make_uniq<CAPIResult>();
 		result->Query(connection, query);
