@@ -44,8 +44,8 @@ public:
 
 public:
 	static profiler_settings_t DefaultSettings();
-	static profiler_settings_t DefaultRootSettings();
-	static profiler_settings_t DefaultOperatorSettings();
+	static profiler_settings_t RootScopeSettings();
+	static profiler_settings_t OperatorScopeSettings();
 
 public:
 	void ResetMetrics();
@@ -102,6 +102,7 @@ public:
 			return MaxValue(old_value, new_value);
 		});
 	}
+
 	template <class METRIC_TYPE>
 	void MetricMax(const MetricsType type, const METRIC_TYPE &value) {
 		auto new_value = Value::CreateValue(value);

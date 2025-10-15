@@ -85,20 +85,27 @@ shared_ptr<AttachedDatabase> DatabaseManager::AttachDatabase(ClientContext &cont
                                                              AttachOptions &options) {
 	auto &config = DBConfig::GetConfig(context);
 	if (options.db_type.empty() || StringUtil::CIEquals(options.db_type, "duckdb")) {
+		// Start timing the ATTACH-delay step.
+		auto profiler = context.client_data->profiler;
+		profiler->StartTimer(MetricsType::WAITING_TO_ATTACH_LATENCY);
 		while (InsertDatabasePath(info, options) == InsertDatabasePathResult::ALREADY_EXISTS) {
 			// database with this name and path already exists
 			// ... but it might not be done attaching yet!
 			// verify the database has actually finished attaching prior to returning
 			lock_guard<mutex> guard(databases_lock);
 			if (databases.find(info.name) != databases.end()) {
-				// database ACTUALLY exists - return
+				// The database ACTUALLY exists, so we return it.
+				profiler->EndTimer(MetricsType::WAITING_TO_ATTACH_LATENCY);
 				return nullptr;
 			}
 			if (context.interrupted) {
+				profiler->EndTimer(MetricsType::WAITING_TO_ATTACH_LATENCY);
 				throw InterruptException();
 			}
 		}
+		profiler->EndTimer(MetricsType::WAITING_TO_ATTACH_LATENCY);
 	}
+
 	GetDatabaseType(context, info, config, options);
 	if (!options.db_type.empty()) {
 		// we only need to prevent duplicate opening of DuckDB files
