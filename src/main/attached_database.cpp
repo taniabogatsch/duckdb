@@ -281,10 +281,6 @@ void AttachedDatabase::Close() {
 	catalog.reset();
 	storage.reset();
 	stored_database_path.reset();
-
-	if (Allocator::SupportsFlush()) {
-		Allocator::FlushAll();
-	}
 }
 
 } // namespace duckdb
