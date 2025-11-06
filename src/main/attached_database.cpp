@@ -273,6 +273,9 @@ void AttachedDatabase::Close() {
 				options.wal_action = CheckpointWALAction::DELETE_WAL;
 				storage->CreateCheckpoint(QueryContext(), options);
 			}
+		} catch (std::exception &ex) {
+			ErrorData data(ex);
+			Printer::Print(data.Message());
 		} catch (...) { // NOLINT
 		}
 	}

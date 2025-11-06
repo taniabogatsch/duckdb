@@ -48,7 +48,7 @@ void Printer::Flush(OutputStream stream) {
 }
 
 void Printer::Print(const string &str) {
-	Printer::Print(OutputStream::STREAM_STDERR, str);
+	Printer::Print(OutputStream::STREAM_STDOUT, str);
 }
 
 bool Printer::IsTerminal(OutputStream stream) {
