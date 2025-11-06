@@ -15,7 +15,10 @@ CompressedFile::~CompressedFile() {
 	try {
 		// stream_wrapper->Close() might throw
 		CompressedFile::Close();
-	} catch (...) { // NOLINT - cannot throw in exception
+	} catch (std::exception &ex) {
+		ErrorData data(ex);
+		Printer::Print("CompressedFile::~CompressedFile()\t\t" + data.Message());
+	} catch (...) { // NOLINT
 	}
 }
 

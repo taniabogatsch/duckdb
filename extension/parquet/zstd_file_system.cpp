@@ -28,7 +28,10 @@ ZstdStreamWrapper::~ZstdStreamWrapper() {
 	}
 	try {
 		Close();
-	} catch (...) { // NOLINT: swallow exceptions in destructor
+	} catch (std::exception &ex) {
+		ErrorData data(ex);
+		Printer::Print("ZstdStreamWrapper::~ZstdStreamWrapper()\t\t" + data.Message());
+	} catch (...) { // NOLINT
 	}
 }
 

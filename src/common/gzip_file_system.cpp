@@ -93,7 +93,10 @@ MiniZStreamWrapper::~MiniZStreamWrapper() {
 	}
 	try {
 		MiniZStreamWrapper::Close();
-	} catch (...) { // NOLINT - cannot throw in exception
+	} catch (std::exception &ex) {
+		ErrorData data(ex);
+		Printer::Print("MiniZStreamWrapper::~MiniZStreamWrapper()\t\t" + data.Message());
+	} catch (...) { // NOLINT
 	}
 }
 

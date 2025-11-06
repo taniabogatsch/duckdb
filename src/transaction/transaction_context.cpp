@@ -17,6 +17,9 @@ TransactionContext::~TransactionContext() {
 	if (current_transaction) {
 		try {
 			Rollback(nullptr);
+		} catch (std::exception &ex) {
+			ErrorData data(ex);
+			Printer::Print("TransactionContext::~TransactionContext()\t\t" + data.Message());
 		} catch (...) { // NOLINT
 		}
 	}

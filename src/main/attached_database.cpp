@@ -275,7 +275,7 @@ void AttachedDatabase::Close() {
 			}
 		} catch (std::exception &ex) {
 			ErrorData data(ex);
-			Printer::Print(data.Message());
+			Printer::Print("AttachedDatabase::Close()\t\t" + data.Message());
 		} catch (...) { // NOLINT
 		}
 	}

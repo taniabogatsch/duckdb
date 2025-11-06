@@ -416,6 +416,9 @@ SingleFileStorageCommitState::~SingleFileStorageCommitState() {
 	try {
 		// truncate the WAL in case of a destructor
 		RevertCommit();
+	} catch (std::exception &ex) {
+		ErrorData data(ex);
+		Printer::Print("SingleFileStorageCommitState::~SingleFileStorageCommitState()\t\t" + data.Message());
 	} catch (...) { // NOLINT
 	}
 }
