@@ -141,7 +141,17 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, Sto
 }
 
 AttachedDatabase::~AttachedDatabase() {
-	Close();
+	try {
+		Close();
+	} catch (std::exception &ex) {
+		ErrorData data(ex);
+		DUCKDB_LOG_ERROR(db, "Exception in AttachedDatabase::~AttachedDatabase():\t" + data.Message());
+	} catch (...) { // NOLINT
+	}
+    transaction_manager.reset();
+    catalog.reset();
+    storage.reset();
+    stored_database_path.reset();
 }
 
 bool AttachedDatabase::IsSystem() const {
@@ -254,17 +264,14 @@ void AttachedDatabase::Close() {
 	D_ASSERT(catalog);
 	is_closed = true;
 
-	// shutting down: attempt to checkpoint the database
-	// but only if we are not cleaning up as part of an exception unwind
+	// Shutting down: attempt to checkpoint the database,
+	// but only if we are not cleaning up as part of an exception unwind.
 	if (!Exception::UncaughtException() && storage && !storage->InMemory() && !ValidChecker::IsInvalidated(db)) {
-		try {
-			auto &config = DBConfig::GetConfig(db);
-			if (config.options.checkpoint_on_shutdown) {
-				CheckpointOptions options;
-				options.wal_action = CheckpointWALAction::DELETE_WAL;
-				storage->CreateCheckpoint(QueryContext(), options);
-			}
-		} catch (...) { // NOLINT
+		auto &config = DBConfig::GetConfig(db);
+		if (config.options.checkpoint_on_shutdown) {
+			CheckpointOptions options;
+			options.wal_action = CheckpointWALAction::DELETE_WAL;
+			storage->CreateCheckpoint(QueryContext(), options);
 		}
 	}
 

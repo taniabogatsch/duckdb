@@ -178,6 +178,19 @@ void DatabaseManager::DetachDatabase(ClientContext &context, const string &name,
 	}
 
 	attached_db->OnDetach(context);
+
+	// DetachInternal removes the AttachedDatabase from the list of databases that can be referenced.
+	// Thus, if the use count is 1, then we know it will be destroyed after the function is over.
+	if (attached_db.use_count() == 1) {
+        try {
+            attached_db->Close();
+        } catch (std::exception &ex) {
+            ErrorData data(ex);
+
+            data.Throw();
+        } catch (...) { // NOLINT
+        }
+	}
 }
 
 shared_ptr<AttachedDatabase> DatabaseManager::DetachInternal(const string &name) {
@@ -319,7 +332,11 @@ vector<shared_ptr<AttachedDatabase>> DatabaseManager::GetDatabases() {
 void DatabaseManager::ResetDatabases(unique_ptr<TaskScheduler> &scheduler) {
 	auto databases = GetDatabases();
 	for (auto &entry : databases) {
-		entry->Close();
+        try {
+            entry->Close();
+        } catch (...) { // NOLINT
+            // FIXME: Failure to shut down gracefully - notify somehow?
+        }
 		entry.reset();
 	}
 }
