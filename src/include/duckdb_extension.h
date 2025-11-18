@@ -579,6 +579,15 @@ typedef struct {
 	                                            duckdb_value *out_value);
 #endif
 
+// API to register a custom log storage.
+#ifdef DUCKDB_EXTENSION_API_VERSION_UNSTABLE
+	duckdb_log_storage (*duckdb_create_log_storage)();
+	void (*duckdb_destroy_log_storage)(duckdb_log_storage *log_storage);
+	void (*duckdb_log_storage_set_write_log_entry)(duckdb_log_storage log_storage,
+	                                               duckdb_logger_write_log_entry_t function);
+	void (*duckdb_register_log_storage)(duckdb_database database, const char *name, duckdb_log_storage log_storage);
+#endif
+
 // New functions around the client context
 #ifdef DUCKDB_EXTENSION_API_VERSION_UNSTABLE
 	idx_t (*duckdb_client_context_get_connection_id)(duckdb_client_context context);
@@ -1101,6 +1110,12 @@ typedef struct {
 #define duckdb_expression_return_type duckdb_ext_api.duckdb_expression_return_type
 #define duckdb_expression_is_foldable duckdb_ext_api.duckdb_expression_is_foldable
 #define duckdb_expression_fold        duckdb_ext_api.duckdb_expression_fold
+
+// Version unstable_new_logger_functions
+#define duckdb_create_log_storage              duckdb_ext_api.duckdb_create_log_storage
+#define duckdb_destroy_log_storage             duckdb_ext_api.duckdb_destroy_log_storage
+#define duckdb_log_storage_set_write_log_entry duckdb_ext_api.duckdb_log_storage_set_write_log_entry
+#define duckdb_register_log_storage            duckdb_ext_api.duckdb_register_log_storage
 
 // Version unstable_new_open_connect_functions
 #define duckdb_connection_get_client_context    duckdb_ext_api.duckdb_connection_get_client_context

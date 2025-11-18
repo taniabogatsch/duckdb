@@ -275,7 +275,10 @@ void AttachedDatabase::Close() {
 			}
 		} catch (std::exception &ex) {
 			ErrorData data(ex);
-			Printer::Print("AttachedDatabase::Close()\t\t" + data.Message());
+			try {
+				DUCKDB_LOG_ERROR(db, "AttachedDatabase::Close()\t\t" + data.Message());
+			} catch (...) { // NOLINT
+			}
 		} catch (...) { // NOLINT
 		}
 	}

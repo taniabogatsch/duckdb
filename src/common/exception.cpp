@@ -330,12 +330,13 @@ InterruptException::InterruptException() : Exception(ExceptionType::INTERRUPT, "
 }
 
 FatalException::FatalException(ExceptionType type, const string &msg) : Exception(type, msg) {
-	Printer::Print("ABORT THROWN BY INTERNAL EXCEPTION: " + msg + "\n" + StackTrace::GetStackTrace());
+	// FIXME: Make any log context available to add error logging.
 }
 
 InternalException::InternalException(const string &msg) : Exception(ExceptionType::INTERNAL, msg) {
-	Printer::Print("ABORT THROWN BY INTERNAL EXCEPTION: " + msg + "\n" + StackTrace::GetStackTrace());
+	// FIXME: Make any log context available to add error logging.
 #ifdef DUCKDB_CRASH_ON_ASSERT
+	Printer::Print("ABORT THROWN BY INTERNAL EXCEPTION: " + msg + "\n" + StackTrace::GetStackTrace());
 	abort();
 #endif
 }

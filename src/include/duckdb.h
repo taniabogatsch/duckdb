@@ -757,6 +757,19 @@ typedef struct _duckdb_arrow_options {
 } * duckdb_arrow_options;
 
 //===--------------------------------------------------------------------===//
+// Logging Types
+//===--------------------------------------------------------------------===//
+
+//! Holds a log storage object.
+typedef struct _duckdb_log_storage {
+	void *internal_ptr;
+} * duckdb_log_storage;
+
+//! This function is missing the logging context, which will be added later.
+typedef void (*duckdb_logger_write_log_entry_t)(duckdb_timestamp timestamp, const char *level, const char *log_type,
+                                                const char *log_message);
+
+//===--------------------------------------------------------------------===//
 // DuckDB extension access
 //===--------------------------------------------------------------------===//
 
@@ -5188,6 +5201,43 @@ Folds an expression creating a folded value.
 */
 DUCKDB_C_API duckdb_error_data duckdb_expression_fold(duckdb_client_context context, duckdb_expression expr,
                                                       duckdb_value *out_value);
+
+//===--------------------------------------------------------------------===//
+// Logging
+//===--------------------------------------------------------------------===//
+
+/*!
+Creates a new log storage object.
+
+* @return A log storage object. Must be destroyed with `duckdb_destroy_log_storage`.
+*/
+DUCKDB_C_API duckdb_log_storage duckdb_create_log_storage();
+
+/*!
+Destroys a log storage object.
+
+* @param log_storage The log storage object to destroy.
+*/
+DUCKDB_C_API void duckdb_destroy_log_storage(duckdb_log_storage *log_storage);
+
+/*!
+Sets the callback function for writing log entries.
+
+* @param log_storage The log storage object.
+* @param function The function to call.
+*/
+DUCKDB_C_API void duckdb_log_storage_set_write_log_entry(duckdb_log_storage log_storage,
+                                                         duckdb_logger_write_log_entry_t function);
+
+/*!
+Registers a custom log storage for the logger.
+
+* @param database A database object.
+* @param name The storage name.
+* @param log_storage The log storage object.
+*/
+DUCKDB_C_API void duckdb_register_log_storage(duckdb_database database, const char *name,
+                                              duckdb_log_storage log_storage);
 
 #endif
 

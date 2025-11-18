@@ -502,6 +502,13 @@ typedef struct {
 	bool (*duckdb_expression_is_foldable)(duckdb_expression expr);
 	duckdb_error_data (*duckdb_expression_fold)(duckdb_client_context context, duckdb_expression expr,
 	                                            duckdb_value *out_value);
+	// API to register a custom log storage.
+
+	duckdb_log_storage (*duckdb_create_log_storage)();
+	void (*duckdb_destroy_log_storage)(duckdb_log_storage *log_storage);
+	void (*duckdb_log_storage_set_write_log_entry)(duckdb_log_storage log_storage,
+	                                               duckdb_logger_write_log_entry_t function);
+	void (*duckdb_register_log_storage)(duckdb_database database, const char *name, duckdb_log_storage log_storage);
 	// New functions around the client context
 
 	idx_t (*duckdb_client_context_get_connection_id)(duckdb_client_context context);
@@ -994,6 +1001,10 @@ inline duckdb_ext_api_v1 CreateAPIv1() {
 	result.duckdb_expression_return_type = duckdb_expression_return_type;
 	result.duckdb_expression_is_foldable = duckdb_expression_is_foldable;
 	result.duckdb_expression_fold = duckdb_expression_fold;
+	result.duckdb_create_log_storage = duckdb_create_log_storage;
+	result.duckdb_destroy_log_storage = duckdb_destroy_log_storage;
+	result.duckdb_log_storage_set_write_log_entry = duckdb_log_storage_set_write_log_entry;
+	result.duckdb_register_log_storage = duckdb_register_log_storage;
 	result.duckdb_client_context_get_connection_id = duckdb_client_context_get_connection_id;
 	result.duckdb_destroy_client_context = duckdb_destroy_client_context;
 	result.duckdb_connection_get_client_context = duckdb_connection_get_client_context;

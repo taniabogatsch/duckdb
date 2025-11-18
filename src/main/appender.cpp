@@ -40,10 +40,8 @@ void BaseAppender::Destructor() {
 	// try/catch. Close() can throw if the table was dropped in the meantime.
 	try {
 		Close();
-	} catch (std::exception &ex) {
-		ErrorData data(ex);
-		Printer::Print("BaseAppender::Destructor()\t\t" + data.Message());
 	} catch (...) { // NOLINT
+		            // FIXME: Make any log context available here.
 	}
 }
 
