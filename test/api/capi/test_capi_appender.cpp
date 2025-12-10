@@ -1462,4 +1462,3 @@ TEST_CASE("Test the appender with parallel appends and multiple data types in th
 	duckdb_disconnect(&conn);
 	duckdb_close(&db);
 }
-
