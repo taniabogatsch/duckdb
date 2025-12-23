@@ -12,5 +12,19 @@
         "description": "Sleeps for the specified number of milliseconds and returns NULL",
         "example": "sleep_ms(100)",
         "type": "scalar_function"
+    },
+    {
+        "name": "chaos_exception",
+        "parameters": "message,type",
+        "description": "Throws an exception of the given type with the given message",
+        "example": "chaos_exception('hello world', 'OUT_OF_MEMORY')",
+        "type": "scalar_function"
+    },
+    {
+        "name": "chaos_signal",
+        "parameters": "signal",
+        "description": "Throws the given signal",
+        "example": "chaos_signal('SIGSEGV')",
+        "type": "scalar_function"
     }
 ]

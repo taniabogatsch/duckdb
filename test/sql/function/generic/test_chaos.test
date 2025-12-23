@@ -1,0 +1,13 @@
+# name: test/sql/function/generic/test_chaos.test
+# description: Test the chaos_exception and chaos_signal functions
+# group: [generic]
+
+statement error
+SELECT chaos_exception('hello world', 'unknown type');
+----
+Not implemented Error
+
+statement error
+SELECT chaos_exception('hello world', 'OUT_OF_MEMORY');
+----
+Out of Memory Error

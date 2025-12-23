@@ -35,4 +35,24 @@ struct SleepMsFun {
 	static ScalarFunction GetFunction();
 };
 
+struct ChaosExceptionFun {
+	static constexpr const char *Name = "chaos_exception";
+	static constexpr const char *Parameters = "message,type";
+	static constexpr const char *Description = "Throws an exception of the given type with the given message";
+	static constexpr const char *Example = "chaos_exception('hello world', 'OUT_OF_MEMORY')";
+	static constexpr const char *Categories = "";
+
+	static ScalarFunction GetFunction();
+};
+
+struct ChaosSignalFun {
+	static constexpr const char *Name = "chaos_signal";
+	static constexpr const char *Parameters = "signal";
+	static constexpr const char *Description = "Throws the given signal";
+	static constexpr const char *Example = "chaos_signal('SIGSEGV')";
+	static constexpr const char *Categories = "";
+
+	static ScalarFunction GetFunction();
+};
+
 } // namespace duckdb
