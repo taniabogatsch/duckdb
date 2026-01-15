@@ -152,10 +152,12 @@ AttachedDatabase::AttachedDatabase(DatabaseInstance &db, Catalog &catalog_p, Sto
 }
 
 AttachedDatabase::~AttachedDatabase() {
-	// FIXME: Theoretically, we should catch all places higher up the call stack where the
-	// FIXME: shared pointer goes out of scope and we need to invoke a checkpoint.
-	// FIXME: However, for now, we keep this to avoid unintentional behavior / oversights.
-	Close(DatabaseCloseAction::TRY_CHECKPOINT);
+	if (!is_closed && !Exception::UncaughtException()) {
+		try {
+			DUCKDB_LOG_ERROR(db, "Found attached database that has not been closed correctly!");
+		} catch (...) { // NOLINT
+		}
+	}
 }
 
 bool AttachedDatabase::IsSystem() const {
@@ -198,11 +200,11 @@ string AttachedDatabase::ExtractDatabaseName(const string &dbpath, FileSystem &f
 	return name;
 }
 
-void AttachedDatabase::InvokeCloseIfLastReference(shared_ptr<AttachedDatabase> &attached_db) {
+void AttachedDatabase::InvokeCloseIfLastReference(ClientContext &context, shared_ptr<AttachedDatabase> &attached_db) {
 	auto close_lock = attached_db->close_lock;
 	lock_guard<mutex> guard(*close_lock);
 	if (attached_db.use_count() == 1) {
-		attached_db->Close(DatabaseCloseAction::CHECKPOINT);
+		attached_db->Close(context);
 	}
 	attached_db.reset();
 }
@@ -270,41 +272,34 @@ void AttachedDatabase::OnDetach(ClientContext &context) {
 	}
 }
 
-void AttachedDatabase::Close(const DatabaseCloseAction action) {
+void AttachedDatabase::Close(QueryContext context) {
 	if (is_closed) {
 		return;
 	}
 	D_ASSERT(catalog);
 	is_closed = true;
 
-	try {
-		auto create_checkpoint = true;
-		if (action == DatabaseCloseAction::TRY_CHECKPOINT && Exception::UncaughtException()) {
-			create_checkpoint = false;
-		} else if (!storage || storage->InMemory() || ValidChecker::IsInvalidated(db)) {
-			create_checkpoint = false;
-		}
+	if (context.Valid()) {
+		try {
+			auto create_checkpoint = true;
+			if (Exception::UncaughtException() || !storage || storage->InMemory() || ValidChecker::IsInvalidated(db)) {
+				create_checkpoint = false;
+			}
 
-		if (create_checkpoint) {
-			auto &config = DBConfig::GetConfig(db);
-			if (config.options.checkpoint_on_shutdown) {
-				CheckpointOptions options;
-				options.wal_action = CheckpointWALAction::DELETE_WAL;
-				storage->CreateCheckpoint(QueryContext(), options);
+			if (create_checkpoint) {
+				const auto &config = DBConfig::GetConfig(db);
+				if (config.options.checkpoint_on_shutdown) {
+					CheckpointOptions options;
+					options.wal_action = CheckpointWALAction::DELETE_WAL;
+					storage->CreateCheckpoint(*context.GetClientContext(), options);
+				}
 			}
-		}
-	} catch (std::exception &ex) {
-		ErrorData data(ex);
-		if (action == DatabaseCloseAction::TRY_CHECKPOINT) {
-			try {
-				DUCKDB_LOG_ERROR(db, "Silent exception in AttachedDatabase::Close():\t" + data.Message());
-			} catch (...) { // NOLINT
-			}
-		} else {
+		} catch (std::exception &ex) {
+			const ErrorData data(ex);
 			Cleanup();
 			data.Throw("Detached database '" + name + "', but CHECKPOINT during DETACH failed. \n");
+		} catch (...) { // NOLINT
 		}
-	} catch (...) { // NOLINT
 	}
 
 	Cleanup();

@@ -210,7 +210,7 @@ void DatabaseManager::DetachDatabase(ClientContext &context, const string &name,
 	attached_db->OnDetach(context);
 
 	// DetachInternal removes the AttachedDatabase from the list of databases that can be referenced.
-	AttachedDatabase::InvokeCloseIfLastReference(attached_db);
+	AttachedDatabase::InvokeCloseIfLastReference(context, attached_db);
 }
 
 void DatabaseManager::Alter(ClientContext &context, AlterInfo &info) {
@@ -400,7 +400,9 @@ vector<shared_ptr<AttachedDatabase>> DatabaseManager::GetDatabases() {
 void DatabaseManager::ResetDatabases() {
 	auto shared_db_pointers = GetDatabases();
 	for (auto &entry : shared_db_pointers) {
-		entry->Close(DatabaseCloseAction::TRY_CHECKPOINT);
+		// Close the database without running a checkpoint.
+		// We do not have the context here, and running a checkpoint without a context can result in corrupted indexes.
+		entry->Close(QueryContext());
 		entry.reset();
 	}
 }

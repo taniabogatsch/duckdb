@@ -36,10 +36,6 @@ enum class AttachVisibility { SHOWN, HIDDEN };
 //! Use this mode with caution, as it disables recovery from crashes for the file.
 enum class RecoveryMode : uint8_t { DEFAULT = 0, NO_WAL_WRITES = 1 };
 
-//! CHECKPOINT: Throws, if the checkpoint fails. Always cleans up.
-//! TRY_CHECKPOINT: Does not throw when failing a checkpoint. Always cleans up.
-enum class DatabaseCloseAction { CHECKPOINT, TRY_CHECKPOINT };
-
 class DatabaseFilePathManager;
 
 struct StoredDatabasePath {
@@ -95,7 +91,7 @@ public:
 	void Initialize(optional_ptr<ClientContext> context = nullptr);
 	void FinalizeLoad(optional_ptr<ClientContext> context);
 	//! Close the database before shutting it down.
-	void Close(const DatabaseCloseAction action);
+	void Close(QueryContext context);
 
 	Catalog &ParentCatalog() override;
 	const Catalog &ParentCatalog() const override;
@@ -139,7 +135,7 @@ public:
 	static string ExtractDatabaseName(const string &dbpath, FileSystem &fs);
 	// Invoke Close() on an attached database, if its use count is 1.
 	// Only call this in places where you know that the (last) shared pointer is about to go out of scope.
-	static void InvokeCloseIfLastReference(shared_ptr<AttachedDatabase> &attached_database);
+	static void InvokeCloseIfLastReference(ClientContext &context, shared_ptr<AttachedDatabase> &attached_database);
 
 private:
 	DatabaseInstance &db;

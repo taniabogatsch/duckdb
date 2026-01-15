@@ -655,15 +655,14 @@ bool SingleFileStorageManager::IsCheckpointClean(MetaBlockPointer checkpoint_id)
 	return block_manager->IsRootBlock(checkpoint_id);
 }
 
-unique_ptr<CheckpointWriter> SingleFileStorageManager::CreateCheckpointWriter(QueryContext context,
-                                                                              CheckpointOptions options) {
+unique_ptr<CheckpointWriter> SingleFileStorageManager::CreateCheckpointWriter(ClientContext &context, CheckpointOptions options) {
 	if (InMemory()) {
 		return make_uniq<InMemoryCheckpointer>(context, db, *block_manager, *this, options);
 	}
 	return make_uniq<SingleFileCheckpointWriter>(context, db, *block_manager, options);
 }
 
-void SingleFileStorageManager::CreateCheckpoint(QueryContext context, CheckpointOptions options) {
+void SingleFileStorageManager::CreateCheckpoint(ClientContext &context, CheckpointOptions options) {
 	if (read_only || !load_complete) {
 		return;
 	}
@@ -691,10 +690,7 @@ void SingleFileStorageManager::CreateCheckpoint(QueryContext context, Checkpoint
 	if (wal_size > 0 || config.options.force_checkpoint || options.action == CheckpointAction::ALWAYS_CHECKPOINT) {
 		try {
 			// Start timing the checkpoint.
-			auto client_context = context.GetClientContext();
-			if (client_context) {
-				auto profiler = client_context->client_data->profiler->StartTimer(MetricType::CHECKPOINT_LATENCY);
-			}
+			auto profiler = context.client_data->profiler->StartTimer(MetricType::CHECKPOINT_LATENCY);
 
 			// Write the checkpoint.
 			auto checkpointer = CreateCheckpointWriter(context, options);

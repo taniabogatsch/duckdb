@@ -98,7 +98,7 @@ public:
 	virtual bool AutomaticCheckpoint(idx_t estimated_wal_bytes) = 0;
 	virtual unique_ptr<StorageCommitState> GenStorageCommitState(WriteAheadLog &wal) = 0;
 	virtual bool IsCheckpointClean(MetaBlockPointer checkpoint_id) = 0;
-	virtual void CreateCheckpoint(QueryContext context, CheckpointOptions options = CheckpointOptions()) = 0;
+	virtual void CreateCheckpoint(ClientContext &context, CheckpointOptions options = CheckpointOptions()) = 0;
 	virtual DatabaseSize GetDatabaseSize() = 0;
 	virtual vector<MetadataBlockInfo> GetMetadataInfo() = 0;
 	virtual shared_ptr<TableIOManager> GetTableIOManager(BoundCreateTableInfo *info) = 0;
@@ -190,7 +190,7 @@ public:
 	bool AutomaticCheckpoint(idx_t estimated_wal_bytes) override;
 	unique_ptr<StorageCommitState> GenStorageCommitState(WriteAheadLog &wal) override;
 	bool IsCheckpointClean(MetaBlockPointer checkpoint_id) override;
-	void CreateCheckpoint(QueryContext context, CheckpointOptions options) override;
+	void CreateCheckpoint(ClientContext &context, CheckpointOptions options) override;
 	DatabaseSize GetDatabaseSize() override;
 	vector<MetadataBlockInfo> GetMetadataInfo() override;
 	shared_ptr<TableIOManager> GetTableIOManager(BoundCreateTableInfo *info) override;
@@ -199,7 +199,6 @@ public:
 
 protected:
 	void LoadDatabase(QueryContext context) override;
-
-	unique_ptr<CheckpointWriter> CreateCheckpointWriter(QueryContext context, CheckpointOptions options);
+	unique_ptr<CheckpointWriter> CreateCheckpointWriter(ClientContext &context, CheckpointOptions options);
 };
 } // namespace duckdb
