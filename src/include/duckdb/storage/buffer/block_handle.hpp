@@ -30,8 +30,8 @@ using BlockLock = unique_lock<mutex>;
 
 class BlockHandle : public enable_shared_from_this<BlockHandle> {
 public:
-	BlockHandle(BlockManager &block_manager, block_id_t block_id, MemoryTag tag);
-	BlockHandle(BlockManager &block_manager, block_id_t block_id, MemoryTag tag, unique_ptr<FileBuffer> buffer,
+	BlockHandle(shared_ptr<BlockManager> block_manager_p, block_id_t block_id, MemoryTag tag);
+	BlockHandle(shared_ptr<BlockManager> block_manager_p, block_id_t block_id, MemoryTag tag, unique_ptr<FileBuffer> buffer,
 	            DestroyBufferUpon destroy_buffer_upon, idx_t size, BufferPoolReservation &&reservation);
 	~BlockHandle();
 
@@ -40,7 +40,7 @@ public:
 		return buffer_manager;
 	}
 	BlockManager &GetBlockManager() const {
-		return block_manager;
+		return *block_manager_p;
 	}
 
 	block_id_t BlockId() const {
@@ -173,7 +173,7 @@ private:
 
 private:
 	BufferManager &buffer_manager;
-	BlockManager &block_manager;
+	shared_ptr<BlockManager> block_manager_p;
 	//! The block allocation size, which is determined by the block manager creating the block.
 	//! For non-temporary block managers the block_alloc_size corresponds to the memory_usage.
 	//! If we are pinning/loading an unloaded block, then we know how much memory to reserve.
@@ -184,7 +184,7 @@ private:
 
 	//! The block-level lock
 	mutex lock;
-	//! Whether or not the block is loaded/unloaded
+	//! Whether the block is loaded or unloaded.
 	atomic<BlockState> state;
 	//! Amount of concurrent readers
 	atomic<int32_t> readers;

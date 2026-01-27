@@ -10,20 +10,20 @@
 
 namespace duckdb {
 
-BlockHandle::BlockHandle(BlockManager &block_manager, block_id_t block_id_p, MemoryTag tag)
-    : buffer_manager(block_manager.GetBufferManager()), block_manager(block_manager),
-      block_alloc_size(block_manager.GetBlockAllocSize()), block_header_size(block_manager.GetBlockHeaderSize()),
+BlockHandle::BlockHandle(shared_ptr<BlockManager> block_manager_p, block_id_t block_id_p, MemoryTag tag)
+    : buffer_manager(block_manager_p->GetBufferManager()), block_manager_p(std::move(block_manager_p)),
+      block_alloc_size(block_manager_p->GetBlockAllocSize()), block_header_size(block_manager_p->GetBlockHeaderSize()),
       state(BlockState::BLOCK_UNLOADED), readers(0), block_id(block_id_p), tag(tag), buffer_type(FileBufferType::BLOCK),
       buffer(nullptr), eviction_seq_num(0), destroy_buffer_upon(DestroyBufferUpon::BLOCK),
       memory_usage(block_alloc_size), memory_charge(tag, buffer_manager.GetBufferPool()), unswizzled(nullptr),
       eviction_queue_idx(DConstants::INVALID_INDEX) {
 }
 
-BlockHandle::BlockHandle(BlockManager &block_manager, block_id_t block_id_p, MemoryTag tag,
+BlockHandle::BlockHandle(shared_ptr<BlockManager> block_manager_p, block_id_t block_id_p, MemoryTag tag,
                          unique_ptr<FileBuffer> buffer_p, DestroyBufferUpon destroy_buffer_upon_p, idx_t size_p,
                          BufferPoolReservation &&reservation)
-    : buffer_manager(block_manager.GetBufferManager()), block_manager(block_manager),
-      block_alloc_size(block_manager.GetBlockAllocSize()), block_header_size(block_manager.GetBlockHeaderSize()),
+    : buffer_manager(block_manager_p->GetBufferManager()), block_manager_p(std::move(block_manager_p)),
+      block_alloc_size(block_manager_p->GetBlockAllocSize()), block_header_size(block_manager_p->GetBlockHeaderSize()),
       state(BlockState::BLOCK_LOADED), readers(0), block_id(block_id_p), tag(tag),
       buffer_type(buffer_p->GetBufferType()), buffer(std::move(buffer_p)), eviction_seq_num(0),
       destroy_buffer_upon(destroy_buffer_upon_p), memory_usage(size_p),
@@ -33,7 +33,7 @@ BlockHandle::BlockHandle(BlockManager &block_manager, block_id_t block_id_p, Mem
 }
 
 BlockHandle::~BlockHandle() { // NOLINT: allow internal exceptions
-	// being destroyed, so any unswizzled pointers are just binary junk now.
+	// The block is being destroyed, so any unswizzled pointers are just binary junk now.
 	unswizzled = nullptr;
 	D_ASSERT(!buffer || buffer->GetBufferType() == buffer_type);
 	if (buffer && buffer_type != FileBufferType::TINY_BUFFER) {
@@ -41,18 +41,23 @@ BlockHandle::~BlockHandle() { // NOLINT: allow internal exceptions
 		buffer_manager.GetBufferPool().IncrementDeadNodes(*this);
 	}
 
-	// no references remain to this block: erase
 	if (buffer && state == BlockState::BLOCK_LOADED) {
+		// Erase any remaining references to the block.
 		D_ASSERT(memory_charge.size > 0);
-		// the block is still loaded in memory: erase it
 		buffer.reset();
 		memory_charge.Resize(0);
 	} else {
 		D_ASSERT(memory_charge.size == 0);
 	}
+
 	try {
-		block_manager.UnregisterBlock(*this);
+		if (BlockId() >= MAXIMUM_BLOCK) {
+			BlockManager::UnregisterTemporaryBlock(buffer_manager, *this);
+		} else {
+			BlockManager::UnregisterPersistentBlock(*this);
+		}
 	} catch (...) {
+		// TODO: warning or error log here?
 	}
 }
 
@@ -113,7 +118,7 @@ void BlockHandle::ResizeBuffer(BlockLock &l, idx_t block_size, int64_t memory_de
 
 	D_ASSERT(buffer);
 	// resize and adjust current memory
-	buffer->Resize(block_size, block_manager);
+	buffer->Resize(block_size, *block_manager_p);
 	memory_usage = NumericCast<idx_t>(NumericCast<int64_t>(memory_usage.load()) + memory_delta);
 	D_ASSERT(memory_usage == buffer->AllocSize());
 }
@@ -125,7 +130,7 @@ BufferHandle BlockHandle::LoadFromBuffer(BlockLock &l, data_ptr_t data, unique_p
 	D_ASSERT(state != BlockState::BLOCK_LOADED);
 	D_ASSERT(readers == 0);
 	// copy over the data into the block from the file buffer
-	auto block = AllocateBlock(block_manager, std::move(reusable_buffer), block_id);
+	auto block = AllocateBlock(*block_manager_p, std::move(reusable_buffer), block_id);
 	memcpy(block->InternalBuffer(), data, block->AllocSize());
 	buffer = std::move(block);
 	state = BlockState::BLOCK_LOADED;
@@ -143,8 +148,8 @@ BufferHandle BlockHandle::Load(QueryContext context, unique_ptr<FileBuffer> reus
 	}
 
 	if (block_id < MAXIMUM_BLOCK) {
-		auto block = AllocateBlock(block_manager, std::move(reusable_buffer), block_id);
-		block_manager.Read(context, *block);
+		auto block = AllocateBlock(*block_manager_p, std::move(reusable_buffer), block_id);
+		block_manager_p->Read(context, *block);
 		buffer = std::move(block);
 	} else {
 		if (MustWriteToTemporaryFile()) {

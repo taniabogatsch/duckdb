@@ -142,7 +142,7 @@ void MetadataManager::ConvertToTransient(unique_lock<mutex> &block_lock, Metadat
 	memcpy(new_buffer.Ptr(), old_buffer.Ptr(), block_manager.GetBlockSize());
 
 	// unregister the old block
-	block_manager.UnregisterBlock(metadata_block.block_id);
+	block_manager.UnregisterPersistentBlockById(metadata_block.block_id);
 
 	block_lock.lock();
 	metadata_block.block = std::move(new_block);

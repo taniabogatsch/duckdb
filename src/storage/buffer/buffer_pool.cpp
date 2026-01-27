@@ -44,7 +44,8 @@ BufferEvictionNode::BufferEvictionNode(weak_ptr<BlockHandle> handle_p, idx_t evi
 
 bool BufferEvictionNode::CanUnload(BlockHandle &handle_p) {
 	if (handle_sequence_number != handle_p.EvictionSequenceNumber()) {
-		// handle was used in between
+		// We cannot unload, if the handle has been used in between
+		// staring the "CanUnload" check and concluding it.
 		return false;
 	}
 	return handle_p.CanUnload();
@@ -53,15 +54,21 @@ bool BufferEvictionNode::CanUnload(BlockHandle &handle_p) {
 shared_ptr<BlockHandle> BufferEvictionNode::TryGetBlockHandle() {
 	auto handle_p = handle.lock();
 	if (!handle_p) {
-		// BlockHandle has been destroyed
+		// The block handle has been destroyed.
 		return nullptr;
 	}
-	if (!CanUnload(*handle_p)) {
-		// handle was used in between
-		return nullptr;
+
+	wrapper.block_handle = handle.lock();
+	if (!wrapper.block_handle) {
+		return wrapper;
 	}
-	// this is the latest node in the queue with this handle
-	return handle_p;
+
+	if (!CanUnload(*wrapper.block_handle)) {
+		return BufferEvictionNodeWrapper();
+	}
+
+	// Ths node is the latest node in the queue of the block handle.
+	return wrapper;
 }
 
 typedef duckdb_moodycamel::ConcurrentQueue<BufferEvictionNode> eviction_queue_t;
@@ -217,8 +224,8 @@ void EvictionQueue::PurgeIteration(const idx_t purge_size) {
 	idx_t alive_nodes = 0;
 	for (idx_t i = 0; i < actually_dequeued; i++) {
 		auto &node = purge_nodes[i];
-		auto handle = node.TryGetBlockHandle();
-		if (handle) {
+		auto wrapper = node.TryGetBlockHandle();
+		if (wrapper.block_handle) {
 			purge_nodes[alive_nodes++] = std::move(node);
 		}
 	}
@@ -267,7 +274,8 @@ bool BufferPool::AddToEvictionQueue(shared_ptr<BlockHandle> &handle) {
 	}
 
 	// Get the eviction queue for the block and add it
-	return queue.AddToEvictionQueue(BufferEvictionNode(weak_ptr<BlockHandle>(handle), ts));
+	BufferEvictionNode node(handle->GetBlockManagerWeak(), weak_ptr<BlockHandle>(handle), ts);
+	return queue.AddToEvictionQueue(std::move(node));
 }
 
 EvictionQueue &BufferPool::GetEvictionQueueForBlockHandle(const BlockHandle &handle) {
@@ -445,21 +453,21 @@ void EvictionQueue::IterateUnloadableBlocks(FN fn) {
 		}
 
 		// get a reference to the underlying block pointer
-		auto handle = node.TryGetBlockHandle();
-		if (!handle) {
+		auto wrapper = node.TryGetBlockHandle();
+		if (!wrapper.block_handle) {
 			DecrementDeadNodes();
 			continue;
 		}
 
 		// we might be able to free this block: grab the mutex and check if we can free it
-		auto lock = handle->GetLock();
-		if (!node.CanUnload(*handle)) {
+		auto lock = wrapper.block_handle->GetLock();
+		if (!node.CanUnload(*wrapper.block_handle)) {
 			// something changed in the mean-time, bail out
 			DecrementDeadNodes();
 			continue;
 		}
 
-		if (!fn(node, handle, lock)) {
+		if (!fn(node, wrapper.block_handle, lock)) {
 			break;
 		}
 	}

@@ -43,6 +43,7 @@ shared_ptr<BlockHandle> BlockManager::RegisterBlock(block_id_t block_id) {
 		}
 	}
 	// create a new block pointer for this block
+
 	auto result = make_shared_ptr<BlockHandle>(*this, block_id, MemoryTag::BASE_TABLE);
 	// register the block pointer in the set of blocks as a weak pointer
 	blocks[block_id] = weak_ptr<BlockHandle>(result);
@@ -112,24 +113,25 @@ shared_ptr<BlockHandle> BlockManager::ConvertToPersistent(QueryContext context, 
 	return ConvertToPersistent(context, block_id, std::move(old_block), std::move(handle), mode);
 }
 
-void BlockManager::UnregisterBlock(block_id_t id) {
+void BlockManager::UnregisterPersistentBlock(BlockHandle &block) {
+	auto &block_manager = block.GetBlockManager();
+	if (block_manager.in_destruction) {
+		return;
+	}
+	const auto id = block.BlockId();
+	block_manager.UnregisterPersistentBlockById(id);
+}
+
+void BlockManager::UnregisterPersistentBlockById(block_id_t id) {
 	D_ASSERT(id < MAXIMUM_BLOCK);
 	lock_guard<mutex> lock(blocks_lock);
-	// on-disk block: erase from list of blocks in manager
 	blocks.erase(id);
 }
 
-void BlockManager::UnregisterBlock(BlockHandle &block) {
-	if (in_destruction) {
-		return;
-	}
-	auto id = block.BlockId();
-	if (id >= MAXIMUM_BLOCK) {
-		// in-memory buffer: buffer could have been offloaded to disk: remove the file
-		buffer_manager.DeleteTemporaryFile(block);
-	} else {
-		UnregisterBlock(id);
-	}
+void BlockManager::UnregisterTemporaryBlock(BufferManager &buffer_manager_p, BlockHandle &block) {
+	// In-memory buffers can be offloaded to disk. In that case, we remove the file.
+	D_ASSERT(block.BlockId() >= MAXIMUM_BLOCK);
+	buffer_manager_p.DeleteTemporaryFile(block);
 }
 
 MetadataManager &BlockManager::GetMetadataManager() {

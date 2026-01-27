@@ -349,7 +349,7 @@ SingleFileStorageManager::SingleFileStorageManager(AttachedDatabase &db, string 
 
 void SingleFileStorageManager::LoadDatabase(QueryContext context) {
 	if (InMemory()) {
-		block_manager = make_uniq<InMemoryBlockManager>(BufferManager::GetBufferManager(db), DEFAULT_BLOCK_ALLOC_SIZE,
+		block_manager = make_shared_ptr<InMemoryBlockManager>(BufferManager::GetBufferManager(db), DEFAULT_BLOCK_ALLOC_SIZE,
 		                                                DEFAULT_BLOCK_HEADER_STORAGE_SIZE);
 		table_io_manager = make_uniq<SingleFileTableIOManager>(*block_manager, DEFAULT_ROW_GROUP_SIZE);
 		// in-memory databases can always use the latest storage version
