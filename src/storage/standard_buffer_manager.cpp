@@ -262,6 +262,7 @@ void StandardBufferManager::BatchRead(vector<shared_ptr<BlockHandle>> &handles, 
 
 	// perform a batch read of the blocks into the buffer
 	auto &block_manager = handles[0]->GetBlockManager();
+	block_manager.ReadBlocks(intermediate_buffer.GetFileBuffer(), first_block, block_count);
 
 	// the blocks are read - now we need to assign them to the individual blocks
 	for (idx_t block_idx = 0; block_idx < block_count; block_idx++) {
