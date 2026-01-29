@@ -280,7 +280,7 @@ DataPointer ColumnSegment::GetDataPointer() {
 //===--------------------------------------------------------------------===//
 void ColumnSegment::CommitDropSegment() {
 	if (block_id != INVALID_BLOCK) {
-		GetBlockManager().MarkBlockAsModified(block_id);
+		block->GetBlockManager().MarkBlockAsModified(block_id);
 	}
 	if (function.get().cleanup_state) {
 		function.get().cleanup_state(*this);

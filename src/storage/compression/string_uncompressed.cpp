@@ -259,7 +259,7 @@ unique_ptr<ColumnSegmentState> UncompressedStringStorage::DeserializeState(Deser
 
 void UncompressedStringStorage::CleanupState(ColumnSegment &segment) {
 	auto &state = segment.GetSegmentState()->Cast<UncompressedStringSegmentState>();
-	auto &block_manager = segment.GetBlockManager();
+	auto &block_manager = segment.block->GetBlockManager();
 	state.Cleanup(block_manager);
 }
 
@@ -398,7 +398,7 @@ string_t UncompressedStringStorage::ReadOverflowString(ColumnSegment &segment, V
 
 		// now append the string to the single buffer
 		while (remaining > 0) {
-			idx_t to_write = MinValue<idx_t>(remaining, block_manager.GetBlockSize() - sizeof(block_id_t) -
+			idx_t to_write = MinValue<idx_t>(remaining, segment.GetBlockSize() - sizeof(block_id_t) -
 			                                                UnsafeNumericCast<idx_t>(offset));
 			memcpy(target_ptr, handle.Ptr() + offset, to_write);
 			remaining -= to_write;

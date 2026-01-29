@@ -1043,7 +1043,7 @@ unique_ptr<ColumnSegmentState> ZSTDStorage::DeserializeState(Deserializer &deser
 
 void ZSTDStorage::CleanupState(ColumnSegment &segment) {
 	auto &state = segment.GetSegmentState()->Cast<UncompressedStringSegmentState>();
-	auto &block_manager = segment.GetBlockManager();
+	auto &block_manager = segment.block->GetBlockManager();
 	for (auto &block_id : state.on_disk_blocks) {
 		block_manager.MarkBlockAsModified(block_id);
 	}
