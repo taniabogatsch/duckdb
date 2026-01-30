@@ -30,7 +30,7 @@ constexpr uint64_t WAL_ENCRYPTED_VERSION_NUMBER = 3;
 
 WriteAheadLog::WriteAheadLog(AttachedDatabase &database, const string &wal_path, idx_t wal_size,
                              WALInitState init_state)
-    : database(database), wal_path(wal_path), wal_size(wal_size), init_state(init_state) {
+    : database(database), wal_path(wal_path), wal_size(wal_size), wal_entries_count(0), init_state(init_state) {
 }
 
 WriteAheadLog::~WriteAheadLog() {
@@ -100,6 +100,11 @@ void WriteAheadLog::Delete() {
 	fs.TryRemoveFile(wal_path);
 	init_state = WALInitState::NO_WAL;
 	wal_size = 0;
+	wal_entries_count = 0;
+}
+
+idx_t WriteAheadLog::GetWALEntriesCount() const {
+	return wal_entries_count;
 }
 
 //===--------------------------------------------------------------------===//
@@ -194,6 +199,10 @@ public:
 		memory_stream.Rewind();
 	}
 
+	WriteAheadLog &GetWAL() {
+		return wal;
+	}
+
 private:
 	WriteAheadLog &wal;
 	optional_ptr<WriteStream> stream;
@@ -216,6 +225,7 @@ public:
 	void End() {
 		serializer.End();
 		checksum_writer.Flush();
+		checksum_writer.GetWAL().IncrementWALEntriesCount();
 	}
 
 	template <class T>
@@ -540,6 +550,10 @@ void WriteAheadLog::Flush() {
 	// flushes all changes made to the WAL to disk
 	writer->Sync();
 	wal_size = writer->GetFileSize();
+}
+
+void WriteAheadLog::IncrementWALEntriesCount() {
+	wal_entries_count++;
 }
 
 } // namespace duckdb

@@ -902,6 +902,12 @@
         ]
     },
     {
+        "name": "wal_autocheckpoint_entries",
+        "description": "Trigger automatic checkpoint when WAL entry count reaches or exceeds N (0 = disabled)",
+        "type": "UBIGINT",
+        "scope": "global"
+    },
+    {
         "name": "zstd_min_string_length",
         "description": "The (average) length at which to enable ZSTD compression, defaults to 4096",
         "type": "UBIGINT",
