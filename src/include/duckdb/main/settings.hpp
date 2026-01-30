@@ -1251,6 +1251,17 @@ struct UsernameSetting {
 	static Value GetSetting(const ClientContext &context);
 };
 
+struct WalAutocheckpointEntriesSetting {
+	using RETURN_TYPE = idx_t;
+	static constexpr const char *Name = "wal_autocheckpoint_entries";
+	static constexpr const char *Description =
+	    "Trigger automatic checkpoint when WAL entry count reaches or exceeds N (0 = disabled)";
+	static constexpr const char *InputType = "UBIGINT";
+	static void SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &parameter);
+	static void ResetGlobal(DatabaseInstance *db, DBConfig &config);
+	static Value GetSetting(const ClientContext &context);
+};
+
 struct ZstdMinStringLengthSetting {
 	using RETURN_TYPE = idx_t;
 	static constexpr const char *Name = "zstd_min_string_length";

@@ -119,6 +119,11 @@ public:
 	void Delete();
 	void Flush();
 
+	//! Gets the number of WAL entries since last checkpoint
+	idx_t GetWALEntriesCount() const;
+	//! Increment the WAL entry count (for autocheckpoint threshold)
+	void IncrementWALEntriesCount();
+
 	void WriteCheckpoint(MetaBlockPointer meta_block);
 
 protected:
@@ -132,6 +137,7 @@ protected:
 	unique_ptr<BufferedFileWriter> writer;
 	string wal_path;
 	atomic<idx_t> wal_size;
+	atomic<idx_t> wal_entries_count;
 	atomic<WALInitState> init_state;
 };
 

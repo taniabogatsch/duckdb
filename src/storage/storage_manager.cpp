@@ -114,6 +114,19 @@ idx_t StorageManager::GetWALSize() {
 	return wal->GetWALSize();
 }
 
+idx_t StorageManager::GetWALEntriesCount() {
+	if (!wal) {
+		return 0;
+	}
+	return wal->GetWALEntriesCount();
+}
+
+void StorageManager::IncrementWALEntriesCount() {
+	if (wal) {
+		wal->IncrementWALEntriesCount();
+	}
+}
+
 optional_ptr<WriteAheadLog> StorageManager::GetWAL() {
 	if (InMemory() || read_only || !load_complete) {
 		return nullptr;
@@ -575,9 +588,22 @@ vector<MetadataBlockInfo> SingleFileStorageManager::GetMetadataInfo() {
 }
 
 bool SingleFileStorageManager::AutomaticCheckpoint(idx_t estimated_wal_bytes) {
+	auto &config = DBConfig::Get(db).options;
+
+	// Check size-based threshold
 	auto initial_size = NumericCast<idx_t>(GetWALSize());
 	idx_t expected_wal_size = initial_size + estimated_wal_bytes;
-	return expected_wal_size > DBConfig::Get(db).options.checkpoint_wal_size;
+	if (expected_wal_size > config.checkpoint_wal_size) {
+		return true;
+	}
+
+	// Check entries-based threshold (if enabled)
+	auto entries_limit = config.wal_autocheckpoint_entries;
+	if (entries_limit > 0 && GetWALEntriesCount() >= entries_limit) {
+		return true;
+	}
+
+	return false;
 }
 
 shared_ptr<TableIOManager> SingleFileStorageManager::GetTableIOManager(BoundCreateTableInfo *info /*info*/) {

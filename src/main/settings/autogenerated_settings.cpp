@@ -529,6 +529,22 @@ Value SchedulerProcessPartialSetting::GetSetting(const ClientContext &context) {
 }
 
 //===----------------------------------------------------------------------===//
+// Wal Autocheckpoint Entries
+//===----------------------------------------------------------------------===//
+void WalAutocheckpointEntriesSetting::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {
+	config.options.wal_autocheckpoint_entries = input.GetValue<idx_t>();
+}
+
+void WalAutocheckpointEntriesSetting::ResetGlobal(DatabaseInstance *db, DBConfig &config) {
+	config.options.wal_autocheckpoint_entries = DBConfigOptions().wal_autocheckpoint_entries;
+}
+
+Value WalAutocheckpointEntriesSetting::GetSetting(const ClientContext &context) {
+	auto &config = DBConfig::GetConfig(context);
+	return Value::UBIGINT(config.options.wal_autocheckpoint_entries);
+}
+
+//===----------------------------------------------------------------------===//
 // Zstd Min String Length
 //===----------------------------------------------------------------------===//
 void ZstdMinStringLengthSetting::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {
