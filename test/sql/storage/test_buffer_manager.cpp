@@ -161,14 +161,13 @@ TEST_CASE("Test buffer reallocation", "[storage][.]") {
 	idx_t requested_size = block_size;
 	auto handle = buffer_manager.Allocate(MemoryTag::EXTENSION, requested_size, false);
 	auto block = handle.GetBlockHandle();
-	CHECK(buffer_manager.GetUsedMemory() ==
-	      BufferManager::GetAllocSize(requested_size + block->block_manager.GetBlockHeaderSize()));
+	CHECK(buffer_manager.GetUsedMemory() == BufferManager::GetAllocSize(requested_size + block->GetBlockHeaderSize()));
 
 	for (; requested_size < limit; requested_size *= 2) {
 		// increase size
 		buffer_manager.ReAllocate(block, requested_size);
 		CHECK(buffer_manager.GetUsedMemory() ==
-		      BufferManager::GetAllocSize(requested_size + block->block_manager.GetBlockHeaderSize()));
+		      BufferManager::GetAllocSize(requested_size + block->GetBlockHeaderSize()));
 		// unpin and make sure it's evicted
 		handle.Destroy();
 		REQUIRE_NO_FAIL(con.Query(StringUtil::Format("PRAGMA memory_limit='%lldB'", requested_size)));
@@ -177,14 +176,14 @@ TEST_CASE("Test buffer reallocation", "[storage][.]") {
 		REQUIRE_NO_FAIL(con.Query(StringUtil::Format("PRAGMA memory_limit='%lldB'", limit)));
 		handle = buffer_manager.Pin(block);
 		CHECK(buffer_manager.GetUsedMemory() ==
-		      BufferManager::GetAllocSize(requested_size + block->block_manager.GetBlockHeaderSize()));
+		      BufferManager::GetAllocSize(requested_size + block->GetBlockHeaderSize()));
 	}
 	requested_size /= 2;
 	for (; requested_size > block_size; requested_size /= 2) {
 		// decrease size
 		buffer_manager.ReAllocate(block, requested_size);
 		CHECK(buffer_manager.GetUsedMemory() ==
-		      BufferManager::GetAllocSize(requested_size + block->block_manager.GetBlockHeaderSize()));
+		      BufferManager::GetAllocSize(requested_size + block->GetBlockHeaderSize()));
 		// unpin and make sure it's evicted
 		handle.Destroy();
 		REQUIRE_NO_FAIL(con.Query(StringUtil::Format("PRAGMA memory_limit='%lldB'", requested_size)));
@@ -193,7 +192,7 @@ TEST_CASE("Test buffer reallocation", "[storage][.]") {
 		REQUIRE_NO_FAIL(con.Query(StringUtil::Format("PRAGMA memory_limit='%lldB'", limit)));
 		handle = buffer_manager.Pin(block);
 		CHECK(buffer_manager.GetUsedMemory() ==
-		      BufferManager::GetAllocSize(requested_size + block->block_manager.GetBlockHeaderSize()));
+		      BufferManager::GetAllocSize(requested_size + block->GetBlockHeaderSize()));
 	}
 }
 
@@ -213,7 +212,7 @@ TEST_CASE("Test buffer manager variable size allocations", "[storage][.]") {
 	idx_t requested_size = 424242;
 	auto pin = buffer_manager.Allocate(MemoryTag::EXTENSION, requested_size, false);
 	auto block = pin.GetBlockHandle();
-	CHECK(buffer_manager.GetUsedMemory() >= requested_size + block->block_manager.GetBlockHeaderSize());
+	CHECK(buffer_manager.GetUsedMemory() >= requested_size + block->GetBlockHeaderSize());
 
 	pin.Destroy();
 	block.reset();
@@ -284,8 +283,8 @@ TEST_CASE("Test buffer manager buffer re-use", "[storage][.]") {
 		CHECK(buffer_manager.GetUsedMemory() == MinValue<idx_t>(pin_count, i + 1) * alloc_size);
 		// increment variable_block_size
 		variable_block_size++;
-		CHECK(BufferManager::GetAllocSize(variable_block_size +
-		                                  pin.GetBlockHandle()->block_manager.GetBlockHeaderSize()) == alloc_size);
+		CHECK(BufferManager::GetAllocSize(variable_block_size + pin.GetBlockHandle()->GetBlockHeaderSize()) ==
+		      alloc_size);
 	}
 	for (idx_t i = 0; i < block_count; i++) {
 		auto pin = buffer_manager.Pin(blocks[i]);
@@ -302,8 +301,8 @@ TEST_CASE("Test buffer manager buffer re-use", "[storage][.]") {
 		CHECK(buffer_manager.GetUsedMemory() == MinValue<idx_t>(pin_count, i + 1) * alloc_size);
 		// increment variable_block_size
 		variable_block_size--;
-		CHECK(BufferManager::GetAllocSize(variable_block_size +
-		                                  pin.GetBlockHandle()->block_manager.GetBlockHeaderSize()) == alloc_size);
+		CHECK(BufferManager::GetAllocSize(variable_block_size + pin.GetBlockHandle()->GetBlockHeaderSize()) ==
+		      alloc_size);
 	}
 	for (idx_t i = 0; i < block_count; i++) {
 		auto pin = buffer_manager.Pin(blocks[i]);
