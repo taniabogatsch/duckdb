@@ -124,6 +124,8 @@ static constexpr ExtensionFunctionEntry EXTENSION_FUNCTIONS[] = {
     {"cbrt", "core_functions", CatalogType::SCALAR_FUNCTION_ENTRY},
     {"ceil", "core_functions", CatalogType::SCALAR_FUNCTION_ENTRY},
     {"ceiling", "core_functions", CatalogType::SCALAR_FUNCTION_ENTRY},
+    {"chaos_exception", "core_functions", CatalogType::SCALAR_FUNCTION_ENTRY},
+    {"chaos_signal", "core_functions", CatalogType::SCALAR_FUNCTION_ENTRY},
     {"check_peg_parser", "autocomplete", CatalogType::TABLE_FUNCTION_ENTRY},
     {"chr", "core_functions", CatalogType::SCALAR_FUNCTION_ENTRY},
     {"corr", "core_functions", CatalogType::AGGREGATE_FUNCTION_ENTRY},
