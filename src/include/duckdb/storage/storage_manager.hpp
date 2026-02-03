@@ -85,6 +85,10 @@ public:
 	//! Deletes the WAL file, and resets the unique pointer.
 	void ResetWAL();
 
+	//! Gets the number of WAL entries since last checkpoint
+	idx_t GetWALEntriesCount();
+	void IncrementWALEntriesCount();
+
 	//! Returns the database file path
 	string GetDBPath() const {
 		return path;

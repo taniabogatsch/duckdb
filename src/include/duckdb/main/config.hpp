@@ -94,6 +94,8 @@ struct DBConfigOptions {
 	AccessMode access_mode = AccessMode::AUTOMATIC;
 	//! Checkpoint when WAL reaches this size (default: 16MB)
 	idx_t checkpoint_wal_size = 1 << 24;
+	//! Checkpoint when WAL entry count reaches this threshold (0 = disabled)
+	idx_t wal_autocheckpoint_entries = 0;
 	//! Whether or not to use Direct IO, bypassing operating system buffers
 	bool use_direct_io = false;
 	//! Whether extensions should be loaded on start-up
