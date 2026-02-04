@@ -197,6 +197,8 @@ struct DBConfigOptions {
 	string duckdb_api;
 	//! Metadata from DuckDB callers
 	string custom_user_agent;
+	//! How many microseconds to sleep during eviction.
+	idx_t debug_eviction_queue_sleep_micro_seconds = 0;
 	//! Encrypt the temp files
 	bool temp_file_encryption = false;
 	//! The default block allocation size for new duckdb database files (new as-in, they do not yet exist).

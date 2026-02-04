@@ -18,6 +18,7 @@
 
 namespace duckdb {
 
+class BlockMemory;
 class Allocator;
 class BufferPool;
 class TemporaryMemoryManager;
@@ -117,6 +118,8 @@ public:
 	                                                      FileBufferType type = FileBufferType::MANAGED_BUFFER);
 	//! Get the buffer pool.
 	virtual BufferPool &GetBufferPool() const;
+	//! Get the const database.
+	virtual const DatabaseInstance &GetDatabase() const = 0;
 	//! Get the database.
 	virtual DatabaseInstance &GetDatabase() = 0;
 	//! Get the manager assigning reservations for temporary memory, e.g., for query intermediates.
@@ -131,8 +134,8 @@ public:
 	//! Read a temporary buffer.
 	virtual unique_ptr<FileBuffer> ReadTemporaryBuffer(QueryContext context, MemoryTag tag, BlockHandle &block,
 	                                                   unique_ptr<FileBuffer> buffer);
-	//! Delete the temporary file containing the block.
-	virtual void DeleteTemporaryFile(BlockHandle &block);
+	//! Delete the temporary file containing the block memory.
+	virtual void DeleteTemporaryFile(BlockMemory &memory);
 };
 
 } // namespace duckdb

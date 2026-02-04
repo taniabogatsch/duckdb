@@ -22,7 +22,8 @@ public:
 		auto size = MaxValue<idx_t>(buffer_manager.GetBlockSize(), capacity * entry_size);
 		auto buffer_handle = buffer_manager.Allocate(tag, size, false);
 		block = buffer_handle.GetBlockHandle();
-		D_ASSERT(BufferManager::GetAllocSize(size + block->GetBlockHeaderSize()) == block->GetMemoryUsage());
+		D_ASSERT(BufferManager::GetAllocSize(size + block->GetBlockHeaderSize()) ==
+		         block->GetMemory().GetMemoryUsage());
 	}
 
 	explicit RowDataBlock(idx_t entry_size) : entry_size(entry_size) {
@@ -102,7 +103,7 @@ public:
 		VerifyBlockSizes();
 		idx_t size = 0;
 		for (auto &block : blocks) {
-			size += block->block->GetMemoryUsage();
+			size += block->block->GetMemory().GetMemoryUsage();
 		}
 		return size;
 	}
@@ -111,7 +112,7 @@ public:
 	void VerifyBlockSizes() const {
 #ifdef DEBUG
 		for (auto &block : blocks) {
-			D_ASSERT(block->block->GetMemoryUsage() ==
+			D_ASSERT(block->block->GetMemory().GetMemoryUsage() ==
 			         BufferManager::GetAllocSize(block->capacity * entry_size + Storage::DEFAULT_BLOCK_HEADER_SIZE));
 		}
 #endif

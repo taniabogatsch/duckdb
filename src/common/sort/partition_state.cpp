@@ -331,7 +331,7 @@ void PartitionLocalSinkState::Sink(DataChunk &input_chunk) {
 		if (!payload_layout.AllConstant()) {
 			D_ASSERT(strings->keep_pinned);
 			for (size_t i = prev_rows_blocks; i < rows->blocks.size(); ++i) {
-				rows->blocks[i]->block->SetSwizzling("PartitionLocalSinkState::Sink");
+				rows->blocks[i]->block->GetMemory().SetSwizzling("PartitionLocalSinkState::Sink");
 			}
 		}
 		return;

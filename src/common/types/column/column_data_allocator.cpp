@@ -52,7 +52,7 @@ ColumnDataAllocator::~ColumnDataAllocator() {
 		return;
 	}
 	for (auto &block : blocks) {
-		block.handle->SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
+		block.handle->GetMemory().SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
 	}
 	blocks.clear();
 }
@@ -81,7 +81,8 @@ BufferHandle ColumnDataAllocator::AllocateBlock(idx_t size) {
 	data.handle = pin.GetBlockHandle();
 	blocks.push_back(std::move(data));
 	if (partition_index.IsValid()) { // Set the eviction queue index logarithmically using RadixBits
-		blocks.back().handle->SetEvictionQueueIndex(RadixPartitioning::RadixBits(partition_index.GetIndex()));
+		blocks.back().handle->GetMemory().SetEvictionQueueIndex(
+		    RadixPartitioning::RadixBits(partition_index.GetIndex()));
 	}
 	allocated_size += max_size;
 	return pin;
@@ -235,7 +236,7 @@ void ColumnDataAllocator::UnswizzlePointers(ChunkManagementState &state, Vector 
 }
 
 void ColumnDataAllocator::SetDestroyBufferUponUnpin(uint32_t block_id) {
-	blocks[block_id].handle->SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
+	blocks[block_id].handle->GetMemory().SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
 }
 
 Allocator &ColumnDataAllocator::GetAllocator() {

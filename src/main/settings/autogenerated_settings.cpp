@@ -216,6 +216,23 @@ void DebugCheckpointAbortSetting::OnSet(SettingCallbackInfo &info, Value &parame
 }
 
 //===----------------------------------------------------------------------===//
+// Debug Eviction Queue Sleep Micro Seconds
+//===----------------------------------------------------------------------===//
+void DebugEvictionQueueSleepMicroSecondsSetting::SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &input) {
+	config.options.debug_eviction_queue_sleep_micro_seconds = input.GetValue<idx_t>();
+}
+
+void DebugEvictionQueueSleepMicroSecondsSetting::ResetGlobal(DatabaseInstance *db, DBConfig &config) {
+	config.options.debug_eviction_queue_sleep_micro_seconds =
+	    DBConfigOptions().debug_eviction_queue_sleep_micro_seconds;
+}
+
+Value DebugEvictionQueueSleepMicroSecondsSetting::GetSetting(const ClientContext &context) {
+	auto &config = DBConfig::GetConfig(context);
+	return Value::UBIGINT(config.options.debug_eviction_queue_sleep_micro_seconds);
+}
+
+//===----------------------------------------------------------------------===//
 // Debug Force External
 //===----------------------------------------------------------------------===//
 void DebugForceExternalSetting::SetLocal(ClientContext &context, const Value &input) {

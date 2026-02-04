@@ -307,6 +307,17 @@ struct DebugCheckpointAbortSetting {
 	static void OnSet(SettingCallbackInfo &info, Value &input);
 };
 
+struct DebugEvictionQueueSleepMicroSecondsSetting {
+	using RETURN_TYPE = idx_t;
+	static constexpr const char *Name = "debug_eviction_queue_sleep_micro_seconds";
+	static constexpr const char *Description =
+	    "DEBUG SETTING: time for the eviction queue to sleep before acquiring shared ownership of block memory";
+	static constexpr const char *InputType = "UBIGINT";
+	static void SetGlobal(DatabaseInstance *db, DBConfig &config, const Value &parameter);
+	static void ResetGlobal(DatabaseInstance *db, DBConfig &config);
+	static Value GetSetting(const ClientContext &context);
+};
+
 struct DebugForceExternalSetting {
 	using RETURN_TYPE = bool;
 	static constexpr const char *Name = "debug_force_external";
