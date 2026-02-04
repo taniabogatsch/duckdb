@@ -52,7 +52,7 @@ void TupleDataAllocator::DestroyRowBlocks(const idx_t row_block_begin, const idx
 	for (idx_t block_idx = row_block_begin; block_idx < row_block_end; block_idx++) {
 		auto &block = row_blocks[block_idx];
 		if (block.handle) {
-			block.handle->SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
+			block.handle->GetMemory().SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
 		}
 	}
 }
@@ -65,7 +65,7 @@ void TupleDataAllocator::DestroyHeapBlocks(const idx_t heap_block_begin, const i
 	for (idx_t block_idx = heap_block_begin; block_idx < heap_block_end; block_idx++) {
 		auto &block = heap_blocks[block_idx];
 		if (block.handle) {
-			block.handle->SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
+			block.handle->GetMemory().SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
 		}
 	}
 }
@@ -219,7 +219,8 @@ TupleDataChunkPart TupleDataAllocator::BuildChunkPart(TupleDataPinState &pin_sta
 	if (row_blocks.empty() || row_blocks.back().RemainingCapacity() < layout.GetRowWidth()) {
 		row_blocks.emplace_back(buffer_manager, block_size);
 		if (partition_index.IsValid()) { // Set the eviction queue index logarithmically using RadixBits
-			row_blocks.back().handle->SetEvictionQueueIndex(RadixPartitioning::RadixBits(partition_index.GetIndex()));
+			row_blocks.back().handle->GetMemory().SetEvictionQueueIndex(
+			    RadixPartitioning::RadixBits(partition_index.GetIndex()));
 		}
 	}
 	result.row_block_index = NumericCast<uint32_t>(row_blocks.size() - 1);
@@ -268,7 +269,7 @@ TupleDataChunkPart TupleDataAllocator::BuildChunkPart(TupleDataPinState &pin_sta
 					const auto size = MaxValue<idx_t>(block_size, heap_sizes[append_offset]);
 					heap_blocks.emplace_back(buffer_manager, size);
 					if (partition_index.IsValid()) { // Set the eviction queue index logarithmically using RadixBits
-						heap_blocks.back().handle->SetEvictionQueueIndex(
+						heap_blocks.back().handle->GetMemory().SetEvictionQueueIndex(
 						    RadixPartitioning::RadixBits(partition_index.GetIndex()));
 					}
 				}
@@ -697,7 +698,7 @@ void TupleDataAllocator::ReleaseOrStoreHandlesInternal(TupleDataSegment &segment
 				break;
 			case TupleDataPinProperties::DESTROY_AFTER_DONE:
 				// Prevent it from being added to the eviction queue
-				blocks[block_id].handle->SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
+				blocks[block_id].handle->GetMemory().SetDestroyBufferUpon(DestroyBufferUpon::UNPIN);
 				// Destroy
 				blocks[block_id].handle.reset();
 				break;

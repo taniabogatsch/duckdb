@@ -66,7 +66,7 @@ void SortedData::Unswizzle() {
 	for (idx_t i = 0; i < data_blocks.size(); i++) {
 		auto &data_block = data_blocks[i];
 		auto &heap_block = heap_blocks[i];
-		D_ASSERT(data_block->block->IsSwizzled());
+		D_ASSERT(data_block->block->GetMemory().IsSwizzled());
 		auto data_handle_p = buffer_manager.Pin(data_block->block);
 		auto heap_handle_p = buffer_manager.Pin(heap_block->block);
 		RowOperations::UnswizzlePointers(layout, data_handle_p.Ptr(), heap_handle_p.Ptr(), data_block->count);
@@ -251,7 +251,7 @@ data_ptr_t SBScanState::RadixPtr() const {
 
 data_ptr_t SBScanState::DataPtr(SortedData &sd) const {
 	auto &data_handle = sd.type == SortedDataType::BLOB ? blob_sorting_data_handle : payload_data_handle;
-	D_ASSERT(sd.data_blocks[block_idx]->block->Readers() != 0 &&
+	D_ASSERT(sd.data_blocks[block_idx]->block->GetMemory().GetReaders() != 0 &&
 	         data_handle.GetBlockHandle() == sd.data_blocks[block_idx]->block);
 	return data_handle.Ptr() + entry_idx * sd.layout.GetRowWidth();
 }
@@ -263,7 +263,7 @@ data_ptr_t SBScanState::HeapPtr(SortedData &sd) const {
 data_ptr_t SBScanState::BaseHeapPtr(SortedData &sd) const {
 	auto &heap_handle = sd.type == SortedDataType::BLOB ? blob_sorting_heap_handle : payload_heap_handle;
 	D_ASSERT(!sd.layout.AllConstant() && state.external);
-	D_ASSERT(sd.heap_blocks[block_idx]->block->Readers() != 0 &&
+	D_ASSERT(sd.heap_blocks[block_idx]->block->GetMemory().GetReaders() != 0 &&
 	         heap_handle.GetBlockHandle() == sd.heap_blocks[block_idx]->block);
 	return heap_handle.Ptr();
 }

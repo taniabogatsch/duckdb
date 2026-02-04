@@ -311,7 +311,7 @@ void LocalSortState::ReOrder(SortedData &sd, data_ptr_t sorting_ptr, RowDataColl
 		ordered_data_ptr += row_width;
 		sorting_ptr += sorting_entry_size;
 	}
-	ordered_data_block->block->SetSwizzling(
+	ordered_data_block->block->GetMemory().SetSwizzling(
 	    sd.layout.AllConstant() || !sd.swizzled ? nullptr : "LocalSortState::ReOrder.ordered_data");
 	// Replace the unordered data block with the re-ordered data block
 	sd.data_blocks.clear();
@@ -320,7 +320,7 @@ void LocalSortState::ReOrder(SortedData &sd, data_ptr_t sorting_ptr, RowDataColl
 	if (!sd.layout.AllConstant() && reorder_heap) {
 		// Swizzle the column pointers to offsets
 		RowOperations::SwizzleColumns(sd.layout, ordered_data_handle.Ptr(), count);
-		sd.data_blocks.back()->block->SetSwizzling(nullptr);
+		sd.data_blocks.back()->block->GetMemory().SetSwizzling(nullptr);
 		// Create a single heap block to store the ordered heap
 		idx_t total_byte_offset =
 		    std::accumulate(heap.blocks.begin(), heap.blocks.end(), (idx_t)0,

@@ -139,6 +139,9 @@ public:
 	BufferPool &GetBufferPool() const override {
 		return buffer_manager.GetBufferPool();
 	}
+	const DatabaseInstance &GetDatabase() const override {
+		return buffer_manager.GetDatabase();
+	}
 	DatabaseInstance &GetDatabase() override {
 		return buffer_manager.GetDatabase();
 	}
@@ -159,8 +162,8 @@ public:
 	                                           unique_ptr<FileBuffer> buffer) override {
 		return buffer_manager.ReadTemporaryBuffer(context, tag, block, std::move(buffer));
 	}
-	void DeleteTemporaryFile(BlockHandle &block) override {
-		return buffer_manager.DeleteTemporaryFile(block);
+	void DeleteTemporaryFile(BlockMemory &memory) override {
+		return buffer_manager.DeleteTemporaryFile(memory);
 	}
 
 private:

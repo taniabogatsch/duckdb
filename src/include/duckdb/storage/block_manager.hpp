@@ -26,8 +26,8 @@ class MetadataManager;
 
 enum class ConvertToPersistentMode { DESTRUCTIVE, THREAD_SAFE };
 
-//! BlockManager is an abstract representation to manage blocks on DuckDB. When writing or reading blocks, the
-//! BlockManager creates and accesses blocks. The concrete types implement specific block storage strategies.
+//! BlockManager is an abstract representation to manage blocks. When writing or reading blocks, the
+//! BlockManager creates and accesses them. The concrete types implement specific block storage strategies.
 class BlockManager {
 public:
 	BlockManager() = delete;
@@ -106,7 +106,7 @@ public:
 	                                            shared_ptr<BlockHandle> old_block,
 	                                            ConvertToPersistentMode mode = ConvertToPersistentMode::DESTRUCTIVE);
 
-	void UnregisterBlock(BlockHandle &block);
+	void UnregisterPersistentBlock(BlockHandle &block);
 	//! UnregisterBlock, only accepts non-temporary block ids
 	void UnregisterBlock(block_id_t id);
 
