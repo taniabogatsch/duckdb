@@ -9,6 +9,7 @@
 #include "duckdb/planner/expression/bound_lambdaref_expression.hpp"
 #include "duckdb/planner/expression/bound_lambda_expression.hpp"
 #include "duckdb/planner/expression_iterator.hpp"
+#include "duckdb/common/printer.hpp"
 
 namespace duckdb {
 
@@ -152,6 +153,7 @@ void ExpressionBinder::TransformCapturedLambdaColumn(unique_ptr<Expression> &ori
 				if (column_idx == bound_lambda_ref.binding.column_index) {
 					// now create the replacement
 					auto index = GetLambdaParamIndex(*lambda_bindings, bound_lambda_expr, bound_lambda_ref);
+					Printer::PrintF("found outer(?) lambda parameter: %d", index);
 					replacement =
 					    make_uniq<BoundReferenceExpression>(column_names[column_idx], column_types[column_idx], index);
 					return;
@@ -164,9 +166,8 @@ void ExpressionBinder::TransformCapturedLambdaColumn(unique_ptr<Expression> &ori
 		// refers to a lambda parameter inside the current lambda function
 		auto logical_type =
 		    (*bind_lambda_function)(context, function_child_types, bound_lambda_ref.binding.column_index);
-
 		const auto index = bound_lambda_ref.binding.column_index;
-
+		Printer::PrintF("found lambda parameter: %d", index);
 		replacement = make_uniq<BoundReferenceExpression>(alias, logical_type, index);
 		return;
 	}
@@ -179,6 +180,7 @@ void ExpressionBinder::TransformCapturedLambdaColumn(unique_ptr<Expression> &ori
 	offset += bound_lambda_expr.parameter_count;
 	offset += bound_lambda_expr.captures.size();
 
+	Printer::PrintF("found capture: %d", offset);
 	replacement = make_uniq<BoundReferenceExpression>(original->GetAlias(), original->return_type, offset);
 	bound_lambda_expr.captures.push_back(std::move(original));
 }

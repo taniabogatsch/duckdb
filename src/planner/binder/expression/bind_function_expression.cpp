@@ -317,9 +317,7 @@ BindResult ExpressionBinder::BindLambdaFunction(FunctionExpression &function, Sc
 			for (idx_t col_idx = 0; col_idx < column_names.size(); col_idx++) {
 				auto &param_name = column_names[col_idx];
 				auto &param_type = column_types[col_idx];
-
 				auto bound_lambda_param = make_uniq<BoundReferenceExpression>(param_name, param_type, offset++);
-
 				bound_function_expr.children.push_back(std::move(bound_lambda_param));
 			}
 		}

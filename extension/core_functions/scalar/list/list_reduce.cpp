@@ -228,8 +228,7 @@ unique_ptr<FunctionData> ListReduceBind(ClientContext &context, ScalarFunction &
 		throw BinderException("Could not cast lambda expression to list child type");
 	}
 	bound_function.SetReturnType(cast_lambda_expr->return_type);
-	return make_uniq<ListLambdaBindData>(bound_function.GetReturnType(), std::move(cast_lambda_expr), has_index,
-	                                     has_initial);
+	return make_uniq<ListLambdaBindData>(bound_function.GetReturnType(), std::move(cast_lambda_expr), bound_lambda_expr.parameter_count, has_index, has_initial);
 }
 
 LogicalType BindReduceChildren(ClientContext &context, const vector<LogicalType> &function_child_types,

@@ -23,15 +23,19 @@ struct LambdaFunctionData : public FunctionData {
 
 struct ListLambdaBindData final : public LambdaFunctionData {
 public:
-	ListLambdaBindData(const LogicalType &return_type, unique_ptr<Expression> lambda_expr, const bool has_index = false,
+	ListLambdaBindData(const LogicalType &return_type, unique_ptr<Expression> lambda_expr, const idx_t parameter_count, const bool is_inverted, const bool has_index = false,
 	                   const bool has_initial = false)
-	    : return_type(return_type), lambda_expr(std::move(lambda_expr)), has_index(has_index),
+	    : return_type(return_type), lambda_expr(std::move(lambda_expr)), parameter_count(parameter_count), has_index(has_index),
 	      has_initial(has_initial) {};
 
 	//! Return type of the scalar function
 	LogicalType return_type;
 	//! Lambda expression that the expression executor executes
 	unique_ptr<Expression> lambda_expr;
+	//! The lambda parameter count, necessary for BWC.
+	idx_t parameter_count;
+	//! True, if the deserialized lambda expression has inverted lambda parameters.
+	//! We cannot reshuffle (yet) because we don't know
 	//! True, if the last parameter in a lambda parameter list represents the index of the current list element
 	bool has_index;
 	bool has_initial;
@@ -73,7 +77,7 @@ public:
 
 	//! Returns the ListLambdaBindData containing the lambda expression
 	static unique_ptr<FunctionData> ListLambdaBind(ClientContext &, ScalarFunction &bound_function,
-	                                               vector<unique_ptr<Expression>> &arguments,
+	                                               vector<unique_ptr<Expression>> &arguments, const idx_t parameter_count,
 	                                               const bool has_index = false);
 
 	//! Internally executes list_transform

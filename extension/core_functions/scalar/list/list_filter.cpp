@@ -27,7 +27,7 @@ static unique_ptr<FunctionData> ListFilterBind(ClientContext &context, ScalarFun
 
 	bound_function.SetReturnType(arguments[0]->return_type);
 	auto has_index = bound_lambda_expr.parameter_count == 2;
-	return LambdaFunctions::ListLambdaBind(context, bound_function, arguments, has_index);
+	return LambdaFunctions::ListLambdaBind(context, bound_function, arguments, bound_lambda_expr.parameter_count, has_index);
 }
 
 static LogicalType ListFilterBindLambda(ClientContext &context, const vector<LogicalType> &function_child_types,

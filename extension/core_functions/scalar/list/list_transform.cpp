@@ -19,7 +19,7 @@ static unique_ptr<FunctionData> ListTransformBind(ClientContext &context, Scalar
 	auto &bound_lambda_expr = arguments[1]->Cast<BoundLambdaExpression>();
 	bound_function.SetReturnType(LogicalType::LIST(bound_lambda_expr.lambda_expr->return_type));
 	auto has_index = bound_lambda_expr.parameter_count == 2;
-	return LambdaFunctions::ListLambdaBind(context, bound_function, arguments, has_index);
+	return LambdaFunctions::ListLambdaBind(context, bound_function, arguments, bound_lambda_expr.parameter_count, has_index);
 }
 
 static LogicalType ListTransformBindLambda(ClientContext &context, const vector<LogicalType> &function_child_types,

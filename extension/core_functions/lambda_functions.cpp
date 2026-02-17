@@ -6,6 +6,8 @@
 #include "duckdb/planner/expression/bound_function_expression.hpp"
 #include "duckdb/planner/expression/bound_cast_expression.hpp"
 #include "duckdb/planner/expression/bound_lambda_expression.hpp"
+#include "duckdb/planner/expression/bound_reference_expression.hpp"
+#include "duckdb/common/printer.hpp"
 
 namespace duckdb {
 
@@ -222,13 +224,43 @@ static void ExecuteExpression(const idx_t elem_cnt, const LambdaFunctions::Colum
 // ListLambdaBindData
 //===--------------------------------------------------------------------===//
 
+static void EnumerateBWC(unique_ptr<Expression> &expr, const idx_t parameter_count) {
+	if (expr->GetExpressionClass() == ExpressionClass::BOUND_REF) {
+		auto &bound_ref = expr->Cast<BoundReferenceExpression>();
+		if (bound_ref.index > parameter_count) {
+			return;
+		}
+		Printer::PrintF("parameter count: %d", parameter_count);
+		Printer::PrintF("old index: %d", bound_ref.index);
+		Printer::PrintF("new index: %d", parameter_count - (bound_ref.index - 1));
+		bound_ref.index = parameter_count - (bound_ref.index - 1);
+		return;
+	}
+
+	// Recursively enumerate the children of the expression
+		ExpressionIterator::EnumerateChildren(*expr, [&](unique_ptr<Expression> &child) {
+			EnumerateBWC(child, parameter_count);
+		});
+}
+
 void ListLambdaBindData::Serialize(Serializer &serializer, const optional_ptr<FunctionData> bind_data_p,
                                    const ScalarFunction &) {
 	auto &bind_data = bind_data_p->Cast<ListLambdaBindData>();
 	serializer.WriteProperty(100, "return_type", bind_data.return_type);
-	serializer.WritePropertyWithDefault(101, "lambda_expr", bind_data.lambda_expr, unique_ptr<Expression>());
+
+	if (!serializer.ShouldSerialize(7) && bind_data.parameter_count != 0) {
+		auto copied_expr = bind_data.lambda_expr->Copy();
+		EnumerateBWC(copied_expr, bind_data.parameter_count);
+		serializer.WritePropertyWithDefault(101, "lambda_expr", copied_expr, unique_ptr<Expression>());
+	} else {
+		serializer.WritePropertyWithDefault(101, "lambda_expr", bind_data.lambda_expr, unique_ptr<Expression>());
+	}
+
 	serializer.WriteProperty(102, "has_index", bind_data.has_index);
 	serializer.WritePropertyWithDefault<bool>(103, "has_initial", bind_data.has_initial, false);
+	if (serializer.ShouldSerialize(7) && bind_data.parameter_count != 0) {
+		serializer.WritePropertyWithDefault<bool>(104, "parameters_flipped", true, false);
+	}
 }
 
 unique_ptr<FunctionData> ListLambdaBindData::Deserialize(Deserializer &deserializer, ScalarFunction &) {
@@ -237,6 +269,7 @@ unique_ptr<FunctionData> ListLambdaBindData::Deserialize(Deserializer &deseriali
 	                                                                                        unique_ptr<Expression>());
 	auto has_index = deserializer.ReadProperty<bool>(102, "has_index");
 	auto has_initial = deserializer.ReadPropertyWithExplicitDefault<bool>(103, "has_initial", false);
+	auto parameters_flipped = deserializer.ReadPropertyWithDefault<bool>(104, "parameters_flipped");
 	return make_uniq<ListLambdaBindData>(return_type, std::move(lambda_expr), has_index, has_initial);
 }
 
@@ -365,7 +398,7 @@ unique_ptr<FunctionData> LambdaFunctions::ListLambdaPrepareBind(vector<unique_pt
 	if (arguments[0]->return_type.id() == LogicalTypeId::SQLNULL) {
 		bound_function.arguments[0] = LogicalType::SQLNULL;
 		bound_function.SetReturnType(LogicalType::SQLNULL);
-		return make_uniq<ListLambdaBindData>(bound_function.GetReturnType(), nullptr);
+		return make_uniq<ListLambdaBindData>(bound_function.GetReturnType(), nullptr, 0);
 	}
 	// prepared statements
 	if (arguments[0]->return_type.id() == LogicalTypeId::UNKNOWN) {
@@ -378,7 +411,7 @@ unique_ptr<FunctionData> LambdaFunctions::ListLambdaPrepareBind(vector<unique_pt
 }
 
 unique_ptr<FunctionData> LambdaFunctions::ListLambdaBind(ClientContext &context, ScalarFunction &bound_function,
-                                                         vector<unique_ptr<Expression>> &arguments,
+                                                         vector<unique_ptr<Expression>> &arguments, const idx_t parameter_count,
                                                          const bool has_index) {
 	unique_ptr<FunctionData> bind_data = ListLambdaPrepareBind(arguments, context, bound_function);
 	if (bind_data) {
@@ -388,8 +421,7 @@ unique_ptr<FunctionData> LambdaFunctions::ListLambdaBind(ClientContext &context,
 	// get the lambda expression and put it in the bind info
 	auto &bound_lambda_expr = arguments[1]->Cast<BoundLambdaExpression>();
 	auto lambda_expr = std::move(bound_lambda_expr.lambda_expr);
-
-	return make_uniq<ListLambdaBindData>(bound_function.GetReturnType(), std::move(lambda_expr), has_index);
+	return make_uniq<ListLambdaBindData>(bound_function.GetReturnType(), std::move(lambda_expr), parameter_count, has_index);
 }
 
 void LambdaFunctions::ListTransformFunction(DataChunk &args, ExpressionState &state, Vector &result) {
