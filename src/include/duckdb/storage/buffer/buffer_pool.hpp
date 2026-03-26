@@ -67,6 +67,8 @@ public:
 
 	TemporaryMemoryManager &GetTemporaryMemoryManager();
 
+	vector<EvictionQueueInformation> GetEvictionQueueInfo() const;
+
 	//! Take per-database ObjectCache under buffer pool's memory management.
 	//! Notice, object cache should be registered for at most once, otherwise InvalidInput exception is thrown.
 	void SetObjectCache(ObjectCache *object_cache_p) {
