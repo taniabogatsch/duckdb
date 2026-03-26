@@ -16,6 +16,7 @@
 #include "duckdb/common/optional_ptr.hpp"
 #include "duckdb/common/typedefs.hpp"
 #include "duckdb/storage/buffer/block_handle.hpp"
+#include "duckdb/storage/buffer/temporary_file_information.hpp"
 
 namespace duckdb {
 
