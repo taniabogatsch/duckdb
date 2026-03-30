@@ -430,6 +430,9 @@ static idx_t GetPartitioningSpaceRequirement(ClientContext &context, const vecto
 	auto &buffer_manager = BufferManager::GetBufferManager(context);
 	bool all_constant;
 	idx_t tuple_width = GetTupleWidth(types, all_constant);
+	if (tuple_width == 0) {
+		throw InternalException("GetPartitioningSpaceRequirement: tuple width should not be 0");
+	}
 
 	auto tuples_per_block = MaxValue<idx_t>(buffer_manager.GetBlockSize() / tuple_width, 1);
 	auto blocks_per_chunk = (STANDARD_VECTOR_SIZE + tuples_per_block) / tuples_per_block + 1;
