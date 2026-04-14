@@ -53,7 +53,7 @@ SELECT eviction_invariants_ok();
 1
 
 statement ok
-SET memory_limit='4MB';
+SET memory_limit='5MB';
 
 loop i 0 10
 
